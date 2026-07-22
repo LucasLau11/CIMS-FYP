@@ -1,9 +1,262 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
+import '../../services/auth_service.dart';
+import '../login_screen.dart';
 
-class StudentProfileScreen extends StatelessWidget {
+class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
+
+  @override
+  State<StudentProfileScreen> createState() => _StudentProfileScreenState();
+}
+
+class _StudentProfileScreenState extends State<StudentProfileScreen> {
+  File? _profileImage;
+  String _selectedLanguage = 'English';
+
+  // In-memory only for now — no backend persistence wired up yet.
+  final Map<String, bool> _notificationPrefs = {
+    'Application updates': true,
+    'Report deadlines': true,
+    'Messages': true,
+    'Supervisor feedback': false,
+  };
+
+  static const List<String> _allowedImageExtensions = ['.jpg', '.jpeg', '.png'];
+
+  Future<void> _pickProfileImage(ImageSource source) async {
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 800,
+      );
+      if (picked == null) return;
+
+      final lowerPath = picked.path.toLowerCase();
+      final hasAllowedExtension =
+      _allowedImageExtensions.any((ext) => lowerPath.endsWith(ext));
+
+      if (!hasAllowedExtension) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unsupported file format. Please upload a JPG, JPEG, or PNG image.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      final file = File(picked.path);
+      final exists = await file.exists();
+      final size = exists ? await file.length() : 0;
+
+      if (!exists || size == 0) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(exists
+                ? 'The selected photo is empty (0 bytes) — this can happen with broken sample images on some emulators. Try a different photo.'
+                : 'The selected photo could not be found on disk (path: ${picked.path}).'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      setState(() => _profileImage = file);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not access ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e')),
+      );
+    }
+  }
+
+  void _showPhotoOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Update profile photo',
+                    style: TextStyle(
+                        fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700)),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
+              title: const Text('Take a photo'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickProfileImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+              title: const Text('Choose from gallery'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickProfileImage(ImageSource.gallery);
+              },
+            ),
+            if (_profileImage != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: AppColors.error),
+                title: const Text('Remove photo', style: TextStyle(color: AppColors.error)),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  setState(() => _profileImage = null);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationPreferences() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Notification preferences',
+                        style: TextStyle(
+                            fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    const Text('Choose what you want to be notified about.',
+                        style: TextStyle(
+                            fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+                    const SizedBox(height: 12),
+                    ..._notificationPrefs.keys.map((key) {
+                      return SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(key,
+                            style: const TextStyle(fontFamily: 'Inter', fontSize: 14)),
+                        value: _notificationPrefs[key]!,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) {
+                          setSheetState(() => _notificationPrefs[key] = val);
+                          setState(() {});
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(sheetContext);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Notification preferences updated.'),
+                                backgroundColor: AppColors.primary),
+                          );
+                        },
+                        child: const Text('Save'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showLanguagePicker() {
+    const languages = ['English', 'Bahasa Malaysia', '中文'];
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Select language',
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: languages.map((lang) {
+              return RadioListTile<String>(
+                contentPadding: EdgeInsets.zero,
+                title: Text(lang, style: const TextStyle(fontFamily: 'Inter', fontSize: 14)),
+                value: lang,
+                groupValue: _selectedLanguage,
+                activeColor: AppColors.primary,
+                onChanged: (val) {
+                  setState(() => _selectedLanguage = val!);
+                  Navigator.pop(dialogContext);
+                },
+              );
+            }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out?',
+            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+        content: const Text('You will need to log in again to access your account.',
+            style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Log out', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await AuthService.instance.signOut();
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,27 +293,64 @@ class StudentProfileScreen extends StatelessWidget {
                     const SizedBox(height: 40),
                     Stack(
                       children: [
-                        const CircleAvatar(
-                          radius: 44,
-                          backgroundColor: Colors.white24,
-                          child: Text('TK',
-                              style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
+                        ClipOval(
+                          child: Container(
+                            width: 88,
+                            height: 88,
+                            color: Colors.white24,
+                            child: _profileImage != null
+                                ? Image.file(
+                              _profileImage!,
+                              width: 88,
+                              height: 88,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Surface decode failures instead of
+                                // silently showing a blank circle.
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Could not load the selected photo: ${error.toString().split('\n').first}'),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                });
+                                return const Center(
+                                  child: Text('TK',
+                                      style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white)),
+                                );
+                              },
+                            )
+                                : const Center(
+                              child: Text('TK',
+                                  style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white)),
+                            ),
+                          ),
                         ),
                         Positioned(
                           right: 0,
                           bottom: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+                          child: GestureDetector(
+                            onTap: _showPhotoOptions,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.camera_alt,
+                                  size: 14, color: AppColors.primary),
                             ),
-                            child: const Icon(Icons.camera_alt,
-                                size: 14, color: AppColors.primary),
                           ),
                         ),
                       ],
@@ -197,17 +487,17 @@ class StudentProfileScreen extends StatelessWidget {
                 _SettingsTile(
                     icon: Icons.notifications_outlined,
                     label: 'Notification preferences',
-                    onTap: () {}),
+                    onTap: _showNotificationPreferences),
                 _SettingsTile(
                     icon: Icons.language_outlined,
                     label: 'Language',
-                    trailing: 'English',
-                    onTap: () {}),
+                    trailing: _selectedLanguage,
+                    onTap: _showLanguagePicker),
                 _SettingsTile(
                     icon: Icons.logout,
                     label: 'Log out',
                     isDestructive: true,
-                    onTap: () {}),
+                    onTap: _handleLogout),
                 const SizedBox(height: 32),
               ],
             ),
@@ -318,7 +608,7 @@ class _SettingsTile extends StatelessWidget {
                 color: color)),
         trailing: trailing != null
             ? Text(trailing!,
-                style: AppTextStyles.caption)
+            style: AppTextStyles.caption)
             : Icon(Icons.chevron_right, size: 18, color: AppColors.textMuted),
       ),
     );

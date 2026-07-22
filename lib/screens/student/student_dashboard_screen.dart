@@ -15,10 +15,17 @@ class StudentDashboardScreen extends StatelessWidget {
         slivers: [
           // Gradient header with wave
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 190,
             pinned: true,
             backgroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 16, bottom: 14),
+              title: const Text('Dashboard',
+                  style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -29,7 +36,7 @@ class StudentDashboardScreen extends StatelessWidget {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -56,7 +63,7 @@ class StudentDashboardScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         const Text(
                           'Good morning, Tan Kai!',
                           style: TextStyle(
@@ -81,12 +88,6 @@ class StudentDashboardScreen extends StatelessWidget {
               ),
             ),
             actions: const [],
-            title: const Text('Dashboard',
-                style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
           ),
 
           SliverToBoxAdapter(

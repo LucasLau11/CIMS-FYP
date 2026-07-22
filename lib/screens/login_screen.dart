@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
 import 'student_shell.dart';
 import 'admin_shell.dart';
 import 'supervisor_shell.dart';
 import 'hr_shell.dart';
 import 'company_supervisor_shell.dart';
 import 'parent_shell.dart';
-
-// Hardcoded admin email list
-// TODO: Replace with actual database query against admin table
-const List<String> _adminEmails = [
-  'admin@tarc.edu.my',
-  'registrar@tarc.edu.my',
-  'itadmin@tarc.edu.my',
-];
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,81 +21,172 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
-  String? _emailError;
 
-  // Tracks whether this is a company-domain email needing role picker
-  bool get _isCompanyEmail {
-    final email = _emailController.text.trim().toLowerCase();
-    return email.isNotEmpty &&
-        !email.endsWith('@student.tarumt.edu.my') &&
-        !email.endsWith('@tarc.edu.my');
+  // Per-field errors, shown directly under their respective inputs.
+  String? _emailError;
+  String? _passwordError;
+  // General account-level issues that aren't tied to a specific field
+  // (e.g. missing profile data) — shown as a banner above the button.
+  String? _generalError;
+
+  void _clearErrors() {
+    _emailError = null;
+    _passwordError = null;
+    _generalError = null;
   }
 
-  String? _selectedCompanyRole;
-
-  void _handleLogin() async {
-    final email = _emailController.text.trim().toLowerCase();
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    // Basic validation
-    if (email.isEmpty || password.isEmpty) {
-      setState(() => _emailError = 'Please enter your email and password.');
+    setState(_clearErrors);
+
+    bool hasError = false;
+    if (email.isEmpty) {
+      setState(() => _emailError = 'Please enter your email.');
+      hasError = true;
+    }
+    if (password.isEmpty) {
+      setState(() => _passwordError = 'Please enter your password.');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    setState(() => _isLoading = true);
+
+    // Admin is a hardcoded demo account — never touches Supabase.
+    if (AuthService.instance.isAdminLogin(email, password)) {
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _routeToShell(destination: const AdminShell());
       return;
     }
 
-    // If company email but no role selected yet, show picker
-    if (_isCompanyEmail && _selectedCompanyRole == null) {
-      setState(() => _emailError = 'Please select your role to continue.');
-      return;
+    try {
+      final role = await AuthService.instance.logIn(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _routeToShellByRole(role);
+    } on AuthFieldException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (e.target == AuthFieldTarget.credentials) {
+          // Supabase doesn't tell us whether the email or the password was
+          // wrong (security by design), so this shows under the password
+          // field — the natural "final" field before submitting.
+          _passwordError = e.message;
+        } else {
+          _generalError = e.message;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _generalError = 'Something went wrong. Please try again.';
+      });
     }
-
-    setState(() {
-      _isLoading = true;
-      _emailError = null;
-    });
-
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 1200));
-
-    if (!mounted) return;
-
-    setState(() => _isLoading = false);
-
-    // Route based on email domain + role logic
-    _routeUser(email);
   }
 
-  void _routeUser(String email) {
-    Widget destination;
+  Future<void> _handleForgotPassword() async {
+    final controller = TextEditingController(text: _emailController.text.trim());
+    bool isSending = false;
 
-    if (email.endsWith('@student.tarumt.edu.my')) {
-      // Student
-      destination = const StudentShell();
-    } else if (email.endsWith('@tarc.edu.my')) {
-      // Check admin table (hardcoded for prototype)
-      // TODO: Replace with actual DB query
-      if (_adminEmails.contains(email)) {
-        destination = const AdminShell();
-      } else {
-        destination = const SupervisorShell();
-      }
-    } else {
-      // Company-side user — role was picked from the mini picker
-      switch (_selectedCompanyRole) {
-        case 'HR Personnel':
-          destination = const HrShell();
-          break;
-        case 'Company Supervisor':
-          destination = const CompanySupervisorShell();
-          break;
-        case 'Parent/Guardian':
-          destination = const ParentShell();
-          break;
-        default:
-          destination = const HrShell();
-      }
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Reset your password',
+                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Enter your account email and we\'ll send you a link to reset your password.',
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter your email',
+                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSending ? null : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isSending
+                      ? null
+                      : () async {
+                    final email = controller.text.trim();
+                    if (email.isEmpty) return;
+
+                    setDialogState(() => isSending = true);
+                    await AuthService.instance.sendPasswordResetEmail(email);
+                    if (!dialogContext.mounted) return;
+
+                    Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'If an account exists for this email, a reset link has been sent.'),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  },
+                  child: isSending
+                      ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                      : const Text('Send reset link'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _routeToShellByRole(UserRole role) {
+    switch (role) {
+      case UserRole.student:
+        _routeToShell(destination: const StudentShell());
+        break;
+      case UserRole.academicSupervisor:
+        _routeToShell(destination: const SupervisorShell());
+        break;
+      case UserRole.companyHr:
+        _routeToShell(destination: const HrShell());
+        break;
+      case UserRole.companySupervisor:
+        _routeToShell(destination: const CompanySupervisorShell());
+        break;
+      case UserRole.parent:
+        _routeToShell(destination: const ParentShell());
+        break;
     }
+  }
 
+  void _routeToShell({required Widget destination}) {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => destination,
@@ -166,6 +251,33 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 36),
 
+              // General (non-field) error banner
+              if (_generalError != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.errorBg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.error.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, size: 16, color: AppColors.error),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _generalError!,
+                          style: const TextStyle(
+                              fontFamily: 'Inter', fontSize: 12, color: AppColors.error),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // Email field
               Align(
                 alignment: Alignment.centerLeft,
@@ -175,10 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                onChanged: (_) => setState(() {
-                  _emailError = null;
-                  _selectedCompanyRole = null;
-                }),
+                onChanged: (_) => setState(() => _emailError = null),
                 decoration: InputDecoration(
                   hintText: 'Enter your email',
                   prefixIcon: const Icon(Icons.email_outlined,
@@ -197,10 +306,12 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                onChanged: (_) => setState(() => _passwordError = null),
                 decoration: InputDecoration(
                   hintText: 'Enter your password',
                   prefixIcon: const Icon(Icons.lock_outline,
                       size: 20, color: AppColors.textMuted),
+                  errorText: _passwordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -220,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _handleForgotPassword,
                   child: const Text('Forgot password?',
                       style: TextStyle(
                           fontFamily: 'Inter',
@@ -229,55 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Company role picker — only shown for non-TARC/student emails
-              if (_isCompanyEmail) ...[
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.warningBg,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppColors.warning.withOpacity(0.4)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.info_outline,
-                              size: 15, color: AppColors.warning),
-                          SizedBox(width: 6),
-                          Text('Select your role',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.warning)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Your email is not a TARUMT address. Please select the role that applies to you.',
-                        style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12,
-                            color: AppColors.warning),
-                      ),
-                      const SizedBox(height: 12),
-                      ...['HR Personnel', 'Company Supervisor', 'Parent/Guardian']
-                          .map((role) => _RoleTile(
-                                label: role,
-                                selected: _selectedCompanyRole == role,
-                                onTap: () => setState(
-                                    () => _selectedCompanyRole = role),
-                              )),
-                    ],
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Login button
               SizedBox(
@@ -288,18 +351,37 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14)),
                   child: _isLoading
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
                       : const Text('Log in',
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w600)),
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 16),
+
+              // Sign up link
+              TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                      builder: (_) => const SignUpScreen()),
+                ),
+                child: const Text(
+                  "Don't have an account? Sign up",
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13,
+                      color: AppColors.primary),
+                ),
+              ),
+
+              const SizedBox(height: 24),
 
               // Footer
               const Text('© 2026 TARUMT · CIMS v1.0',
@@ -310,71 +392,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoleTile extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _RoleTile({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  IconData get _icon {
-    switch (label) {
-      case 'HR Personnel': return Icons.badge_outlined;
-      case 'Company Supervisor': return Icons.supervisor_account_outlined;
-      default: return Icons.family_restroom_outlined;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.infoBg : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(_icon,
-                size: 18,
-                color: selected ? AppColors.primary : AppColors.textMuted),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(label,
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      fontWeight:
-                          selected ? FontWeight.w600 : FontWeight.w400,
-                      color: selected
-                          ? AppColors.primary
-                          : AppColors.textPrimary)),
-            ),
-            Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_off,
-              size: 18,
-              color: selected ? AppColors.primary : AppColors.textMuted,
-            ),
-          ],
         ),
       ),
     );
