@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import 'student_shell.dart';
@@ -36,6 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -43,11 +45,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     bool hasError = false;
     if (email.isEmpty) {
-      setState(() => _emailError = 'Please enter your email.');
+      setState(() => _emailError = l10n.errorEnterEmail);
       hasError = true;
     }
     if (password.isEmpty) {
-      setState(() => _passwordError = 'Please enter your password.');
+      setState(() => _passwordError = l10n.errorEnterPassword);
       hasError = true;
     }
     if (hasError) return;
@@ -56,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Admin is a hardcoded demo account — never touches Supabase.
     if (AuthService.instance.isAdminLogin(email, password)) {
+      await AuthService.instance.setAdminRemembered(true);
       await Future.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -89,12 +92,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _generalError = 'Something went wrong. Please try again.';
+        _generalError = AppLocalizations.of(context)!.errorSomethingWrong;
       });
     }
   }
 
   Future<void> _handleForgotPassword() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: _emailController.text.trim());
     bool isSending = false;
 
@@ -104,23 +108,23 @@ class _LoginScreenState extends State<LoginScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Reset your password',
-                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+              title: Text(l10n.resetYourPassword,
+                  style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Enter your account email and we\'ll send you a link to reset your password.',
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
+                  Text(
+                    l10n.resetPasswordInstructions,
+                    style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: controller,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
+                    decoration: InputDecoration(
+                      hintText: l10n.enterYourEmail,
+                      prefixIcon: const Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
                     ),
                   ),
                 ],
@@ -128,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
               actions: [
                 TextButton(
                   onPressed: isSending ? null : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
                 ElevatedButton(
                   onPressed: isSending
@@ -143,9 +147,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     Navigator.of(dialogContext).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'If an account exists for this email, a reset link has been sent.'),
+                      SnackBar(
+                        content: Text(l10n.resetLinkSentMessage),
                         backgroundColor: AppColors.primary,
                       ),
                     );
@@ -156,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                      : const Text('Send reset link'),
+                      : Text(l10n.sendResetLink),
                 ),
               ],
             );
@@ -199,6 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -231,18 +235,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Welcome to CIMS',
-                style: TextStyle(
+              Text(
+                l10n.welcomeToCims,
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const Text(
-                'Centralised Internship Management System',
-                style: TextStyle(
+              Text(
+                l10n.cimsFullName,
+                style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 13,
                   color: AppColors.textSecondary,
@@ -281,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // Email field
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Email address', style: AppTextStyles.label),
+                child: Text(l10n.emailAddress, style: AppTextStyles.label),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -289,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 onChanged: (_) => setState(() => _emailError = null),
                 decoration: InputDecoration(
-                  hintText: 'Enter your email',
+                  hintText: l10n.enterYourEmail,
                   prefixIcon: const Icon(Icons.email_outlined,
                       size: 20, color: AppColors.textMuted),
                   errorText: _emailError,
@@ -300,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // Password field
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Password', style: AppTextStyles.label),
+                child: Text(l10n.password, style: AppTextStyles.label),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -308,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: _obscurePassword,
                 onChanged: (_) => setState(() => _passwordError = null),
                 decoration: InputDecoration(
-                  hintText: 'Enter your password',
+                  hintText: l10n.enterYourPassword,
                   prefixIcon: const Icon(Icons.lock_outline,
                       size: 20, color: AppColors.textMuted),
                   errorText: _passwordError,
@@ -332,8 +336,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: _isLoading ? null : _handleForgotPassword,
-                  child: const Text('Forgot password?',
-                      style: TextStyle(
+                  child: Text(l10n.forgotPassword,
+                      style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13,
                           color: AppColors.primary)),
@@ -356,8 +360,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: Colors.white),
                   )
-                      : const Text('Log in',
-                      style: TextStyle(
+                      : Text(l10n.logIn,
+                      style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
               ),
@@ -372,9 +376,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   MaterialPageRoute(
                       builder: (_) => const SignUpScreen()),
                 ),
-                child: const Text(
-                  "Don't have an account? Sign up",
-                  style: TextStyle(
+                child: Text(
+                  l10n.noAccountSignUp,
+                  style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 13,
                       color: AppColors.primary),
@@ -384,8 +388,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
 
               // Footer
-              const Text('© 2026 TARUMT · CIMS v1.0',
-                  style: TextStyle(
+              Text(l10n.footerCopyright,
+                  style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 11,
                       color: AppColors.textMuted)),

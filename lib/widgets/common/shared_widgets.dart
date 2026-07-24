@@ -90,26 +90,51 @@ class AccentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A BoxDecoration can't combine a borderRadius with a Border whose
+    // sides have different colors (the left accent stripe vs. the neutral
+    // AppColors.border on the other three) — Flutter can only paint that
+    // combination for a *uniform* border. In debug builds that mismatch
+    // throws mid-paint (aborting before the child ever paints, i.e. a
+    // blank card); in release builds the assert is stripped but the
+    // paint still doesn't reliably draw the stripe. So the left stripe is
+    // its own solid-color bar instead of a border side, and the outer
+    // decoration keeps a plain uniform border + radius.
+    //
+    // The stripe is positioned via Stack, not a Row with
+    // CrossAxisAlignment.stretch — AccentCard is used both inside
+    // ListView items (bounded height) and inside a plain Column in a
+    // scrolling page (Profile screen's resume section), and stretch
+    // needs a bounded cross-axis constraint from the parent to resolve.
+    // Inside the unbounded case it throws "BoxConstraints forces an
+    // infinite height", which — same as the border/radius bug — takes
+    // down the whole page's layout, not just this card. Stack sizes
+    // itself from the non-positioned content child first, then lays out
+    // the Positioned stripe against that resolved height, so it works
+    // in both contexts.
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border(
-            left: BorderSide(
-              color: accentColor ?? AppColors.cardAccent,
-              width: 4,
-            ),
-            top: const BorderSide(color: AppColors.border),
-            right: const BorderSide(color: AppColors.border),
-            bottom: const BorderSide(color: AppColors.border),
-          ),
+          border: Border.all(color: AppColors.border),
         ),
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(14),
-          child: child,
+        child: Stack(
+          children: [
+            Padding(
+              padding: (padding ?? const EdgeInsets.all(14)).add(const EdgeInsets.only(left: 4)),
+              child: child,
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 4,
+              child: Container(color: accentColor ?? AppColors.cardAccent),
+            ),
+          ],
         ),
       ),
     );
@@ -130,34 +155,34 @@ class StatusBadge extends StatelessWidget {
   });
 
   factory StatusBadge.pending() => const StatusBadge(
-        label: 'Pending',
-        backgroundColor: Color(0xFFFEF3C7),
-        textColor: Color(0xFFD97706),
-      );
+    label: 'Pending',
+    backgroundColor: Color(0xFFFEF3C7),
+    textColor: Color(0xFFD97706),
+  );
 
   factory StatusBadge.approved() => const StatusBadge(
-        label: 'Approved',
-        backgroundColor: Color(0xFFE2F6EF),
-        textColor: Color(0xFF1A9E6E),
-      );
+    label: 'Approved',
+    backgroundColor: Color(0xFFE2F6EF),
+    textColor: Color(0xFF1A9E6E),
+  );
 
   factory StatusBadge.rejected() => const StatusBadge(
-        label: 'Rejected',
-        backgroundColor: Color(0xFFFDEEEE),
-        textColor: Color(0xFFD94F4F),
-      );
+    label: 'Rejected',
+    backgroundColor: Color(0xFFFDEEEE),
+    textColor: Color(0xFFD94F4F),
+  );
 
   factory StatusBadge.submitted() => const StatusBadge(
-        label: 'Submitted',
-        backgroundColor: Color(0xFFE0F4F5),
-        textColor: Color(0xFF0F7E8A),
-      );
+    label: 'Submitted',
+    backgroundColor: Color(0xFFE0F4F5),
+    textColor: Color(0xFF0F7E8A),
+  );
 
   factory StatusBadge.active() => const StatusBadge(
-        label: 'Active',
-        backgroundColor: Color(0xFFE2F6EF),
-        textColor: Color(0xFF1A9E6E),
-      );
+    label: 'Active',
+    backgroundColor: Color(0xFFE2F6EF),
+    textColor: Color(0xFF1A9E6E),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -184,12 +209,14 @@ class StatusBadge extends StatelessWidget {
 class SectionHeader extends StatelessWidget {
   final String title;
   final String? actionLabel;
+  final IconData? actionIcon;
   final VoidCallback? onAction;
 
   const SectionHeader({
     super.key,
     required this.title,
     this.actionLabel,
+    this.actionIcon,
     this.onAction,
   });
 
@@ -201,7 +228,12 @@ class SectionHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title, style: AppTextStyles.h3),
-          if (actionLabel != null)
+          if (actionIcon != null)
+            GestureDetector(
+              onTap: onAction,
+              child: Icon(actionIcon, size: 20, color: AppColors.primary),
+            )
+          else if (actionLabel != null)
             GestureDetector(
               onTap: onAction,
               child: Text(
@@ -399,21 +431,21 @@ class ProgressStepper extends StatelessWidget {
                         color: isCompleted
                             ? AppColors.primary
                             : isActive
-                                ? AppColors.primaryLight
-                                : AppColors.border,
+                            ? AppColors.primaryLight
+                            : AppColors.border,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: isCompleted
                             ? const Icon(Icons.check, size: 14, color: Colors.white)
                             : Text(
-                                '${i + 1}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: isActive ? Colors.white : AppColors.textMuted,
-                                ),
-                              ),
+                          '${i + 1}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isActive ? Colors.white : AppColors.textMuted,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),

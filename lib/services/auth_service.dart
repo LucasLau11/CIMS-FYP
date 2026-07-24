@@ -1,4 +1,8 @@
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'locale_controller.dart';
 
 /// All the possible roles a signed-up user can end up with.
 /// 'admin' is intentionally excluded — the admin account is a hardcoded
@@ -65,6 +69,58 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------
+  // Persistent login (problem 9). Supabase already persists real user
+  // sessions across app restarts automatically. The hardcoded admin
+  // account never creates a Supabase session though, so it needs its own
+  // locally-stored "remembered" flag to get the same stay-logged-in
+  // behaviour.
+  // ---------------------------------------------------------------------
+  static const String _adminRememberedKey = 'cims_admin_remembered';
+
+  Future<void> setAdminRemembered(bool remembered) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (remembered) {
+      await prefs.setBool(_adminRememberedKey, true);
+    } else {
+      await prefs.remove(_adminRememberedKey);
+    }
+  }
+
+  Future<bool> isAdminRemembered() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_adminRememberedKey) ?? false;
+  }
+
+  /// Checks for either a real Supabase session or a remembered admin login.
+  /// Returns null if there's nothing to restore (show the login screen).
+  /// Returns UserRole for a normal restored session, or throws
+  /// [AdminSessionRestored] as a signal value for the admin case.
+  Future<RestoredSession?> checkForRestoredSession() async {
+    if (await isAdminRemembered()) {
+      return RestoredSession.admin();
+    }
+
+    final session = _client.auth.currentSession;
+    if (session == null) return null;
+
+    try {
+      final profile = await getCurrentProfile();
+      if (profile == null) return null;
+
+      final savedLanguage = profile['language'] as String?;
+      if (savedLanguage != null) {
+        await LocaleController.instance.setLanguageByDisplayName(savedLanguage);
+      }
+
+      return RestoredSession.role(UserRoleX.fromDbValue(profile['role'] as String));
+    } catch (_) {
+      // Session token present but invalid/expired/profile missing —
+      // treat as no session, fall back to login screen.
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Allowed email domains for sign-up. Anything outside this list is
   // rejected — keeps accounts limited to institutional emails plus the
   // common personal providers used by parents/company staff.
@@ -128,6 +184,282 @@ class AuthService {
       return 'Password must include at least one symbol (e.g. ! @ # \$ %).';
     }
     return null;
+  }
+
+  // ---------------------------------------------------------------------
+  // Current user / profile helpers
+  // ---------------------------------------------------------------------
+  String? get currentUserId => _client.auth.currentUser?.id;
+
+  /// Fetches the current user's full profile row (id, email, role, avatar_url).
+  Future<Map<String, dynamic>?> getCurrentProfile() async {
+    final userId = currentUserId;
+    if (userId == null) return null;
+
+    final row = await _client
+        .from('profiles')
+        .select('id, email, role, avatar_url, full_name, phone, date_of_birth, '
+        'address_text, address_lat, address_lng, language, notification_prefs, '
+        'resume_path, resume_filename, resume_size_bytes, resume_uploaded_at, '
+        'programme, semester, faculty, cgpa, academic_supervisor_name')
+        .eq('id', userId)
+        .single();
+
+    return row;
+  }
+
+  // ---------------------------------------------------------------------
+  // Avatar — stored LOCALLY on-device (not Supabase Storage).
+  //
+  // Why: Supabase Storage uploads kept failing with a row-level-security
+  // error even after confirming the policies were correct and even after
+  // testing with a maximally permissive "is authenticated" check — meaning
+  // auth.uid() wasn't reaching Postgres for storage calls specifically.
+  // Rather than fight that further, the photo is saved to the app's local
+  // documents folder, and the *local file path* is saved in the profiles
+  // table's avatar_url column (same column, different meaning now).
+  //
+  // Tradeoff to be aware of: this means the photo only exists on the
+  // device it was set on — it won't appear if the student logs in on a
+  // different device, and it's lost if the app is uninstalled/data is
+  // cleared. The `profiles.avatar_url` value still travels with the
+  // account, but there's no file behind it on another device.
+  // ---------------------------------------------------------------------
+  /// Verifies the locally-stored avatar file still exists on this install.
+  /// It won't after a fresh install/reinstall — the app's documents folder
+  /// (and the file in it) is wiped, but `profiles.avatar_url` is remote and
+  /// survives. Self-heals by clearing the stale DB reference so the UI
+  /// doesn't keep failing to load a dead path or offer to remove/replace a
+  /// photo that's already gone.
+  Future<String?> resolveAvatarPath(String? storedPath) async {
+    if (storedPath == null) return null;
+    if (await File(storedPath).exists()) return storedPath;
+
+    final userId = currentUserId;
+    if (userId != null) {
+      try {
+        await _client.from('profiles').update({'avatar_url': null}).eq('id', userId);
+      } catch (_) {
+        // Non-fatal — worst case it re-checks and retries next load.
+      }
+    }
+    return null;
+  }
+
+  Future<String> uploadAvatar(File file) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw Exception('You must be logged in to upload a profile photo.');
+    }
+
+    final ext = file.path.split('.').last.toLowerCase();
+    final docsDir = await getApplicationDocumentsDirectory();
+    final avatarsDir = Directory('${docsDir.path}/avatars');
+    if (!await avatarsDir.exists()) {
+      await avatarsDir.create(recursive: true);
+    }
+
+    final localPath = '${avatarsDir.path}/$userId.$ext';
+    await file.copy(localPath);
+
+    await _client.from('profiles').update({'avatar_url': localPath}).eq('id', userId);
+
+    return localPath;
+  }
+
+  /// Removes the current user's locally-stored avatar and clears the DB column.
+  Future<void> removeAvatar() async {
+    final userId = currentUserId;
+    if (userId == null) return;
+
+    try {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final avatarsDir = Directory('${docsDir.path}/avatars');
+      if (await avatarsDir.exists()) {
+        final files = avatarsDir.listSync().where((f) => f.path.contains('/$userId.'));
+        for (final f in files) {
+          await f.delete();
+        }
+      }
+    } catch (_) {
+      // Non-fatal — proceed to clear the DB reference regardless.
+    }
+
+    await _client.from('profiles').update({'avatar_url': null}).eq('id', userId);
+  }
+
+  // ---------------------------------------------------------------------
+  // Resume upload — stored in a PRIVATE bucket (unlike avatars) since
+  // resumes contain personal info. Access is via short-lived signed URLs
+  // only, never a public link.
+  // ---------------------------------------------------------------------
+  static const int maxResumeSizeBytes = 5 * 1024 * 1024; // 5MB
+  static const List<String> allowedResumeExtensions = ['pdf', 'docx'];
+
+  Future<void> uploadResume({
+    required File file,
+    required String originalFilename,
+    required int sizeBytes,
+  }) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw Exception('You must be logged in to upload a resume.');
+    }
+
+    final ext = originalFilename.split('.').last.toLowerCase();
+    if (!allowedResumeExtensions.contains(ext)) {
+      throw Exception('Only PDF or DOCX files are accepted.');
+    }
+    if (sizeBytes > maxResumeSizeBytes) {
+      throw Exception('File is too large — max size is 5MB.');
+    }
+    if (sizeBytes == 0) {
+      throw Exception('The selected file is empty.');
+    }
+
+    final storagePath = '$userId/resume.$ext';
+
+    await _client.storage.from('resumes').upload(
+      storagePath,
+      file,
+      fileOptions: const FileOptions(upsert: true),
+    );
+
+    await _client.from('profiles').update({
+      'resume_path': storagePath,
+      'resume_filename': originalFilename,
+      'resume_size_bytes': sizeBytes,
+      'resume_uploaded_at': DateTime.now().toIso8601String(),
+    }).eq('id', userId);
+  }
+
+  Future<void> removeResume() async {
+    final userId = currentUserId;
+    if (userId == null) return;
+
+    try {
+      final files = await _client.storage.from('resumes').list(path: userId);
+      if (files.isNotEmpty) {
+        await _client.storage
+            .from('resumes')
+            .remove(files.map((f) => '$userId/${f.name}').toList());
+      }
+    } catch (_) {
+      // Non-fatal — proceed to clear the DB reference regardless.
+    }
+
+    await _client.from('profiles').update({
+      'resume_path': null,
+      'resume_filename': null,
+      'resume_size_bytes': null,
+      'resume_uploaded_at': null,
+    }).eq('id', userId);
+  }
+
+  /// Generates a short-lived signed URL to view/download the resume,
+  /// since the bucket is private.
+  Future<String> getResumeSignedUrl(String storagePath) async {
+    return await _client.storage.from('resumes').createSignedUrl(storagePath, 300);
+  }
+
+  // ---------------------------------------------------------------------
+  // Personal information (problem 3) — full name, phone, date of birth,
+  // and address (chosen via map, stored as text + lat/lng).
+  // ---------------------------------------------------------------------
+  Future<void> updatePersonalInfo({
+    required String fullName,
+    required String phone,
+    required DateTime dateOfBirth,
+    required String addressText,
+    required double addressLat,
+    required double addressLng,
+  }) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw Exception('You must be logged in to update your profile.');
+    }
+
+    final dobString =
+        '${dateOfBirth.year.toString().padLeft(4, '0')}-${dateOfBirth.month.toString().padLeft(2, '0')}-${dateOfBirth.day.toString().padLeft(2, '0')}';
+
+    await _client.from('profiles').update({
+      'full_name': fullName.trim(),
+      'phone': phone.trim(),
+      'date_of_birth': dobString,
+      'address_text': addressText.trim(),
+      'address_lat': addressLat,
+      'address_lng': addressLng,
+    }).eq('id', userId);
+  }
+
+  // ---------------------------------------------------------------------
+  // Notification preferences + language (problem 8) — persisted to the
+  // profile row so they survive navigating away or closing the app,
+  // instead of living only in local widget state.
+  // ---------------------------------------------------------------------
+  Future<void> updateNotificationPrefs(Map<String, bool> prefs) async {
+    final userId = currentUserId;
+    if (userId == null) return;
+    await _client.from('profiles').update({'notification_prefs': prefs}).eq('id', userId);
+  }
+
+  Future<void> updateLanguage(String language) async {
+    await LocaleController.instance.setLanguageByDisplayName(language);
+    final userId = currentUserId;
+    if (userId == null) return;
+    await _client.from('profiles').update({'language': language}).eq('id', userId);
+  }
+
+  // ---------------------------------------------------------------------
+  // Academic information (problem 4).
+  // ---------------------------------------------------------------------
+  Future<void> updateAcademicInfo({
+    required String programme,
+    required int semester,
+    required String faculty,
+    required double cgpa,
+  }) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw Exception('You must be logged in to update your profile.');
+    }
+
+    await _client.from('profiles').update({
+      'programme': programme,
+      'semester': semester,
+      'faculty': faculty,
+      'cgpa': cgpa,
+    }).eq('id', userId);
+  }
+
+  // ---------------------------------------------------------------------
+  // Change password (problem 7). Re-verifies the current password via a
+  // sign-in attempt before applying the change — Supabase's updateUser()
+  // doesn't require this on its own since the session is already
+  // authenticated, but requiring it here stops someone from changing the
+  // password if they got hold of an active session without knowing the
+  // actual password (e.g. an unlocked, unattended phone).
+  // ---------------------------------------------------------------------
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final email = _client.auth.currentUser?.email;
+    if (email == null) {
+      throw Exception('You must be logged in to change your password.');
+    }
+
+    try {
+      await _client.auth.signInWithPassword(email: email, password: currentPassword);
+    } on AuthException {
+      throw Exception('Current password is incorrect.');
+    }
+
+    try {
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
+    } on AuthException catch (e) {
+      throw Exception('Could not update password: ${e.message}');
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -275,10 +607,12 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------
-  // Log out — clears the current Supabase session.
+  // Log out — clears the current Supabase session AND the admin
+  // remembered flag, so logout works no matter which login path was used.
   // ---------------------------------------------------------------------
   Future<void> signOut() async {
     await _client.auth.signOut();
+    await setAdminRemembered(false);
   }
 }
 
@@ -297,3 +631,19 @@ class AuthFieldException implements Exception {
 }
 
 enum AuthFieldTarget { credentials, account }
+
+/// Result of checking for a restored session on app start — either the
+/// hardcoded admin was remembered, or a real Supabase session restored to
+/// a specific role.
+class RestoredSession {
+  final bool isAdmin;
+  final UserRole? role;
+
+  RestoredSession.admin()
+      : isAdmin = true,
+        role = null;
+
+  RestoredSession.role(UserRole role)
+      : isAdmin = false,
+        role = role;
+}

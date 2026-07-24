@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'admin_shell.dart';
+import 'student_shell.dart';
+import 'supervisor_shell.dart';
+import 'hr_shell.dart';
+import 'company_supervisor_shell.dart';
+import 'parent_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -34,18 +42,62 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Auto-navigate to login after 2.5 seconds
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const LoginScreen(),
-            transitionsBuilder: (_, animation, __, child) =>
-                FadeTransition(opacity: animation, child: child),
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
+    // Check for a restored session (real Supabase session, or remembered
+    // admin login) after the splash animation, then route accordingly —
+    // this is what makes login persist across app restarts (problem 9).
+    Future.delayed(const Duration(milliseconds: 2500), () async {
+      if (!mounted) return;
+      debugPrint('🔵 Splash: checking for restored session...');
+
+      Widget destination;
+      try {
+        final restored = await AuthService.instance
+            .checkForRestoredSession()
+            .timeout(const Duration(seconds: 8));
+        debugPrint('🔵 Splash: session check returned: '
+            '${restored == null ? 'null (go to Login)' : restored.isAdmin ? 'admin' : restored.role}');
+
+        if (restored == null) {
+          destination = const LoginScreen();
+        } else if (restored.isAdmin) {
+          destination = const AdminShell();
+        } else {
+          switch (restored.role!) {
+            case UserRole.student:
+              destination = const StudentShell();
+              break;
+            case UserRole.academicSupervisor:
+              destination = const SupervisorShell();
+              break;
+            case UserRole.companyHr:
+              destination = const HrShell();
+              break;
+            case UserRole.companySupervisor:
+              destination = const CompanySupervisorShell();
+              break;
+            case UserRole.parent:
+              destination = const ParentShell();
+              break;
+          }
+        }
+      } catch (e) {
+        // Any unexpected error (including a timeout) checking the session —
+        // fail safe to Login rather than getting stuck on the splash screen.
+        debugPrint('🔴 Splash: session check failed or timed out: $e');
+        destination = const LoginScreen();
       }
+
+      debugPrint('🔵 Splash: navigating to $destination');
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => destination,
+          transitionsBuilder: (_, animation, __, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
     });
   }
 
@@ -102,9 +154,9 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       const SizedBox(height: 28),
-                      const Text(
-                        'TARUMT',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)!.tarumt,
+                        style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -113,10 +165,10 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'Centralised Internship\nManagement System',
+                      Text(
+                        AppLocalizations.of(context)!.splashTagline,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -140,13 +192,13 @@ class _SplashScreenState extends State<SplashScreen>
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
                         valueColor:
-                            AlwaysStoppedAnimation(Colors.white.withOpacity(0.7)),
+                        AlwaysStoppedAnimation(Colors.white.withOpacity(0.7)),
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      'Loading...',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.loading,
+                      style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13,
                           color: Colors.white70),

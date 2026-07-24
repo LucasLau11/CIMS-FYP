@@ -1,18 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
+import 'services/locale_controller.dart';
+import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load the last-used language immediately (from local storage) so the
+  // correct locale shows on the very first frame, before any network call.
+  await LocaleController.instance.loadSavedLocale();
+
   // Initialize Supabase — anon/publishable key is safe to embed client-side,
   // access is restricted by Row Level Security policies on the database.
-  await Supabase.initialize(
-    url: 'https://aoyumcvaxrhkicapsxdi.supabase.co',
-    anonKey: 'sb_publishable_mCsTo_Ja_zzlX6Z5WsQbZg_EjJLMYfQ',
-  );
+  //
+  // Wrapped with a timeout: without this, a silent network issue (e.g. a
+  // firewall dropping packets instead of refusing the connection) leaves
+  // the app hanging forever on the splash screen with zero error output —
+  // this makes that failure visible instead.
+  try {
+    await Supabase.initialize(
+      url: 'https://aoyumcvaxrhkicapsxdi.supabase.co',
+      anonKey: 'sb_publishable_mCsTo_Ja_zzlX6Z5WsQbZg_EjJLMYfQ',
+    ).timeout(const Duration(seconds: 10));
+  } catch (e) {
+    // Log clearly to the console so this shows up in Logcat/Run output
+    // instead of the app just silently sitting on the splash screen.
+    debugPrint('❌ Supabase.initialize() failed or timed out: $e');
+  }
 
   // Lock to portrait orientation
   SystemChrome.setPreferredOrientations([
@@ -34,27 +52,46 @@ class CimsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CIMS',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+    // Rebuilds the whole app instantly whenever the language is changed
+    // (see LocaleController + AuthService.updateLanguage) — no restart needed.
+    return ValueListenableBuilder<Locale>(
+      valueListenable: LocaleController.instance.currentLocale,
+      builder: (context, locale, _) {
+        return MaterialApp(
+          title: 'CIMS',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: const SplashScreen(),
+          locale: locale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('ms'),
+            Locale('zh'),
+          ],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
 
-      // Named routes for potential deep-linking later
-      // Currently all navigation is handled imperatively via Navigator.push
-      //
-      // Role assignment now happens ONCE at sign-up (see SignUpScreen +
-      // AuthService), not at login. Login just authenticates via Supabase
-      // and looks up the stored role from the `profiles` table.
-      //
-      // Sign-up role assignment summary:
-      // @student.tarc.edu.my → Student        (automatic, by domain)
-      // @tarc.edu.my         → AcademicSupervisor (automatic, by domain)
-      // Any other email      → user manually picks: Parent/Guardian,
-      //                         HR Personnel, or Company Supervisor
-      //
-      // Admin is a hardcoded demo account (see AuthService.isAdminLogin) —
-      // it never goes through sign-up or Supabase at all.
+          // Named routes for potential deep-linking later
+          // Currently all navigation is handled imperatively via Navigator.push
+          //
+          // Role assignment now happens ONCE at sign-up (see SignUpScreen +
+          // AuthService), not at login. Login just authenticates via Supabase
+          // and looks up the stored role from the `profiles` table.
+          //
+          // Sign-up role assignment summary:
+          // @student.tarc.edu.my → Student        (automatic, by domain)
+          // @tarc.edu.my         → AcademicSupervisor (automatic, by domain)
+          // Any other email      → user manually picks: Parent/Guardian,
+          //                         HR Personnel, or Company Supervisor
+          //
+          // Admin is a hardcoded demo account (see AuthService.isAdminLogin) —
+          // it never goes through sign-up or Supabase at all.
+        );
+      },
     );
   }
 }

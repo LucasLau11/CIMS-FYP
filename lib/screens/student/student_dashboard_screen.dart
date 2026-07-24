@@ -1,458 +1,308 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
+import '../../services/auth_service.dart';
+import '../../services/student_data_service.dart';
+import '../../utils/format_utils.dart';
 import 'student_notifications_screen.dart';
 import 'student_profile_screen.dart';
 
-class StudentDashboardScreen extends StatelessWidget {
+class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
 
   @override
+  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
+}
+
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  String? _name;
+  String? _avatarUrl;
+  String? _programme;
+  int? _semester;
+
+  bool _isLoading = true;
+  Map<String, int> _counts = const {
+    'applications': 0,
+    'interviews': 0,
+    'reports': 0,
+    'unreadNotifications': 0,
+    'unreadMessages': 0,
+  };
+  List<Map<String, dynamic>> _recentNotifications = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAll();
+  }
+
+  Future<void> _loadAll() async {
+    await Future.wait([_loadProfile(), _loadDashboardData()]);
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await AuthService.instance.getCurrentProfile();
+      if (!mounted) return;
+      final resolvedAvatarUrl =
+          await AuthService.instance.resolveAvatarPath(profile?['avatar_url'] as String?);
+      if (!mounted) return;
+      setState(() {
+        _name = profile?['full_name'] as String?;
+        _avatarUrl = resolvedAvatarUrl;
+        _programme = profile?['programme'] as String?;
+        _semester = (profile?['semester'] as num?)?.toInt();
+      });
+    } catch (_) {
+      // Non-fatal — dashboard still works with placeholder text.
+    }
+  }
+
+  Future<void> _loadDashboardData() async {
+    try {
+      final counts = await StudentDataService.instance.getDashboardCounts();
+      final notifications = await StudentDataService.instance.getNotifications();
+      if (!mounted) return;
+      setState(() {
+        _counts = counts;
+        _recentNotifications = notifications.take(4).toList();
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  String get _programmeSemesterLine {
+    final programme = _programme ?? 'Programme not set';
+    final semesterPart = _semester != null ? ' · Sem $_semester' : '';
+    return '$programme$semesterPart';
+  }
+
+  String get _initials {
+    if (_name == null || _name!.trim().isEmpty) return '👤';
+    final parts = _name!.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // Gradient header with wave
-          SliverAppBar(
-            expandedHeight: 190,
-            pinned: true,
-            backgroundColor: AppColors.primary,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 16, bottom: 14),
-              title: const Text('Dashboard',
-                  style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [AppColors.primary, AppColors.primaryLight],
+      body: RefreshIndicator(
+        onRefresh: _loadAll,
+        child: CustomScrollView(
+          slivers: [
+            // Gradient header with wave
+            SliverAppBar(
+              expandedHeight: 180,
+              pinned: true,
+              backgroundColor: AppColors.primary,
+              flexibleSpace: FlexibleSpaceBar(
+                // No animated `title` here — it collapses to overlap the
+                // custom header content below instead of fading in behind
+                // it, which read as "Dashboard" and "Programme · Sem"
+                // being jammed together with no gap.
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [AppColors.primary, AppColors.primaryLight],
+                    ),
                   ),
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.push(context,
-                                  MaterialPageRoute(builder: (_) => const StudentProfileScreen())),
-                              child: const CircleAvatar(
-                                radius: 20,
-                                backgroundColor: Colors.white24,
-                                child: Text('TK',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14)),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              GestureDetector(
+                                onTap: () async {
+                                  await Navigator.push(context,
+                                      MaterialPageRoute(builder: (_) => const StudentProfileScreen()));
+                                  _loadAll();
+                                },
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: Colors.white24,
+                                  backgroundImage: _avatarUrl != null ? FileImage(File(_avatarUrl!)) : null,
+                                  onBackgroundImageError: _avatarUrl != null ? (_, __) {} : null,
+                                  child: _avatarUrl == null
+                                      ? Text(_initials,
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 14))
+                                      : null,
+                                ),
                               ),
-                            ),
-                            NotificationBell(
-                              count: 3,
-                              onTap: () => Navigator.push(context,
-                                  MaterialPageRoute(builder: (_) => const StudentNotificationsScreen())),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Good morning, Tan Kai!',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                              NotificationBell(
+                                count: _counts['unreadNotifications'] ?? 0,
+                                onTap: () async {
+                                  await Navigator.push(context,
+                                      MaterialPageRoute(builder: (_) => const StudentNotificationsScreen()));
+                                  _loadDashboardData();
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                        const Text(
-                          'Bachelor of Computer Science · Sem 6',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 13,
-                            color: Colors.white70,
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.goodMorning(_name?.isNotEmpty == true ? _name! : ''),
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            _programmeSemesterLine,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 13,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
+              actions: const [],
             ),
-            actions: const [],
-          ),
 
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Active internship status banner
-                _ActiveInternshipBanner(),
-
-                // Metric grid
-                const SectionHeader(title: 'Overview'),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.5,
-                    children: const [
-                      MetricCard(
-                        label: 'Applications sent',
-                        value: '5',
-                        icon: Icons.send_outlined,
-                        color: AppColors.primary,
-                      ),
-                      MetricCard(
-                        label: 'Interviews scheduled',
-                        value: '2',
-                        icon: Icons.calendar_today_outlined,
-                        color: AppColors.warning,
-                      ),
-                      MetricCard(
-                        label: 'Reports submitted',
-                        value: '3',
-                        icon: Icons.assignment_turned_in_outlined,
-                        color: AppColors.success,
-                      ),
-                      MetricCard(
-                        label: 'Days remaining',
-                        value: '42',
-                        icon: Icons.timer_outlined,
-                        color: AppColors.primaryLight,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Internship progress
-                const SectionHeader(title: 'Internship progress'),
-                _InternshipProgressCard(),
-
-                // Upcoming deadlines
-                const SectionHeader(
-                  title: 'Upcoming deadlines',
-                  actionLabel: 'View all',
-                ),
-                _DeadlineItem(
-                  title: 'Monthly Report — June',
-                  dueDate: 'Due 30 Jun 2026',
-                  icon: Icons.assignment_outlined,
-                  isUrgent: true,
-                ),
-                _DeadlineItem(
-                  title: 'Supervisor Evaluation Form',
-                  dueDate: 'Due 5 Jul 2026',
-                  icon: Icons.rate_review_outlined,
-                  isUrgent: false,
-                ),
-                _DeadlineItem(
-                  title: 'Final Report',
-                  dueDate: 'Due 31 Jul 2026',
-                  icon: Icons.library_books_outlined,
-                  isUrgent: false,
-                ),
-
-                // Recent feedback
-                const SectionHeader(
-                  title: 'Recent feedback',
-                  actionLabel: 'View all',
-                ),
-                AccentCard(
-                  accentColor: AppColors.success,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+            if (_isLoading)
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              )
+            else
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Metric grid
+                    SectionHeader(title: l10n.overview),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 1.1,
                         children: [
-                          const CircleAvatar(
-                            radius: 16,
-                            backgroundColor: AppColors.surfaceVariant,
-                            child: Icon(Icons.person, size: 18, color: AppColors.textSecondary),
+                          MetricCard(
+                            label: 'Applications sent',
+                            value: '${_counts['applications'] ?? 0}',
+                            icon: Icons.send_outlined,
+                            color: AppColors.primary,
                           ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text('Dr. Lim Wei Shan',
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary)),
-                              Text('Academic Supervisor',
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11,
-                                      color: AppColors.textSecondary)),
-                            ],
+                          MetricCard(
+                            label: 'Interviews scheduled',
+                            value: '${_counts['interviews'] ?? 0}',
+                            icon: Icons.calendar_today_outlined,
+                            color: AppColors.warning,
                           ),
-                          const Spacer(),
-                          StatusBadge.approved(),
+                          MetricCard(
+                            label: 'Reports submitted',
+                            value: '${_counts['reports'] ?? 0}',
+                            icon: Icons.assignment_turned_in_outlined,
+                            color: AppColors.success,
+                          ),
+                          MetricCard(
+                            label: 'Unread messages',
+                            value: '${_counts['unreadMessages'] ?? 0}',
+                            icon: Icons.chat_bubble_outline,
+                            color: AppColors.primaryLight,
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        '"Good progress on your May report. Please elaborate more on technical challenges in the next submission."',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                // Company review prompt
-                const SectionHeader(title: 'Quick actions'),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _QuickActionTile(
-                          icon: Icons.rate_review_outlined,
-                          label: 'Submit company review',
-                          onTap: () {},
+                    // Recent activity
+                    SectionHeader(
+                      title: 'Recent activity',
+                      actionLabel: l10n.viewAll,
+                      onAction: () async {
+                        await Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const StudentNotificationsScreen()));
+                        _loadDashboardData();
+                      },
+                    ),
+                    if (_recentNotifications.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Text(
+                          'Nothing here yet — apply to an internship or submit a report to get started.',
+                          style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _QuickActionTile(
-                          icon: Icons.trending_up,
-                          label: 'View my progress',
-                          onTap: () {},
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+                      )
+                    else
+                      ..._recentNotifications.map((n) => _RecentActivityTile(data: n)),
 
-class _ActiveInternshipBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0D6E78), Color(0xFF14B8C8)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.work, color: Colors.white, size: 28),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Internship active',
-                    style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white)),
-                Text('Tencent Malaysia Sdn. Bhd.',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        color: Colors.white70)),
-                Text('1 Jun — 31 Aug 2026',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11,
-                        color: Colors.white60)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text('Week 4',
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
 }
 
-class _InternshipProgressCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          ProgressStepper(
-            steps: const ['Applied', 'Accepted', 'Ongoing', 'Completed'],
-            currentStep: 2,
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Text('Overall progress',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      color: AppColors.textSecondary)),
-              const Spacer(),
-              const Text('42%',
-                  style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: 0.42,
-              backgroundColor: AppColors.surfaceVariant,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryLight),
-              minHeight: 8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+class _RecentActivityTile extends StatelessWidget {
+  final Map<String, dynamic> data;
 
-class _DeadlineItem extends StatelessWidget {
-  final String title;
-  final String dueDate;
-  final IconData icon;
-  final bool isUrgent;
-
-  const _DeadlineItem({
-    required this.title,
-    required this.dueDate,
-    required this.icon,
-    required this.isUrgent,
-  });
+  const _RecentActivityTile({required this.data});
 
   @override
   Widget build(BuildContext context) {
+    final type = data['type'] as String;
+    final createdAt = DateTime.parse(data['created_at'] as String);
+
     return AccentCard(
-      accentColor: isUrgent ? AppColors.error : AppColors.cardAccent,
+      accentColor: notificationColor(type),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isUrgent ? AppColors.errorBg : AppColors.infoBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon,
-                size: 20,
-                color: isUrgent ? AppColors.error : AppColors.primary),
-          ),
-          const SizedBox(width: 12),
+          Icon(notificationIcon(type), size: 18, color: notificationColor(type)),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
+                Text(data['title'] as String,
                     style: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary)),
-                const SizedBox(height: 2),
-                Text(dueDate, style: AppTextStyles.caption),
+                if ((data['body'] as String?)?.isNotEmpty == true) ...[
+                  const SizedBox(height: 2),
+                  Text(data['body'] as String,
+                      style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
               ],
             ),
           ),
-          if (isUrgent)
-            const StatusBadge(
-              label: 'Urgent',
-              backgroundColor: AppColors.errorBg,
-              textColor: AppColors.error,
-            ),
+          const SizedBox(width: 8),
+          Text(timeAgo(createdAt), style: AppTextStyles.caption),
         ],
-      ),
-    );
-  }
-}
-
-class _QuickActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 24),
-            const SizedBox(height: 8),
-            Text(label,
-                style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary),
-                textAlign: TextAlign.center),
-          ],
-        ),
       ),
     );
   }

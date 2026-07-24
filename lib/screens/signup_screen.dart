@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import 'student_shell.dart';
@@ -32,12 +33,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           AuthService.instance.needsManualRoleSelection(_emailController.text);
 
   Future<void> _handleSignUp() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      setState(() => _errorText = 'Please fill in all fields.');
+      setState(() => _errorText = l10n.errorFillAllFields);
       return;
     }
 
@@ -54,12 +56,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     if (password != confirmPassword) {
-      setState(() => _errorText = 'Passwords do not match.');
+      setState(() => _errorText = l10n.errorPasswordsDoNotMatch);
       return;
     }
 
     if (_needsManualRole && _selectedManualRole == null) {
-      setState(() => _errorText = 'Please select your role to continue.');
+      setState(() => _errorText = l10n.errorSelectRole);
       return;
     }
 
@@ -118,6 +120,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -148,9 +151,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
-                'Create your CIMS account',
-                style: TextStyle(
+              Text(
+                l10n.createYourAccount,
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -159,10 +162,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Student/staff emails are assigned a role automatically.\n'
-                    'Gmail, Outlook, or Hotmail addresses will be asked to pick a role below.',
-                style: TextStyle(
+              Text(
+                l10n.signupRoleNote,
+                style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -174,7 +176,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               // Email
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Email address', style: AppTextStyles.label),
+                child: Text(l10n.emailAddress, style: AppTextStyles.label),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -185,7 +187,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   _selectedManualRole = null;
                 }),
                 decoration: InputDecoration(
-                  hintText: 'Enter your email',
+                  hintText: l10n.enterYourEmail,
                   prefixIcon: const Icon(Icons.email_outlined,
                       size: 20, color: AppColors.textMuted),
                 ),
@@ -195,14 +197,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
               // Password
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Password', style: AppTextStyles.label),
+                child: Text(l10n.password, style: AppTextStyles.label),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  hintText: 'Create a password',
+                  hintText: l10n.createAPassword,
                   prefixIcon: const Icon(Icons.lock_outline,
                       size: 20, color: AppColors.textMuted),
                   suffixIcon: IconButton(
@@ -223,14 +225,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
               // Confirm password
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Confirm password', style: AppTextStyles.label),
+                child: Text(l10n.confirmPassword, style: AppTextStyles.label),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirm,
                 decoration: InputDecoration(
-                  hintText: 'Re-enter your password',
+                  hintText: l10n.reEnterYourPassword,
                   prefixIcon: const Icon(Icons.lock_outline,
                       size: 20, color: AppColors.textMuted),
                   suffixIcon: IconButton(
@@ -261,13 +263,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.info_outline,
+                          const Icon(Icons.info_outline,
                               size: 15, color: AppColors.warning),
-                          SizedBox(width: 6),
-                          Text('Select your role',
-                              style: TextStyle(
+                          const SizedBox(width: 6),
+                          Text(l10n.selectYourRole,
+                              style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -275,30 +277,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Your email is not a TARC institutional address. Please select the role that applies to you.',
-                        style: TextStyle(
+                      Text(
+                        l10n.notInstitutionalEmailNote,
+                        style: const TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 12,
                             color: AppColors.warning),
                       ),
                       const SizedBox(height: 12),
                       _RoleTile(
-                        label: 'Parent/Guardian',
+                        label: l10n.parentGuardian,
                         icon: Icons.family_restroom_outlined,
                         selected: _selectedManualRole == UserRole.parent,
                         onTap: () =>
                             setState(() => _selectedManualRole = UserRole.parent),
                       ),
                       _RoleTile(
-                        label: 'HR Personnel',
+                        label: l10n.hrPersonnel,
                         icon: Icons.badge_outlined,
                         selected: _selectedManualRole == UserRole.companyHr,
                         onTap: () => setState(
                                 () => _selectedManualRole = UserRole.companyHr),
                       ),
                       _RoleTile(
-                        label: 'Company Supervisor',
+                        label: l10n.companySupervisor,
                         icon: Icons.supervisor_account_outlined,
                         selected:
                         _selectedManualRole == UserRole.companySupervisor,
@@ -337,8 +339,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: Colors.white),
                   )
-                      : const Text('Sign up',
-                      style: TextStyle(
+                      : Text(l10n.signUp,
+                      style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
               ),
@@ -353,9 +355,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   MaterialPageRoute(
                       builder: (_) => const LoginScreen()),
                 ),
-                child: const Text(
-                  'Already have an account? Log in',
-                  style: TextStyle(
+                child: Text(
+                  l10n.alreadyHaveAccountLogIn,
+                  style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 13,
                       color: AppColors.primary),
