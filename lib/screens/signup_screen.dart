@@ -18,6 +18,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
+  final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -32,6 +33,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _emailController.text.trim().isNotEmpty &&
           AuthService.instance.needsManualRoleSelection(_emailController.text);
 
+  bool get _needsName =>
+      _selectedManualRole == UserRole.companyHr || _selectedManualRole == UserRole.companySupervisor;
+
   Future<void> _handleSignUp() async {
     final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
@@ -40,6 +44,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       setState(() => _errorText = l10n.errorFillAllFields);
+      return;
+    }
+
+    if (_needsName && _nameController.text.trim().isEmpty) {
+      setState(() => _errorText = 'Please enter your name.');
       return;
     }
 
@@ -76,6 +85,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: password,
         manualRole: _selectedManualRole,
       );
+
+      if (_needsName && _nameController.text.trim().isNotEmpty) {
+        try {
+          await AuthService.instance.updateFullName(_nameController.text);
+        } catch (_) {
+          // Non-fatal — the account exists either way; name can be set later from profile.
+        }
+      }
 
       if (!mounted) return;
       _routeToShell(role);
@@ -153,7 +170,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 18),
               Text(
                 l10n.createYourAccount,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -164,7 +181,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 6),
               Text(
                 l10n.signupRoleNote,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -188,7 +205,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 }),
                 decoration: InputDecoration(
                   hintText: l10n.enterYourEmail,
-                  prefixIcon: const Icon(Icons.email_outlined,
+                  prefixIcon: Icon(Icons.email_outlined,
                       size: 20, color: AppColors.textMuted),
                 ),
               ),
@@ -205,7 +222,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   hintText: l10n.createAPassword,
-                  prefixIcon: const Icon(Icons.lock_outline,
+                  prefixIcon: Icon(Icons.lock_outline,
                       size: 20, color: AppColors.textMuted),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -233,7 +250,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 obscureText: _obscureConfirm,
                 decoration: InputDecoration(
                   hintText: l10n.reEnterYourPassword,
-                  prefixIcon: const Icon(Icons.lock_outline,
+                  prefixIcon: Icon(Icons.lock_outline,
                       size: 20, color: AppColors.textMuted),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -265,11 +282,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.info_outline,
+                          Icon(Icons.info_outline,
                               size: 15, color: AppColors.warning),
                           const SizedBox(width: 6),
                           Text(l10n.selectYourRole,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -279,7 +296,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 4),
                       Text(
                         l10n.notInstitutionalEmailNote,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 12,
                             color: AppColors.warning),
@@ -312,11 +329,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ],
 
+              if (_needsName) ...[
+                const SizedBox(height: 14),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Full name', style: AppTextStyles.label),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _nameController,
+                  onChanged: (_) => setState(() => _errorText = null),
+                  decoration: InputDecoration(
+                    hintText: 'Enter your full name',
+                    prefixIcon: Icon(Icons.person_outline, size: 20, color: AppColors.textMuted),
+                  ),
+                ),
+              ],
+
               if (_errorText != null) ...[
                 const SizedBox(height: 14),
                 Text(
                   _errorText!,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12,
                       color: AppColors.error),

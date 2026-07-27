@@ -221,7 +221,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                     point: _pickedPoint,
                     width: 40,
                     height: 40,
-                    child: const Icon(Icons.location_on, color: AppColors.error, size: 40),
+                    child: Icon(Icons.location_on, color: AppColors.error, size: 40),
                   ),
                 ],
               ),
@@ -254,7 +254,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                       hintText: 'Search for your address...',
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+                      prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
                       suffixIcon: _isSearching
                           ? const Padding(
                         padding: EdgeInsets.all(12),
@@ -265,7 +265,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                       )
                           : (_searchController.text.isNotEmpty
                           ? IconButton(
-                        icon: const Icon(Icons.clear, size: 20, color: AppColors.textMuted),
+                        icon: Icon(Icons.clear, size: 20, color: AppColors.textMuted),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchResults = []);
@@ -324,7 +324,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Search above, or tap the map to fine-tune the pin',
+                  Text('Search above, or tap the map to fine-tune the pin',
                       style: TextStyle(
                           fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
                   const SizedBox(height: 8),

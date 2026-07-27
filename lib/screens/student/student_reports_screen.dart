@@ -9,14 +9,15 @@ import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
 import 'student_profile_screen.dart';
 
+// Parent Acknowledgement Form is intentionally not here — it's submitted by
+// the parent account directly (see ParentAcknowledgementScreen), not
+// uploaded by the student. Industrial Training Form (LI01) was replaced by
+// two separate documents. There's no optional-documents section anymore —
+// every required document is required.
 const List<Map<String, String>> _requiredDocTypes = [
   {'category': 'offer_letter', 'title': 'Offer Letter'},
-  {'category': 'parent_acknowledgement', 'title': 'Parent Acknowledgement Form'},
-  {'category': 'li01_form', 'title': 'Industrial Training Form (LI01)'},
-];
-
-const List<Map<String, String>> _optionalDocTypes = [
-  {'category': 'insurance_certificate', 'title': 'Insurance Certificate'},
+  {'category': 'indemnity_letter', 'title': 'Indemnity Letter'},
+  {'category': 'company_acceptance_letter', 'title': 'Company Acceptance Letter'},
 ];
 
 class StudentReportsScreen extends StatefulWidget {
@@ -230,7 +231,7 @@ class _ReportCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                     Text('Submitted ${timeAgo(submittedAt)}', style: AppTextStyles.caption),
                   ],
@@ -242,7 +243,22 @@ class _ReportCard extends StatelessWidget {
           if ((data['notes'] as String?)?.isNotEmpty == true) ...[
             const SizedBox(height: 8),
             Text(data['notes'] as String,
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+          ],
+          if (data['status'] == 'submitted' && data['company_review_status'] == 'approved') ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(8)),
+              child: const Row(
+                children: [
+                  Icon(Icons.check_circle_outline, size: 13, color: AppColors.primary),
+                  SizedBox(width: 6),
+                  Text('Approved by company supervisor · awaiting university review',
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.primary)),
+                ],
+              ),
+            ),
           ],
           if (storagePath != null) ...[
             const SizedBox(height: 8),
@@ -257,9 +273,13 @@ class _ReportCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.attach_file, size: 14, color: AppColors.primary),
                   const SizedBox(width: 4),
-                  Text(data['file_name'] as String? ?? 'Attachment',
-                      style: const TextStyle(
-                          fontFamily: 'Inter', fontSize: 12, color: AppColors.primary, decoration: TextDecoration.underline)),
+                  Flexible(
+                    child: Text(data['file_name'] as String? ?? 'Attachment',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontFamily: 'Inter', fontSize: 12, color: AppColors.primary, decoration: TextDecoration.underline)),
+                  ),
                 ],
               ),
             ),
@@ -272,11 +292,11 @@ class _ReportCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.rate_review_outlined, size: 14, color: AppColors.success),
+                  Icon(Icons.rate_review_outlined, size: 14, color: AppColors.success),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text('"$feedback"',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontFamily: 'Inter', fontSize: 12, color: AppColors.success, fontStyle: FontStyle.italic)),
                   ),
                 ],
@@ -314,15 +334,6 @@ class _DocumentsTab extends StatelessWidget {
         const SectionHeader(title: 'Required documents'),
         _ResumeChecklistTile(resumeFilename: resumeFilename),
         ..._requiredDocTypes.map(
-          (t) => _DocumentTile(
-            category: t['category']!,
-            title: t['title']!,
-            document: _docFor(t['category']!),
-            onChanged: onChanged,
-          ),
-        ),
-        const SectionHeader(title: 'Optional documents'),
-        ..._optionalDocTypes.map(
           (t) => _DocumentTile(
             category: t['category']!,
             title: t['title']!,
@@ -389,7 +400,7 @@ class _ResumeChecklistTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Resume / CV',
+                Text('Resume / CV',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 const SizedBox(height: 2),
                 Text(hasResume ? resumeFilename! : 'Not uploaded yet',
@@ -445,13 +456,13 @@ class _DocumentTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 const SizedBox(height: 2),
                 if (!isMissing)
                   Text('${document!['file_name']} · ${formatFileSize(parseNum(document!['file_size_bytes'])?.toInt() ?? 0)}',
                       style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)
                 else
-                  const Text('Not uploaded yet', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+                  Text('Not uploaded yet', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
               ],
             ),
           ),
@@ -468,7 +479,7 @@ class _DocumentTile extends StatelessWidget {
             )
           else
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
+              icon: Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
               onSelected: (value) async {
                 if (value == 'open') {
                   try {
@@ -505,7 +516,7 @@ Future<void> pickAndUploadDocument(
   if (picked.size > 10 * 1024 * 1024) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('File is too large. Maximum size is 10MB.'), backgroundColor: AppColors.error));
+        .showSnackBar(SnackBar(content: const Text('File is too large. Maximum size is 10MB.'), backgroundColor: AppColors.error));
     return;
   }
 
@@ -581,7 +592,7 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -589,13 +600,13 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
         children: [
           Row(
             children: [
-              const Text('New submission', style: AppTextStyles.h3),
+              Text('New submission', style: AppTextStyles.h3),
               const Spacer(),
               IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.pop(context)),
             ],
           ),
           const SizedBox(height: 16),
-          const Text('Submission type', style: AppTextStyles.label),
+          Text('Submission type', style: AppTextStyles.label),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             decoration: const InputDecoration(),
@@ -604,14 +615,14 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
             onChanged: (v) => setState(() => _selectedType = v!),
           ),
           const SizedBox(height: 14),
-          const Text('Period', style: AppTextStyles.label),
+          Text('Period', style: AppTextStyles.label),
           const SizedBox(height: 8),
           TextField(
             controller: _periodController,
             decoration: const InputDecoration(hintText: 'e.g. June 2026'),
           ),
           const SizedBox(height: 14),
-          const Text('Notes (optional)', style: AppTextStyles.label),
+          Text('Notes (optional)', style: AppTextStyles.label),
           const SizedBox(height: 8),
           TextField(
             controller: _notesController,
@@ -636,7 +647,7 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
                   const SizedBox(height: 6),
                   Text(_pickedFile?.name ?? 'Tap to select file',
                       style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary)),
-                  const Text('PDF, DOCX up to 10MB',
+                  Text('PDF, DOCX up to 10MB',
                       style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted)),
                 ],
               ),
@@ -644,7 +655,7 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
           ),
           if (_error != null) ...[
             const SizedBox(height: 10),
-            Text(_error!, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+            Text(_error!, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
           ],
           const SizedBox(height: 16),
           SizedBox(

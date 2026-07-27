@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/common/shared_widgets.dart';
+import '../../services/supervisor_data_service.dart';
+import '../../utils/format_utils.dart';
 
 class SupervisorEvaluateScreen extends StatefulWidget {
   final Map<String, dynamic> student;
@@ -22,26 +24,60 @@ class _SupervisorEvaluateScreenState extends State<SupervisorEvaluateScreen> {
 
   final _commentsController = TextEditingController();
   bool _submitted = false;
+  bool _isSubmitting = false;
+  String? _error;
 
   double get _averageScore {
     final total = _scores.values.reduce((a, b) => a + b);
     return total / _scores.length;
   }
 
+  String get _studentName {
+    final name = widget.student['full_name'] as String?;
+    return name?.isNotEmpty == true ? name! : 'this student';
+  }
+
+  Future<void> _submit() async {
+    setState(() {
+      _isSubmitting = true;
+      _error = null;
+    });
+    try {
+      await SupervisorDataService.instance.submitEvaluation(
+        studentId: widget.student['id'] as String,
+        scores: _scores,
+        averageScore: _averageScore,
+        comments: _commentsController.text.trim().isEmpty ? null : _commentsController.text.trim(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _submitted = true;
+        _isSubmitting = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _error = 'Could not submit evaluation: $e';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_submitted) return _buildSuccessScreen();
+    final l10n = AppLocalizations.of(context)!;
+
+    final programme = widget.student['programme'] as String?;
+    final companyName = widget.student['company_name'] as String?;
+    final subtitle = companyName != null ? '${programme ?? ''} · $companyName' : (programme ?? l10n.notSpecified);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Evaluate student',
-            style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        title: Text(l10n.supEvaluateStudent, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -51,35 +87,36 @@ class _SupervisorEvaluateScreenState extends State<SupervisorEvaluateScreen> {
               CircleAvatar(
                 radius: 22,
                 backgroundColor: AppColors.infoBg,
-                child: Text(widget.student['initials'],
+                child: Text(logoLetter(_studentName),
                     style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.student['name'],
-                      style: const TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                  Text('${widget.student['id']} · ${widget.student['company']}', style: AppTextStyles.bodySecondary),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_studentName,
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                    Text(subtitle, style: AppTextStyles.bodySecondary, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.infoBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Row(
+            decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(10)),
+            child: Row(
               children: [
-                Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-                SizedBox(width: 8),
+                const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Rate each criterion from 1 (poor) to 5 (excellent) based on internship performance.',
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary),
+                    l10n.supRatingInstruction,
+                    style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary),
                   ),
                 ),
               ],
@@ -102,9 +139,8 @@ class _SupervisorEvaluateScreenState extends State<SupervisorEvaluateScreen> {
               children: [
                 const Icon(Icons.star, color: Colors.white, size: 22),
                 const SizedBox(width: 10),
-                const Expanded(
-                  child: Text('Overall average score',
-                      style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                Expanded(
+                  child: Text(l10n.supOverallAverageScore, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
                 Text(_averageScore.toStringAsFixed(1),
                     style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
@@ -112,21 +148,25 @@ class _SupervisorEvaluateScreenState extends State<SupervisorEvaluateScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Additional comments', style: AppTextStyles.label),
+          Text(l10n.supAdditionalComments, style: AppTextStyles.label),
           const SizedBox(height: 8),
           TextField(
             controller: _commentsController,
             maxLines: 5,
-            decoration: const InputDecoration(
-              hintText: 'Provide qualitative feedback on the student\'s overall performance...',
-            ),
+            decoration: InputDecoration(hintText: l10n.supQualitativeFeedbackHint),
           ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(_error!, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+          ],
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => setState(() => _submitted = true),
-              child: const Text('Submit evaluation'),
+              onPressed: _isSubmitting ? null : _submit,
+              child: _isSubmitting
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(l10n.supSubmitEvaluation),
             ),
           ),
         ],
@@ -135,6 +175,7 @@ class _SupervisorEvaluateScreenState extends State<SupervisorEvaluateScreen> {
   }
 
   Widget _buildSuccessScreen() {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
@@ -146,23 +187,19 @@ class _SupervisorEvaluateScreenState extends State<SupervisorEvaluateScreen> {
               Container(
                 width: 80,
                 height: 80,
-                decoration: const BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
-                child: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
+                decoration: BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
+                child: Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
               ),
               const SizedBox(height: 24),
-              const Text('Evaluation submitted', style: AppTextStyles.h2, textAlign: TextAlign.center),
+              Text(l10n.supEvaluationSubmitted, style: AppTextStyles.h2, textAlign: TextAlign.center),
               const SizedBox(height: 10),
-              Text(
-                'Your evaluation for ${widget.student['name']} has been recorded.',
-                style: AppTextStyles.bodySecondary,
-                textAlign: TextAlign.center,
-              ),
+              Text(l10n.supEvaluationRecorded(_studentName), style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Back to student'),
+                  child: Text(l10n.supBackToStudent),
                 ),
               ),
             ],
@@ -197,11 +234,9 @@ class _RatingRow extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(label,
-                    style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                child: Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
               ),
-              Text(value.toInt().toString(),
-                  style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              Text(value.toInt().toString(), style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
             ],
           ),
           Row(

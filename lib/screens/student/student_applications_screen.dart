@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
+import 'student_interview_screen.dart';
 
 class StudentApplicationsScreen extends StatefulWidget {
   const StudentApplicationsScreen({super.key});
@@ -21,7 +22,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _load();
   }
 
@@ -57,7 +58,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Withdraw', style: TextStyle(color: AppColors.error)),
+            child: Text('Withdraw', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -94,7 +95,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
             Text(internship['title'] as String, style: AppTextStyles.h3),
             Text('${internship['company_name']} · ${internship['location']}', style: AppTextStyles.bodySecondary),
             const SizedBox(height: 16),
-            const Text('COVER LETTER', style: AppTextStyles.label),
+            Text('COVER LETTER', style: AppTextStyles.label),
             const SizedBox(height: 6),
             Text(
               coverLetter?.isNotEmpty == true ? coverLetter! : 'No cover letter provided',
@@ -105,7 +106,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
               ),
             ),
             const SizedBox(height: 16),
-            const Text('SKILLS', style: AppTextStyles.label),
+            Text('SKILLS', style: AppTextStyles.label),
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,
@@ -131,8 +132,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
 
   List<Map<String, dynamic>> _filtered(String tab) {
     if (tab == 'All') return _applications;
-    if (tab == 'Rejected') return _applications.where((a) => a['status'] == 'rejected').toList();
-    final map = {'Active': 'active', 'Interview': 'interview'};
+    final map = {'Pending': 'pending', 'Active': 'active', 'Interview': 'interview', 'Rejected': 'rejected'};
     return _applications.where((a) => a['status'] == map[tab]).toList();
   }
 
@@ -179,8 +179,9 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                       labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600),
                       tabs: const [
                         Tab(text: 'All'),
-                        Tab(text: 'Active'),
+                        Tab(text: 'Pending'),
                         Tab(text: 'Interview'),
+                        Tab(text: 'Active'),
                         Tab(text: 'Rejected'),
                       ],
                     ),
@@ -188,7 +189,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                   Expanded(
                     child: TabBarView(
                       controller: _tabController,
-                      children: ['All', 'Active', 'Interview', 'Rejected'].map((tab) {
+                      children: ['All', 'Pending', 'Interview', 'Active', 'Rejected'].map((tab) {
                         final items = _filtered(tab);
                         if (items.isEmpty) {
                           return const EmptyState(
@@ -204,6 +205,9 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                             data: items[i],
                             onViewDetails: () => _showDetails(items[i]),
                             onWithdraw: items[i]['status'] == 'pending' ? () => _withdraw(items[i]) : null,
+                            onViewInterview: items[i]['status'] == 'interview'
+                                ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentInterviewScreen(application: items[i])))
+                                : null,
                           ),
                         );
                       }).toList(),
@@ -244,8 +248,9 @@ class _ApplicationCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final VoidCallback onViewDetails;
   final VoidCallback? onWithdraw;
+  final VoidCallback? onViewInterview;
 
-  const _ApplicationCard({required this.data, required this.onViewDetails, required this.onWithdraw});
+  const _ApplicationCard({required this.data, required this.onViewDetails, required this.onWithdraw, this.onViewInterview});
 
   Color get _accentColor {
     switch (data['status']) {
@@ -306,7 +311,7 @@ class _ApplicationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(internship['title'] as String,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                     Text(companyName, style: AppTextStyles.caption),
                   ],
@@ -320,24 +325,32 @@ class _ApplicationCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              _MetaItem(icon: Icons.location_on_outlined, label: internship['location'] as String),
+              Flexible(
+                child: _MetaItem(icon: Icons.location_on_outlined, label: internship['location'] as String),
+              ),
               const SizedBox(width: 14),
               _MetaItem(icon: Icons.calendar_today_outlined, label: 'Applied ${timeAgo(appliedAt)}'),
             ],
           ),
           if (interviewAt != null) ...[
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(color: AppColors.warningBg, borderRadius: BorderRadius.circular(8)),
-              child: Row(
-                children: [
-                  const Icon(Icons.videocam_outlined, size: 15, color: AppColors.warning),
-                  const SizedBox(width: 6),
-                  Text('Interview scheduled: ${interviewAt.toString()}',
-                      style: const TextStyle(
-                          fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warning)),
-                ],
+            GestureDetector(
+              onTap: onViewInterview,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(color: AppColors.warningBg, borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  children: [
+                    Icon(Icons.videocam_outlined, size: 15, color: AppColors.warning),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text('Interview scheduled: ${interviewAt.toString()}',
+                          style: TextStyle(
+                              fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warning)),
+                    ),
+                    if (onViewInterview != null) Icon(Icons.chevron_right, size: 16, color: AppColors.warning),
+                  ],
+                ),
               ),
             ),
           ],
@@ -348,12 +361,12 @@ class _ApplicationCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onWithdraw,
-                    icon: const Icon(Icons.cancel_outlined, size: 15, color: AppColors.error),
-                    label: const Text('Withdraw', style: TextStyle(color: AppColors.error)),
+                    icon: Icon(Icons.cancel_outlined, size: 15, color: AppColors.error),
+                    label: Text('Withdraw', style: TextStyle(color: AppColors.error)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       textStyle: const TextStyle(fontSize: 12),
-                      side: const BorderSide(color: AppColors.error),
+                      side: BorderSide(color: AppColors.error),
                     ),
                   ),
                 ),
@@ -379,7 +392,9 @@ class _MetaItem extends StatelessWidget {
       children: [
         Icon(icon, size: 13, color: AppColors.textMuted),
         const SizedBox(width: 4),
-        Text(label, style: AppTextStyles.caption),
+        Flexible(
+          child: Text(label, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
       ],
     );
   }

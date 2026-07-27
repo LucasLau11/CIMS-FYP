@@ -3,7 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
-import 'student_apply_screen.dart';
+import 'student_internship_details_screen.dart';
 
 class StudentSearchScreen extends StatefulWidget {
   const StudentSearchScreen({super.key});
@@ -120,7 +120,7 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
                           controller: _searchController,
                           decoration: InputDecoration(
                             hintText: 'Search by role, company, or skill...',
-                            prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                            prefixIcon: Icon(Icons.search, color: AppColors.textMuted, size: 20),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear, size: 18),
@@ -190,17 +190,15 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
                                   return _InternshipCard(
                                     data: internship,
                                     applied: applied,
-                                    onApply: applied
-                                        ? null
-                                        : () async {
-                                            final submitted = await Navigator.push<bool>(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => StudentApplyScreen(internship: internship),
-                                              ),
-                                            );
-                                            if (submitted == true) _load();
-                                          },
+                                    onTap: () async {
+                                      final result = await Navigator.push<bool>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => StudentInternshipDetailsScreen(internship: internship, applied: applied),
+                                        ),
+                                      );
+                                      if (result == true) _load();
+                                    },
                                   );
                                 },
                               ),
@@ -238,9 +236,9 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
 class _InternshipCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final bool applied;
-  final VoidCallback? onApply;
+  final VoidCallback onTap;
 
-  const _InternshipCard({required this.data, required this.applied, required this.onApply});
+  const _InternshipCard({required this.data, required this.applied, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -249,7 +247,7 @@ class _InternshipCard extends StatelessWidget {
     final skills = (data['required_skills'] as List).cast<String>();
 
     return AccentCard(
-      onTap: onApply,
+      onTap: onTap,
       accentColor: applied ? AppColors.success : AppColors.primary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +279,7 @@ class _InternshipCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(data['title'] as String,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -301,7 +299,9 @@ class _InternshipCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              _InfoChip(icon: Icons.location_on_outlined, label: data['location'] as String),
+              Flexible(
+                child: _InfoChip(icon: Icons.location_on_outlined, label: data['location'] as String),
+              ),
               const SizedBox(width: 8),
               _InfoChip(icon: Icons.schedule, label: formatDuration(data['duration_months'] as int)),
               const SizedBox(width: 8),
@@ -321,7 +321,7 @@ class _InternshipCard extends StatelessWidget {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Text(tag,
-                    style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textSecondary)),
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textSecondary)),
               );
             }).toList(),
           ),
@@ -332,13 +332,13 @@ class _InternshipCard extends StatelessWidget {
               const Spacer(),
               if (!applied)
                 ElevatedButton(
-                  onPressed: onApply,
+                  onPressed: onTap,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text('Apply', style: TextStyle(fontSize: 13)),
+                  child: const Text('View details', style: TextStyle(fontSize: 13)),
                 ),
             ],
           ),
@@ -361,7 +361,14 @@ class _InfoChip extends StatelessWidget {
       children: [
         Icon(icon, size: 13, color: AppColors.textMuted),
         const SizedBox(width: 3),
-        Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }
@@ -403,7 +410,7 @@ class _FilterSheetState extends State<_FilterSheet> {
         children: [
           Row(
             children: [
-              const Text('Filters', style: AppTextStyles.h3),
+              Text('Filters', style: AppTextStyles.h3),
               const Spacer(),
               TextButton(
                 onPressed: () => setState(() {
@@ -411,12 +418,12 @@ class _FilterSheetState extends State<_FilterSheet> {
                   _duration = null;
                   _range = const RangeValues(0, 5000);
                 }),
-                child: const Text('Reset', style: TextStyle(color: AppColors.textSecondary)),
+                child: Text('Reset', style: TextStyle(color: AppColors.textSecondary)),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          const Text('Location', style: AppTextStyles.label),
+          Text('Location', style: AppTextStyles.label),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             decoration: const InputDecoration(),
@@ -425,7 +432,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             onChanged: (v) => setState(() => _location = v!),
           ),
           const SizedBox(height: 16),
-          const Text('Allowance range', style: AppTextStyles.label),
+          Text('Allowance range', style: AppTextStyles.label),
           const SizedBox(height: 8),
           RangeSlider(
             values: _range,
@@ -437,7 +444,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             onChanged: (v) => setState(() => _range = v),
           ),
           const SizedBox(height: 16),
-          const Text('Duration', style: AppTextStyles.label),
+          Text('Duration', style: AppTextStyles.label),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -447,6 +454,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 label: Text(formatDuration(d)),
                 selected: selected,
                 onSelected: (_) => setState(() => _duration = selected ? null : d),
+                labelStyle: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textPrimary),
               );
             }).toList(),
           ),

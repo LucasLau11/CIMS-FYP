@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Admin is a hardcoded demo account — never touches Supabase.
     if (AuthService.instance.isAdminLogin(email, password)) {
       await AuthService.instance.setAdminRemembered(true);
-      await Future.delayed(const Duration(milliseconds: 400));
+      await AuthService.instance.establishAdminSupabaseSession();
       if (!mounted) return;
       setState(() => _isLoading = false);
       _routeToShell(destination: const AdminShell());
@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text(
                     l10n.resetPasswordInstructions,
-                    style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       hintText: l10n.enterYourEmail,
-                      prefixIcon: const Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
+                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
                     ),
                   ),
                 ],
@@ -237,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
               Text(
                 l10n.welcomeToCims,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -246,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               Text(
                 l10n.cimsFullName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 13,
                   color: AppColors.textSecondary,
@@ -268,12 +268,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, size: 16, color: AppColors.error),
+                      Icon(Icons.error_outline, size: 16, color: AppColors.error),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _generalError!,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontFamily: 'Inter', fontSize: 12, color: AppColors.error),
                         ),
                       ),
@@ -294,7 +294,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onChanged: (_) => setState(() => _emailError = null),
                 decoration: InputDecoration(
                   hintText: l10n.enterYourEmail,
-                  prefixIcon: const Icon(Icons.email_outlined,
+                  prefixIcon: Icon(Icons.email_outlined,
                       size: 20, color: AppColors.textMuted),
                   errorText: _emailError,
                 ),
@@ -313,7 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onChanged: (_) => setState(() => _passwordError = null),
                 decoration: InputDecoration(
                   hintText: l10n.enterYourPassword,
-                  prefixIcon: const Icon(Icons.lock_outline,
+                  prefixIcon: Icon(Icons.lock_outline,
                       size: 20, color: AppColors.textMuted),
                   errorText: _passwordError,
                   suffixIcon: IconButton(
@@ -389,7 +389,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Footer
               Text(l10n.footerCopyright,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 11,
                       color: AppColors.textMuted)),

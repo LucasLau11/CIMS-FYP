@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/student_data_service.dart';
 import 'student/student_dashboard_screen.dart';
 import 'student/student_search_screen.dart';
 import 'student/student_applications_screen.dart';
@@ -30,6 +31,24 @@ class _StudentShellState extends State<StudentShell> {
   int _applicationsRefreshKey = 0;
   int _reportsRefreshKey = 0;
 
+  int _unreadMessageCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadMessageCount();
+  }
+
+  Future<void> _loadUnreadMessageCount() async {
+    try {
+      final count = await StudentDataService.instance.getUnreadMessageCount();
+      if (!mounted) return;
+      setState(() => _unreadMessageCount = count);
+    } catch (_) {
+      // Non-fatal — badge just stays at its last known value.
+    }
+  }
+
   void _onTabTapped(int index) {
     setState(() {
       if (index != _currentIndex) {
@@ -39,6 +58,9 @@ class _StudentShellState extends State<StudentShell> {
       }
       _currentIndex = index;
     });
+    // Cheap count-only query — refresh on every tab switch so the badge
+    // reflects messages read/received on the Messages tab or elsewhere.
+    _loadUnreadMessageCount();
   }
 
   @override
@@ -56,41 +78,73 @@ class _StudentShellState extends State<StudentShell> {
         children: screens,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.border, width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
-          items: const [
-            BottomNavigationBarItem(
+          items: [
+            const BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_outlined),
               activeIcon: Icon(Icons.dashboard),
               label: 'Dashboard',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.search_outlined),
               activeIcon: Icon(Icons.search),
               label: 'Search',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.work_outline),
               activeIcon: Icon(Icons.work),
               label: 'Applications',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.assignment_outlined),
               activeIcon: Icon(Icons.assignment),
               label: 'Reports',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
-              activeIcon: Icon(Icons.chat_bubble),
+              icon: _MessagesIcon(count: _unreadMessageCount, filled: false),
+              activeIcon: _MessagesIcon(count: _unreadMessageCount, filled: true),
               label: 'Messages',
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MessagesIcon extends StatelessWidget {
+  final int count;
+  final bool filled;
+
+  const _MessagesIcon({required this.count, required this.filled});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(filled ? Icons.chat_bubble : Icons.chat_bubble_outline),
+        if (count > 0)
+          Positioned(
+            right: -6,
+            top: -4,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                count > 9 ? '9+' : '$count',
+                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

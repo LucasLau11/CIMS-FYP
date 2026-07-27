@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'locale_controller.dart';
+import 'theme_controller.dart';
 
 /// All the possible roles a signed-up user can end up with.
 /// 'admin' is intentionally excluded — the admin account is a hardcoded
@@ -68,6 +69,24 @@ class AuthService {
     return email.trim().toLowerCase() == adminEmail && password == adminPassword;
   }
 
+  /// The admin login itself stays a hardcoded client-side check (by
+  /// design — see the class doc), but every admin screen reads/writes
+  /// real Supabase data behind RLS, which requires a real authenticated
+  /// session (the anon key alone has none). A matching real Supabase
+  /// account was created out-of-band with these same credentials and
+  /// role='admin', so this establishes that session silently right after
+  /// the hardcoded check passes — the login UX is unchanged, but the app
+  /// now has a genuine JWT for RLS to key off. Non-fatal if it fails
+  /// (e.g. offline): admin screens will just show empty/error states
+  /// rather than blocking login entirely.
+  Future<void> establishAdminSupabaseSession() async {
+    try {
+      await _client.auth.signInWithPassword(email: adminEmail, password: adminPassword);
+    } catch (_) {
+      // Non-fatal — see doc comment above.
+    }
+  }
+
   // ---------------------------------------------------------------------
   // Persistent login (problem 9). Supabase already persists real user
   // sessions across app restarts automatically. The hardcoded admin
@@ -110,6 +129,11 @@ class AuthService {
       final savedLanguage = profile['language'] as String?;
       if (savedLanguage != null) {
         await LocaleController.instance.setLanguageByDisplayName(savedLanguage);
+      }
+
+      final savedThemeMode = profile['theme_mode'] as String?;
+      if (savedThemeMode != null) {
+        await ThemeController.instance.setThemeModeByCode(savedThemeMode);
       }
 
       return RestoredSession.role(UserRoleX.fromDbValue(profile['role'] as String));
@@ -199,13 +223,41 @@ class AuthService {
     final row = await _client
         .from('profiles')
         .select('id, email, role, avatar_url, full_name, phone, date_of_birth, '
-        'address_text, address_lat, address_lng, language, notification_prefs, '
+        'address_text, address_lat, address_lng, language, theme_mode, notification_prefs, '
         'resume_path, resume_filename, resume_size_bytes, resume_uploaded_at, '
-        'programme, semester, faculty, cgpa, academic_supervisor_name')
+        'programme, semester, faculty, cgpa, skills, academic_supervisor_id, academic_supervisor_name')
         .eq('id', userId)
         .single();
 
+    // academic_supervisor_name is a legacy column that's never written to —
+    // assignment only sets academic_supervisor_id (see AdminDataService.
+    // assignSupervisor). Resolve the name dynamically via profile_directory
+    // instead, which every authenticated user can read.
+    final supervisorId = row['academic_supervisor_id'] as String?;
+    if (supervisorId != null) {
+      try {
+        final supervisor = await _client
+            .from('profile_directory')
+            .select('full_name')
+            .eq('id', supervisorId)
+            .maybeSingle();
+        row['academic_supervisor_name'] = supervisor?['full_name'] as String?;
+      } catch (_) {
+        // Non-fatal — falls back to whatever was in the (likely null) column.
+      }
+    }
+
     return row;
+  }
+
+  /// Updates the current user's skills list (extracted from resume and/or
+  /// entered manually).
+  Future<void> updateSkills(List<String> skills) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw Exception('You must be logged in to update your profile.');
+    }
+    await _client.from('profiles').update({'skills': skills}).eq('id', userId);
   }
 
   // ---------------------------------------------------------------------
@@ -392,6 +444,40 @@ class AuthService {
     }).eq('id', userId);
   }
 
+  /// Updates just the display name — for roles (e.g. academic supervisor)
+  /// whose profile screen doesn't collect phone/DOB/address the way the
+  /// student one does.
+  Future<void> updateFullName(String fullName) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw Exception('You must be logged in to update your profile.');
+    }
+    await _client.from('profiles').update({'full_name': fullName.trim()}).eq('id', userId);
+  }
+
+  /// Same fields as [updatePersonalInfo] minus date of birth — for staff
+  /// roles (HR, company supervisor, academic supervisor) whose profile
+  /// screen doesn't collect a DOB the way the student one does.
+  Future<void> updateContactInfo({
+    required String fullName,
+    required String phone,
+    String? addressText,
+    double? addressLat,
+    double? addressLng,
+  }) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw Exception('You must be logged in to update your profile.');
+    }
+    await _client.from('profiles').update({
+      'full_name': fullName.trim(),
+      'phone': phone.trim(),
+      if (addressText != null) 'address_text': addressText.trim(),
+      if (addressLat != null) 'address_lat': addressLat,
+      if (addressLng != null) 'address_lng': addressLng,
+    }).eq('id', userId);
+  }
+
   // ---------------------------------------------------------------------
   // Notification preferences + language (problem 8) — persisted to the
   // profile row so they survive navigating away or closing the app,
@@ -408,6 +494,13 @@ class AuthService {
     final userId = currentUserId;
     if (userId == null) return;
     await _client.from('profiles').update({'language': language}).eq('id', userId);
+  }
+
+  Future<void> updateThemeMode(String themeMode) async {
+    await ThemeController.instance.setThemeModeByCode(themeMode);
+    final userId = currentUserId;
+    if (userId == null) return;
+    await _client.from('profiles').update({'theme_mode': themeMode}).eq('id', userId);
   }
 
   // ---------------------------------------------------------------------

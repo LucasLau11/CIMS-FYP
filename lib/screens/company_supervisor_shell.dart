@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../services/company_service.dart';
+import 'company_setup_screen.dart';
 import 'company_supervisor/company_supervisor_dashboard_screen.dart';
 import 'company_supervisor/company_supervisor_students_screen.dart';
 import 'company_supervisor/company_supervisor_messages_screen.dart';
@@ -13,42 +16,89 @@ class CompanySupervisorShell extends StatefulWidget {
 
 class _CompanySupervisorShellState extends State<CompanySupervisorShell> {
   int _currentIndex = 0;
+  bool _isLoading = true;
+  bool _hasCompany = false;
 
-  final List<Widget> _screens = [
-    const CompanySupervisorDashboardScreen(),
-    const CompanySupervisorStudentsScreen(),
-    const CompanySupervisorMessagesScreen(),
-  ];
+  // Same fix as the other shells: IndexedStack keeps every tab's State
+  // alive for the session, so tabs showing server data that changes from
+  // actions on OTHER tabs would keep showing stale data.
+  int _dashboardRefreshKey = 0;
+  int _studentsRefreshKey = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCompany();
+  }
+
+  Future<void> _checkCompany() async {
+    setState(() => _isLoading = true);
+    try {
+      final company = await CompanyService.instance.getMyCompany();
+      if (!mounted) return;
+      setState(() {
+        _hasCompany = company != null;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _onTabTapped(int index) {
+    setState(() {
+      if (index != _currentIndex) {
+        if (index == 0) _dashboardRefreshKey++;
+        if (index == 1) _studentsRefreshKey++;
+      }
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+    }
+    if (!_hasCompany) {
+      return CompanySetupScreen(onDone: _checkCompany);
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final screens = [
+      CompanySupervisorDashboardScreen(key: ValueKey('cs-dashboard-$_dashboardRefreshKey')),
+      CompanySupervisorStudentsScreen(key: ValueKey('cs-students-$_studentsRefreshKey')),
+      const CompanySupervisorMessagesScreen(),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.border, width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          items: const [
+          onTap: _onTabTapped,
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
+              icon: const Icon(Icons.dashboard_outlined),
+              activeIcon: const Icon(Icons.dashboard),
+              label: l10n.dashboard,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline),
-              activeIcon: Icon(Icons.people),
-              label: 'Interns',
+              icon: const Icon(Icons.people_outline),
+              activeIcon: const Icon(Icons.people),
+              label: l10n.csInterns,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
-              activeIcon: Icon(Icons.chat_bubble),
-              label: 'Messages',
+              icon: const Icon(Icons.chat_bubble_outline),
+              activeIcon: const Icon(Icons.chat_bubble),
+              label: l10n.profileMessages,
             ),
           ],
         ),

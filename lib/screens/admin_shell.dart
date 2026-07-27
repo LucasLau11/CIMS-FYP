@@ -16,28 +16,49 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const AdminDashboardScreen(),
-    const AdminStudentsScreen(),
-    const AdminCompaniesScreen(),
-    const AdminSupervisorsScreen(),
-    const AdminMoreScreen(),
-  ];
+  // Same fix as StudentShell/SupervisorShell: IndexedStack keeps every
+  // tab's State alive for the session, so tabs showing server data that
+  // changes from actions on OTHER tabs (assigning a supervisor on
+  // Students doesn't touch the already-built Dashboard/Supervisors tabs)
+  // would keep showing stale data forever without this.
+  int _dashboardRefreshKey = 0;
+  int _studentsRefreshKey = 0;
+  int _companiesRefreshKey = 0;
+  int _supervisorsRefreshKey = 0;
+
+  void _onTabTapped(int index) {
+    setState(() {
+      if (index != _currentIndex) {
+        if (index == 0) _dashboardRefreshKey++;
+        if (index == 1) _studentsRefreshKey++;
+        if (index == 2) _companiesRefreshKey++;
+        if (index == 3) _supervisorsRefreshKey++;
+      }
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      AdminDashboardScreen(key: ValueKey('dashboard-$_dashboardRefreshKey')),
+      AdminStudentsScreen(key: ValueKey('students-$_studentsRefreshKey')),
+      AdminCompaniesScreen(key: ValueKey('companies-$_companiesRefreshKey')),
+      AdminSupervisorsScreen(key: ValueKey('supervisors-$_supervisorsRefreshKey')),
+      const AdminMoreScreen(),
+    ];
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.border, width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
+          onTap: _onTabTapped,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_outlined),

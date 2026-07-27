@@ -1,9 +1,12 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
+import '../../services/resume_parser_service.dart';
+import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
 import 'student_profile_screen.dart';
 
@@ -29,16 +32,17 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
   int? _resumeSizeBytes;
   String? _resumePath;
 
-  static const List<String> _availableSkills = [
+  static const List<String> _fallbackSkills = [
     'Flutter', 'Dart', 'Firebase', 'Python', 'SQL',
     'Java', 'React', 'Node.js', 'Git', 'REST API',
   ];
+  List<String> _availableSkills = _fallbackSkills;
+
+  bool _isExtractingCoverLetter = false;
 
   @override
   void initState() {
     super.initState();
-    final requiredSkills = (widget.internship['required_skills'] as List?)?.cast<String>() ?? [];
-    _selectedSkills = _availableSkills.where(requiredSkills.contains).toList();
     _loadResume();
   }
 
@@ -46,15 +50,47 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
     try {
       final profile = await AuthService.instance.getCurrentProfile();
       if (!mounted) return;
+      final requiredSkills = (widget.internship['required_skills'] as List?)?.cast<String>() ?? [];
+      final profileSkills = (profile?['skills'] as List?)?.cast<String>() ?? [];
+      final merged = <String>[];
+      for (final s in [...requiredSkills, ...profileSkills, ..._fallbackSkills]) {
+        if (!merged.any((m) => m.toLowerCase() == s.toLowerCase())) merged.add(s);
+      }
       setState(() {
         _resumeFilename = profile?['resume_filename'] as String?;
         _resumeSizeBytes = parseNum(profile?['resume_size_bytes'])?.toInt();
         _resumePath = profile?['resume_path'] as String?;
+        _availableSkills = merged;
+        _selectedSkills = merged.where(requiredSkills.contains).toList();
         _isLoadingResume = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoadingResume = false);
+    }
+  }
+
+  Future<void> _uploadCoverLetter() async {
+    final result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['pdf', 'docx'], withData: true);
+    if (result == null || result.files.isEmpty) return;
+    final picked = result.files.single;
+
+    setState(() => _isExtractingCoverLetter = true);
+    try {
+      final file = await resolvePickedFile(picked);
+      final text = await ResumeParserService.instance.extractText(file);
+      if (!mounted) return;
+      setState(() {
+        _coverLetterController.text = text.trim();
+        _isExtractingCoverLetter = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cover letter loaded from file — review and edit before continuing.'), backgroundColor: AppColors.primary),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isExtractingCoverLetter = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not read file: $e'), backgroundColor: AppColors.error));
     }
   }
 
@@ -141,7 +177,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.internship['title'] as String,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -175,7 +211,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                 color: AppColors.errorBg,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Text(_submitError!,
-                    style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
               ),
             // Bottom nav
             Container(
@@ -238,7 +274,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                   } catch (_) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Could not open resume.'), backgroundColor: AppColors.error),
+                      SnackBar(content: const Text('Could not open resume.'), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -248,7 +284,11 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
           },
         );
       case 1:
-        return _CoverLetterStep(controller: _coverLetterController);
+        return _CoverLetterStep(
+          controller: _coverLetterController,
+          isExtracting: _isExtractingCoverLetter,
+          onUpload: _uploadCoverLetter,
+        );
       case 2:
         return _SkillsStep(
           available: _availableSkills,
@@ -301,9 +341,9 @@ class _ResumeStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Resume / CV', style: AppTextStyles.h3),
+        Text('Resume / CV', style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        const Text('This is the resume that will be submitted with your application.',
+        Text('This is the resume that will be submitted with your application.',
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 20),
         if (hasResume)
@@ -350,7 +390,7 @@ class _ResumeStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
                     Icon(Icons.warning_amber_rounded, size: 20, color: AppColors.error),
                     SizedBox(width: 8),
@@ -365,7 +405,7 @@ class _ResumeStep extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text('Upload a resume to your profile before applying.',
+                Text('Upload a resume to your profile before applying.',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
                 const SizedBox(height: 12),
                 OutlinedButton(onPressed: onGoToProfile, child: const Text('Go to profile')),
@@ -379,19 +419,29 @@ class _ResumeStep extends StatelessWidget {
 
 class _CoverLetterStep extends StatelessWidget {
   final TextEditingController controller;
+  final bool isExtracting;
+  final VoidCallback onUpload;
 
-  const _CoverLetterStep({required this.controller});
+  const _CoverLetterStep({required this.controller, required this.isExtracting, required this.onUpload});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Cover letter', style: AppTextStyles.h3),
+        Text('Cover letter', style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        const Text('Tell the company why you are a great fit.',
+        Text('Tell the company why you are a great fit — type it yourself or upload a file.',
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: isExtracting ? null : onUpload,
+          icon: isExtracting
+              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.upload_file_outlined, size: 16),
+          label: Text(isExtracting ? 'Reading file...' : 'Upload cover letter (PDF/DOCX)'),
+        ),
+        const SizedBox(height: 16),
         TextField(
           controller: controller,
           maxLines: 12,
@@ -403,9 +453,9 @@ class _CoverLetterStep extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            const Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
+            Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
             const SizedBox(width: 4),
-            const Text('Tip: Mention relevant skills and experiences.',
+            Text('Tip: Mention relevant skills and experiences.',
                 style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted)),
           ],
         ),
@@ -426,9 +476,9 @@ class _SkillsStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Relevant skills', style: AppTextStyles.h3),
+        Text('Relevant skills', style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        const Text('Select skills that match this internship.',
+        Text('Select skills that match this internship.',
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 20),
         Wrap(
@@ -488,9 +538,9 @@ class _ReviewStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Review your application', style: AppTextStyles.h3),
+        Text('Review your application', style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        const Text('Please review before submitting.',
+        Text('Please review before submitting.',
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 20),
         _ReviewSection(
@@ -499,7 +549,7 @@ class _ReviewStep extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(internship['title'] as String,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
               Text(internship['company_name'] as String, style: AppTextStyles.bodySecondary),
             ],
@@ -512,8 +562,12 @@ class _ReviewStep extends StatelessWidget {
             children: [
               const Icon(Icons.picture_as_pdf_outlined, size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text(resumeFilename ?? 'No resume',
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textPrimary)),
+              Expanded(
+                child: Text(resumeFilename ?? 'No resume',
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ),
             ],
           ),
         ),
@@ -552,7 +606,7 @@ class _ReviewStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: AppColors.warningBg, borderRadius: BorderRadius.circular(10)),
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.info_outline, size: 16, color: AppColors.warning),
               SizedBox(width: 8),
@@ -615,11 +669,11 @@ class _SuccessScreen extends StatelessWidget {
               Container(
                 width: 80,
                 height: 80,
-                decoration: const BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
-                child: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
+                decoration: BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
+                child: Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
               ),
               const SizedBox(height: 24),
-              const Text('Application submitted!', style: AppTextStyles.h2, textAlign: TextAlign.center),
+              Text('Application submitted!', style: AppTextStyles.h2, textAlign: TextAlign.center),
               const SizedBox(height: 10),
               Text(
                 'Your application to ${internship['company_name']} has been sent. You will be notified when there is an update.',

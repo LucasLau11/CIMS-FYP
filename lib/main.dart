@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'services/locale_controller.dart';
+import 'services/theme_controller.dart';
 import 'l10n/app_localizations.dart';
 
 void main() async {
@@ -13,6 +14,9 @@ void main() async {
   // Load the last-used language immediately (from local storage) so the
   // correct locale shows on the very first frame, before any network call.
   await LocaleController.instance.loadSavedLocale();
+
+  // Same idea for the last-used theme mode (Light/Dark/System).
+  await ThemeController.instance.loadSavedThemeMode();
 
   // Initialize Supabase — anon/publishable key is safe to embed client-side,
   // access is restricted by Row Level Security policies on the database.
@@ -47,49 +51,82 @@ void main() async {
   runApp(const CimsApp());
 }
 
-class CimsApp extends StatelessWidget {
+class CimsApp extends StatefulWidget {
   const CimsApp({super.key});
 
   @override
+  State<CimsApp> createState() => _CimsAppState();
+}
+
+class _CimsAppState extends State<CimsApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Only matters while following "System" — a user-picked Light/Dark
+  // doesn't need the device's brightness at all, but rebuilding here is
+  // harmless in that case since applyBrightness() just resolves to the
+  // same fixed value again.
+  @override
+  void didChangePlatformBrightness() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
-    // Rebuilds the whole app instantly whenever the language is changed
-    // (see LocaleController + AuthService.updateLanguage) — no restart needed.
+    // Rebuilds the whole app instantly whenever the language or theme is
+    // changed (see LocaleController/ThemeController + AuthService) — no
+    // restart needed.
     return ValueListenableBuilder<Locale>(
       valueListenable: LocaleController.instance.currentLocale,
       builder: (context, locale, _) {
-        return MaterialApp(
-          title: 'CIMS',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: const SplashScreen(),
-          locale: locale,
-          supportedLocales: const [
-            Locale('en'),
-            Locale('ms'),
-            Locale('zh'),
-          ],
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: ThemeController.instance.themeMode,
+          builder: (context, mode, _) {
+            ThemeController.instance.applyBrightness(
+              WidgetsBinding.instance.platformDispatcher.platformBrightness,
+            );
+            return MaterialApp(
+              title: 'CIMS',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.theme,
+              home: const SplashScreen(),
+              locale: locale,
+              supportedLocales: const [
+                Locale('en'),
+                Locale('ms'),
+                Locale('zh'),
+              ],
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
 
-          // Named routes for potential deep-linking later
-          // Currently all navigation is handled imperatively via Navigator.push
-          //
-          // Role assignment now happens ONCE at sign-up (see SignUpScreen +
-          // AuthService), not at login. Login just authenticates via Supabase
-          // and looks up the stored role from the `profiles` table.
-          //
-          // Sign-up role assignment summary:
-          // @student.tarc.edu.my → Student        (automatic, by domain)
-          // @tarc.edu.my         → AcademicSupervisor (automatic, by domain)
-          // Any other email      → user manually picks: Parent/Guardian,
-          //                         HR Personnel, or Company Supervisor
-          //
-          // Admin is a hardcoded demo account (see AuthService.isAdminLogin) —
-          // it never goes through sign-up or Supabase at all.
+              // Named routes for potential deep-linking later
+              // Currently all navigation is handled imperatively via Navigator.push
+              //
+              // Role assignment now happens ONCE at sign-up (see SignUpScreen +
+              // AuthService), not at login. Login just authenticates via Supabase
+              // and looks up the stored role from the `profiles` table.
+              //
+              // Sign-up role assignment summary:
+              // @student.tarc.edu.my → Student        (automatic, by domain)
+              // @tarc.edu.my         → AcademicSupervisor (automatic, by domain)
+              // Any other email      → user manually picks: Parent/Guardian,
+              //                         HR Personnel, or Company Supervisor
+              //
+              // Admin is a hardcoded demo account (see AuthService.isAdminLogin) —
+              // it never goes through sign-up or Supabase at all.
+            );
+          },
         );
       },
     );

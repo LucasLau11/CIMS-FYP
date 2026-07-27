@@ -152,7 +152,7 @@ class _NotificationCard extends StatelessWidget {
                   if ((data['body'] as String?)?.isNotEmpty == true) ...[
                     const SizedBox(height: 4),
                     Text(data['body'] as String,
-                        style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
                   ],
                   const SizedBox(height: 6),
                   Text(timeAgo(createdAt), style: AppTextStyles.caption),

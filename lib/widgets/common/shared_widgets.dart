@@ -154,34 +154,34 @@ class StatusBadge extends StatelessWidget {
     required this.textColor,
   });
 
-  factory StatusBadge.pending() => const StatusBadge(
+  factory StatusBadge.pending() => StatusBadge(
     label: 'Pending',
-    backgroundColor: Color(0xFFFEF3C7),
-    textColor: Color(0xFFD97706),
+    backgroundColor: AppColors.warningBg,
+    textColor: AppColors.warning,
   );
 
-  factory StatusBadge.approved() => const StatusBadge(
+  factory StatusBadge.approved() => StatusBadge(
     label: 'Approved',
-    backgroundColor: Color(0xFFE2F6EF),
-    textColor: Color(0xFF1A9E6E),
+    backgroundColor: AppColors.successBg,
+    textColor: AppColors.success,
   );
 
-  factory StatusBadge.rejected() => const StatusBadge(
+  factory StatusBadge.rejected() => StatusBadge(
     label: 'Rejected',
-    backgroundColor: Color(0xFFFDEEEE),
-    textColor: Color(0xFFD94F4F),
+    backgroundColor: AppColors.errorBg,
+    textColor: AppColors.error,
   );
 
-  factory StatusBadge.submitted() => const StatusBadge(
+  factory StatusBadge.submitted() => StatusBadge(
     label: 'Submitted',
-    backgroundColor: Color(0xFFE0F4F5),
-    textColor: Color(0xFF0F7E8A),
+    backgroundColor: AppColors.infoBg,
+    textColor: AppColors.info,
   );
 
-  factory StatusBadge.active() => const StatusBadge(
+  factory StatusBadge.active() => StatusBadge(
     label: 'Active',
-    backgroundColor: Color(0xFFE2F6EF),
-    textColor: Color(0xFF1A9E6E),
+    backgroundColor: AppColors.successBg,
+    textColor: AppColors.success,
   );
 
   @override
@@ -258,6 +258,7 @@ class MetricCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const MetricCard({
     super.key,
@@ -265,39 +266,43 @@ class MetricCard extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 18, color: color),
             ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(height: 10),
-          Text(value,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              )),
-          const SizedBox(height: 2),
-          Text(label, style: AppTextStyles.caption),
-        ],
+            const SizedBox(height: 10),
+            Text(value,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                )),
+            const SizedBox(height: 2),
+            Text(label, style: AppTextStyles.caption),
+          ],
+        ),
       ),
     );
   }
@@ -379,7 +384,7 @@ class NotificationBell extends StatelessWidget {
               top: -2,
               child: Container(
                 padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.error,
                   shape: BoxShape.circle,
                 ),

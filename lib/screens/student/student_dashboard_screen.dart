@@ -6,6 +6,9 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
+import 'student_applications_screen.dart';
+import 'student_reports_screen.dart';
+import 'student_messages_screen.dart';
 import 'student_notifications_screen.dart';
 import 'student_profile_screen.dart';
 
@@ -210,24 +213,28 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                             value: '${_counts['applications'] ?? 0}',
                             icon: Icons.send_outlined,
                             color: AppColors.primary,
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentApplicationsScreen())),
                           ),
                           MetricCard(
                             label: 'Interviews scheduled',
                             value: '${_counts['interviews'] ?? 0}',
                             icon: Icons.calendar_today_outlined,
                             color: AppColors.warning,
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentApplicationsScreen())),
                           ),
                           MetricCard(
                             label: 'Reports submitted',
                             value: '${_counts['reports'] ?? 0}',
                             icon: Icons.assignment_turned_in_outlined,
                             color: AppColors.success,
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentReportsScreen())),
                           ),
                           MetricCard(
                             label: 'Unread messages',
                             value: '${_counts['unreadMessages'] ?? 0}',
                             icon: Icons.chat_bubble_outline,
                             color: AppColors.primaryLight,
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentMessagesScreen())),
                           ),
                         ],
                       ),
@@ -244,8 +251,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       },
                     ),
                     if (_recentNotifications.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Text(
                           'Nothing here yet — apply to an internship or submit a report to get started.',
                           style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
@@ -287,7 +294,7 @@ class _RecentActivityTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(data['title'] as String,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

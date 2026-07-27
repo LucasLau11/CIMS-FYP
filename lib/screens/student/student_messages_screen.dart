@@ -52,7 +52,7 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => _ChatScreen(
+        builder: (_) => ChatScreen(
           conversationId: conversation['id'] as String,
           otherProfile: conversation['other_profile'] as Map<String, dynamic>,
         ),
@@ -78,7 +78,7 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -115,8 +115,8 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
         expand: false,
         builder: (_, scrollController) => Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text('New message', style: AppTextStyles.h3),
@@ -124,9 +124,9 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
             ),
             Expanded(
               child: directory.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Padding(
-                        padding: EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(24),
                         child: Text('No other accounts to message yet.', style: AppTextStyles.bodySecondary),
                       ),
                     )
@@ -162,7 +162,7 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
     if (!mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => _ChatScreen(conversationId: conversation['id'] as String, otherProfile: selected)),
+      MaterialPageRoute(builder: (_) => ChatScreen(conversationId: conversation['id'] as String, otherProfile: selected)),
     );
     _load();
   }
@@ -381,13 +381,13 @@ class _ConversationTile extends StatelessWidget {
                     color: hasUnread ? AppColors.primary : AppColors.textMuted,
                     fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400)),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
+            icon: Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
             onSelected: (value) {
               if (value == 'archive') onArchive();
               if (value == 'delete') onDelete();
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'archive', child: Text('Archive')),
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'archive', child: Text('Archive')),
               PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.error))),
             ],
           ),
@@ -397,17 +397,17 @@ class _ConversationTile extends StatelessWidget {
   }
 }
 
-class _ChatScreen extends StatefulWidget {
+class ChatScreen extends StatefulWidget {
   final String conversationId;
   final Map<String, dynamic> otherProfile;
 
-  const _ChatScreen({required this.conversationId, required this.otherProfile});
+  const ChatScreen({super.key, required this.conversationId, required this.otherProfile});
 
   @override
-  State<_ChatScreen> createState() => _ChatScreenState();
+  State<ChatScreen> createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<_ChatScreen> {
+class ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   final _myId = AuthService.instance.currentUserId;
@@ -481,7 +481,7 @@ class _ChatScreenState extends State<_ChatScreen> {
     if (picked.size > 10 * 1024 * 1024) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('File is too large. Maximum size is 10MB.'), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: const Text('File is too large. Maximum size is 10MB.'), backgroundColor: AppColors.error));
       return;
     }
 
@@ -518,7 +518,7 @@ class _ChatScreenState extends State<_ChatScreen> {
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -563,12 +563,21 @@ class _ChatScreenState extends State<_ChatScreen> {
               child: Text(logoLetter(name), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: nameColor(name))),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-                Text(role, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white70)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(name,
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  Text(role,
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white70),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                ],
+              ),
             ),
           ],
         ),
@@ -579,7 +588,7 @@ class _ChatScreenState extends State<_ChatScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : _messages.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text('Say hello 👋', style: TextStyle(fontFamily: 'Inter', color: AppColors.textMuted)),
                       )
                     : ListView.builder(
@@ -605,7 +614,7 @@ class _ChatScreenState extends State<_ChatScreen> {
                 IconButton(
                   icon: _isAttaching
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.attach_file, color: AppColors.textMuted, size: 22),
+                      : Icon(Icons.attach_file, color: AppColors.textMuted, size: 22),
                   onPressed: _isAttaching ? null : _attachFile,
                 ),
                 Expanded(
@@ -714,7 +723,7 @@ class _AttachmentContent extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.network(url, width: 180, fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox(
+                  errorBuilder: (_, __, ___) => SizedBox(
                         width: 120,
                         height: 90,
                         child: Center(child: Icon(Icons.broken_image_outlined, color: AppColors.textMuted)),

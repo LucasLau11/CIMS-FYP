@@ -1,102 +1,91 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
+import '../../services/company_supervisor_data_service.dart';
+import '../../services/student_data_service.dart';
+import '../../utils/format_utils.dart';
+import '../student/student_messages_screen.dart';
 import 'company_supervisor_evaluate_screen.dart';
 
-class CompanySupervisorStudentsScreen extends StatelessWidget {
+class CompanySupervisorStudentsScreen extends StatefulWidget {
   const CompanySupervisorStudentsScreen({super.key});
 
-  final List<Map<String, dynamic>> _interns = const [
-    {
-      'name': 'Tan Kai Ming',
-      'id': '22CSB12345',
-      'university': 'TARUMT',
-      'role': 'Software Engineering Intern',
-      'progress': 0.42,
-      'status': 'On track',
-      'initials': 'TK',
-      'startDate': '1 Jun 2026',
-      'endDate': '31 Aug 2026',
-    },
-    {
-      'name': 'Nur Sabrina',
-      'id': '22CSB30021',
-      'university': 'TARUMT',
-      'role': 'QA Engineering Intern',
-      'progress': 0.55,
-      'status': 'On track',
-      'initials': 'NS',
-      'startDate': '1 Jun 2026',
-      'endDate': '31 Aug 2026',
-    },
-    {
-      'name': 'Chong Wei Liang',
-      'id': '22CSB09012',
-      'university': 'TARUMT',
-      'role': 'Software Engineering Intern',
-      'progress': 0.20,
-      'status': 'At risk',
-      'initials': 'CW',
-      'startDate': '1 Jun 2026',
-      'endDate': '31 Aug 2026',
-    },
-    {
-      'name': 'Rajesh Kumar',
-      'id': '22CSB18890',
-      'university': 'TARUMT',
-      'role': 'Mobile App Development Intern',
-      'progress': 0.80,
-      'status': 'On track',
-      'initials': 'RK',
-      'startDate': '1 Jun 2026',
-      'endDate': '31 Aug 2026',
-    },
-  ];
+  @override
+  State<CompanySupervisorStudentsScreen> createState() => _CompanySupervisorStudentsScreenState();
+}
+
+class _CompanySupervisorStudentsScreenState extends State<CompanySupervisorStudentsScreen> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _interns = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    try {
+      final interns = await CompanySupervisorDataService.instance.getInterns();
+      if (!mounted) return;
+      setState(() {
+        _interns = interns;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final atRisk = _interns.where((i) => (i['pending_review_count'] as int) > 2).length;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const GradientAppBar(title: 'Interns'),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                Text('${_interns.length} current interns', style: AppTextStyles.caption),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.errorBg,
-                    borderRadius: BorderRadius.circular(6),
+      appBar: GradientAppBar(title: l10n.csInterns),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Row(
+                      children: [
+                        Text(l10n.csCurrentInternsCount(_interns.length), style: AppTextStyles.caption),
+                        const Spacer(),
+                        if (atRisk > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: AppColors.errorBg, borderRadius: BorderRadius.circular(6)),
+                            child: Text(l10n.csNeedsAttention(atRisk), style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.error)),
+                          ),
+                      ],
+                    ),
                   ),
-                  child: const Text('1 at risk',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.error)),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 24),
-              itemCount: _interns.length,
-              itemBuilder: (_, i) => _InternCard(
-                data: _interns[i],
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => _InternDetailScreen(data: _interns[i])),
-                ),
+                  Expanded(
+                    child: _interns.isEmpty
+                        ? EmptyState(icon: Icons.badge_outlined, title: l10n.csNoInternsTitle, description: l10n.csNoInternsDescription)
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            itemCount: _interns.length,
+                            itemBuilder: (_, i) => _InternCard(
+                              data: _interns[i],
+                              onTap: () async {
+                                await Navigator.push(context, MaterialPageRoute(builder: (_) => InternDetailScreen(data: _interns[i])));
+                                _load();
+                              },
+                            ),
+                          ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -107,80 +96,37 @@ class _InternCard extends StatelessWidget {
 
   const _InternCard({required this.data, required this.onTap});
 
-  Color get _statusColor =>
-      data['status'] == 'At risk' ? AppColors.error : AppColors.success;
+  Color get _statusColor => (data['pending_review_count'] as int) > 2 ? AppColors.error : AppColors.success;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final name = data['full_name'] as String;
+    final pending = data['pending_review_count'] as int;
     return AccentCard(
       accentColor: _statusColor,
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppColors.infoBg,
-                child: Text(data['initials'],
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(data['name'],
-                        style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary)),
-                    Text('${data['id']} · ${data['role']}',
-                        style: AppTextStyles.caption,
-                        overflow: TextOverflow.ellipsis),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(data['status'],
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: _statusColor)),
-              ),
-            ],
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: AppColors.infoBg,
+            child: Text(logoLetter(name), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Text('Progress', style: AppTextStyles.caption),
-              const Spacer(),
-              Text('${(data['progress'] * 100).toInt()}%',
-                  style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _statusColor)),
-            ],
-          ),
-          const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: data['progress'],
-              backgroundColor: AppColors.surfaceVariant,
-              valueColor: AlwaysStoppedAnimation(_statusColor),
-              minHeight: 6,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                Text('${data['programme'] ?? l10n.notSpecified} · ${data['role_title'] ?? ''}', style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
+              ],
             ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(color: _statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+            child: Text(pending > 0 ? l10n.supPendingCount(pending) : l10n.supUpToDate, style: TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w600, color: _statusColor)),
           ),
         ],
       ),
@@ -188,27 +134,71 @@ class _InternCard extends StatelessWidget {
   }
 }
 
-class _InternDetailScreen extends StatelessWidget {
+class InternDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
 
-  const _InternDetailScreen({required this.data});
+  const InternDetailScreen({super.key, required this.data});
+
+  @override
+  State<InternDetailScreen> createState() => _InternDetailScreenState();
+}
+
+class _InternDetailScreenState extends State<InternDetailScreen> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _reports = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final reports = await CompanySupervisorDataService.instance.getReviewItems();
+      final studentId = widget.data['id'] as String;
+      if (!mounted) return;
+      setState(() {
+        _reports = reports.where((r) => r['student_id'] == studentId).toList();
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _message() async {
+    try {
+      final conversation = await StudentDataService.instance.getOrCreateConversation(widget.data['id'] as String);
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            conversationId: conversation['id'] as String,
+            otherProfile: {'id': widget.data['id'], 'full_name': widget.data['full_name']},
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open chat: $e'), backgroundColor: AppColors.error));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final data = widget.data;
+    final name = data['full_name'] as String;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Intern details',
-            style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white)),
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        title: Text(l10n.csInternDetails, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -219,24 +209,13 @@ class _InternDetailScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 34,
                   backgroundColor: AppColors.infoBg,
-                  child: Text(data['initials'],
-                      style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary)),
+                  child: Text(logoLetter(name), style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary)),
                 ),
                 const SizedBox(height: 10),
-                Text(data['name'], style: AppTextStyles.h2),
-                Text('${data['id']} · ${data['university']}',
-                    style: AppTextStyles.bodySecondary),
+                Text(name, style: AppTextStyles.h2),
+                Text((data['programme'] as String?) ?? l10n.notSpecified, style: AppTextStyles.bodySecondary),
                 const SizedBox(height: 6),
-                Text(data['role'],
-                    style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary)),
+                Text((data['role_title'] as String?) ?? '', style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary)),
               ],
             ),
           ),
@@ -245,109 +224,56 @@ class _InternDetailScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(
-                          builder: (_) => CompanySupervisorEvaluateScreen(intern: data))),
+                  onPressed: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => CompanySupervisorEvaluateScreen(intern: data)));
+                    _load();
+                  },
                   icon: const Icon(Icons.assessment_outlined, size: 16),
-                  label: const Text('Evaluate'),
+                  label: Text(l10n.supEvaluate),
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: _message,
                   icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                  label: const Text('Message'),
+                  label: Text(l10n.supMessage),
                   style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          const Text('Internship details', style: AppTextStyles.label),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              children: [
-                _DetailLine(icon: Icons.calendar_today_outlined,
-                    label: 'Start date', value: data['startDate']),
-                const Divider(height: 1, indent: 44),
-                _DetailLine(icon: Icons.event_outlined,
-                    label: 'End date', value: data['endDate']),
-                const Divider(height: 1, indent: 44),
-                _DetailLine(icon: Icons.school_outlined,
-                    label: 'University', value: data['university']),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text('Progress', style: AppTextStyles.h3),
+          Text(l10n.csReportSubmissions, style: AppTextStyles.h3),
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              children: [
-                ProgressStepper(
-                    steps: const ['Applied', 'Accepted', 'Ongoing', 'Completed'],
-                    currentStep: 2),
-                const SizedBox(height: 14),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: data['progress'],
-                    backgroundColor: AppColors.surfaceVariant,
-                    valueColor: const AlwaysStoppedAnimation(AppColors.primaryLight),
-                    minHeight: 8,
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          else if (_reports.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(l10n.csNoReportsSubmittedYet, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+            )
+          else
+            ..._reports.map((r) => AccentCard(
+                  accentColor: r['status'] == 'approved' ? AppColors.success : (r['status'] == 'rejected' ? AppColors.error : AppColors.warning),
+                  child: Row(
+                    children: [
+                      Icon(Icons.assignment_outlined, size: 18, color: AppColors.textMuted),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(r['title'] as String, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                            Text(l10n.supSubmittedAgo(timeAgo(DateTime.parse(r['submitted_at'] as String))), style: AppTextStyles.caption),
+                          ],
+                        ),
+                      ),
+                      r['status'] == 'approved' ? StatusBadge.approved() : (r['status'] == 'rejected' ? StatusBadge.rejected() : StatusBadge.pending()),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailLine extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _DetailLine({required this.icon, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.textMuted),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTextStyles.caption),
-              const SizedBox(height: 2),
-              Text(value,
-                  style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary)),
-            ],
-          ),
+                )),
         ],
       ),
     );
