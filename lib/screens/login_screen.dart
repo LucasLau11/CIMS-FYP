@@ -56,16 +56,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // Admin is a hardcoded demo account — never touches Supabase.
-    if (AuthService.instance.isAdminLogin(email, password)) {
-      await AuthService.instance.setAdminRemembered(true);
-      await AuthService.instance.establishAdminSupabaseSession();
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      _routeToShell(destination: const AdminShell());
-      return;
-    }
-
     try {
       final role = await AuthService.instance.logIn(
         email: email,
@@ -185,6 +175,9 @@ class _LoginScreenState extends State<LoginScreen> {
         break;
       case UserRole.parent:
         _routeToShell(destination: const ParentShell());
+        break;
+      case UserRole.admin:
+        _routeToShell(destination: const AdminShell());
         break;
     }
   }

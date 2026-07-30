@@ -1,19 +1,20 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'locale_controller.dart';
 import 'theme_controller.dart';
 
-/// All the possible roles a signed-up user can end up with.
-/// 'admin' is intentionally excluded — the admin account is a hardcoded
-/// demo login and never goes through Supabase (see AuthService.isAdminLogin).
+/// All the possible roles a signed-up user can end up with. 'admin' is a
+/// real Supabase account like every other role (no client-side hardcoded
+/// credential check) — it's just never offered on the sign-up screen since
+/// there's only ever meant to be one, provisioned directly in the database.
 enum UserRole {
   student,
   academicSupervisor,
   companyHr,
   companySupervisor,
   parent,
+  admin,
 }
 
 extension UserRoleX on UserRole {
@@ -29,6 +30,8 @@ extension UserRoleX on UserRole {
         return 'company_supervisor';
       case UserRole.parent:
         return 'parent';
+      case UserRole.admin:
+        return 'admin';
     }
   }
 
@@ -44,6 +47,8 @@ extension UserRoleX on UserRole {
         return UserRole.companySupervisor;
       case 'parent':
         return UserRole.parent;
+      case 'admin':
+        return UserRole.admin;
       default:
         throw ArgumentError('Unknown role value: $value');
     }
@@ -57,68 +62,14 @@ class AuthService {
   final SupabaseClient _client = Supabase.instance.client;
 
   // ---------------------------------------------------------------------
-  // Admin — hardcoded demo credential, deliberately NOT stored in Supabase.
-  // NOTE: this is a temporary demo shortcut for FYP purposes only. Do not
-  // replace with real institutional admin accounts without moving this to
-  // proper backend-verified auth.
+  // Restoring a session on app start (problem 9). Admin is a real Supabase
+  // account like every other role now, so this is the same path for
+  // everyone — Supabase already persists sessions across app restarts.
   // ---------------------------------------------------------------------
-  static const String adminEmail = 'lucas@tar.edu.my';
-  static const String adminPassword = 'ABCxyz#123';
 
-  bool isAdminLogin(String email, String password) {
-    return email.trim().toLowerCase() == adminEmail && password == adminPassword;
-  }
-
-  /// The admin login itself stays a hardcoded client-side check (by
-  /// design — see the class doc), but every admin screen reads/writes
-  /// real Supabase data behind RLS, which requires a real authenticated
-  /// session (the anon key alone has none). A matching real Supabase
-  /// account was created out-of-band with these same credentials and
-  /// role='admin', so this establishes that session silently right after
-  /// the hardcoded check passes — the login UX is unchanged, but the app
-  /// now has a genuine JWT for RLS to key off. Non-fatal if it fails
-  /// (e.g. offline): admin screens will just show empty/error states
-  /// rather than blocking login entirely.
-  Future<void> establishAdminSupabaseSession() async {
-    try {
-      await _client.auth.signInWithPassword(email: adminEmail, password: adminPassword);
-    } catch (_) {
-      // Non-fatal — see doc comment above.
-    }
-  }
-
-  // ---------------------------------------------------------------------
-  // Persistent login (problem 9). Supabase already persists real user
-  // sessions across app restarts automatically. The hardcoded admin
-  // account never creates a Supabase session though, so it needs its own
-  // locally-stored "remembered" flag to get the same stay-logged-in
-  // behaviour.
-  // ---------------------------------------------------------------------
-  static const String _adminRememberedKey = 'cims_admin_remembered';
-
-  Future<void> setAdminRemembered(bool remembered) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (remembered) {
-      await prefs.setBool(_adminRememberedKey, true);
-    } else {
-      await prefs.remove(_adminRememberedKey);
-    }
-  }
-
-  Future<bool> isAdminRemembered() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_adminRememberedKey) ?? false;
-  }
-
-  /// Checks for either a real Supabase session or a remembered admin login.
-  /// Returns null if there's nothing to restore (show the login screen).
-  /// Returns UserRole for a normal restored session, or throws
-  /// [AdminSessionRestored] as a signal value for the admin case.
-  Future<RestoredSession?> checkForRestoredSession() async {
-    if (await isAdminRemembered()) {
-      return RestoredSession.admin();
-    }
-
+  /// Checks for a restored Supabase session on app start. Returns null if
+  /// there's nothing to restore (show the login screen).
+  Future<UserRole?> checkForRestoredSession() async {
     final session = _client.auth.currentSession;
     if (session == null) return null;
 
@@ -136,7 +87,7 @@ class AuthService {
         await ThemeController.instance.setThemeModeByCode(savedThemeMode);
       }
 
-      return RestoredSession.role(UserRoleX.fromDbValue(profile['role'] as String));
+      return UserRoleX.fromDbValue(profile['role'] as String);
     } catch (_) {
       // Session token present but invalid/expired/profile missing —
       // treat as no session, fall back to login screen.
@@ -700,12 +651,10 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------
-  // Log out — clears the current Supabase session AND the admin
-  // remembered flag, so logout works no matter which login path was used.
+  // Log out — clears the current Supabase session.
   // ---------------------------------------------------------------------
   Future<void> signOut() async {
     await _client.auth.signOut();
-    await setAdminRemembered(false);
   }
 }
 
@@ -724,19 +673,3 @@ class AuthFieldException implements Exception {
 }
 
 enum AuthFieldTarget { credentials, account }
-
-/// Result of checking for a restored session on app start — either the
-/// hardcoded admin was remembered, or a real Supabase session restored to
-/// a specific role.
-class RestoredSession {
-  final bool isAdmin;
-  final UserRole? role;
-
-  RestoredSession.admin()
-      : isAdmin = true,
-        role = null;
-
-  RestoredSession.role(UserRole role)
-      : isAdmin = false,
-        role = role;
-}

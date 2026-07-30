@@ -123,6 +123,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       case UserRole.parent:
         destination = const ParentShell();
         break;
+      case UserRole.admin:
+        // Unreachable — sign-up never offers/assigns the admin role.
+        throw StateError('Sign-up cannot produce an admin account.');
     }
 
     Navigator.of(context).pushReplacement(

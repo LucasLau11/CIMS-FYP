@@ -15,7 +15,7 @@ class AdminMoreScreen extends StatefulWidget {
 }
 
 class _AdminMoreScreenState extends State<AdminMoreScreen> {
-  String _email = AuthService.adminEmail;
+  String _email = '';
   String _selectedThemeCode = 'system';
 
   @override
@@ -29,7 +29,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
       final profile = await AuthService.instance.getCurrentProfile();
       if (!mounted) return;
       setState(() {
-        _email = profile?['email'] as String? ?? AuthService.adminEmail;
+        _email = profile?['email'] as String? ?? '';
         _selectedThemeCode = profile?['theme_mode'] as String? ?? 'system';
       });
     } catch (_) {

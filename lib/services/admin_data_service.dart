@@ -130,6 +130,10 @@ class AdminDataService {
     await _client.from('profiles').update({'academic_supervisor_id': supervisorId}).eq('id', studentId);
   }
 
+  Future<void> promoteToAdmin(String userId) async {
+    await _client.from('profiles').update({'role': 'admin'}).eq('id', userId);
+  }
+
   // ---------------------------------------------------------------------
   // Dashboard
   // ---------------------------------------------------------------------

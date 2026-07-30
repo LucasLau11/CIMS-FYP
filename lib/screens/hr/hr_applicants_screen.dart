@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/hr_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 import '../student/address_picker_screen.dart';
 
 class HrApplicantsScreen extends StatefulWidget {
@@ -245,7 +245,9 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     }
     try {
       final url = await HrDataService.instance.getResumeSignedUrl(path);
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!mounted) return;
+      final fileName = (widget.data['resume_filename'] as String?) ?? path.split('/').last;
+      Navigator.push(context, MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: url, fileName: fileName)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open resume: $e'), backgroundColor: AppColors.error));

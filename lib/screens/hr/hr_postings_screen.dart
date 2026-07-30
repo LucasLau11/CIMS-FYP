@@ -5,6 +5,7 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/hr_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../student/address_picker_screen.dart';
+import 'hr_recommended_candidates_screen.dart';
 
 const List<String> _kJobTypes = ['On-site', 'Remote', 'Hybrid'];
 
@@ -86,6 +87,15 @@ class _HrPostingsScreenState extends State<HrPostingsScreen> {
                             itemBuilder: (_, i) => _PostingCard(
                               data: _postings[i],
                               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => _AddEditPostingScreen(posting: _postings[i]))).then((_) => _load()),
+                              onRecommend: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => RecommendedCandidatesScreen(
+                                    postingTitle: _postings[i]['title'] as String,
+                                    requiredSkills: List<String>.from(_postings[i]['required_skills'] as List? ?? []),
+                                  ),
+                                ),
+                              ),
                               onToggleStatus: () async {
                                 final newStatus = _postings[i]['status'] == 'open' ? 'closed' : 'open';
                                 await HrDataService.instance.setPostingStatus(id: _postings[i]['id'] as String, status: newStatus);
@@ -113,10 +123,11 @@ class _HrPostingsScreenState extends State<HrPostingsScreen> {
 class _PostingCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final VoidCallback onTap;
+  final VoidCallback onRecommend;
   final VoidCallback onToggleStatus;
   final VoidCallback onDelete;
 
-  const _PostingCard({required this.data, required this.onTap, required this.onToggleStatus, required this.onDelete});
+  const _PostingCard({required this.data, required this.onTap, required this.onRecommend, required this.onToggleStatus, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -175,10 +186,12 @@ class _PostingCard extends StatelessWidget {
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
                 onSelected: (v) {
+                  if (v == 'recommend') onRecommend();
                   if (v == 'toggle') onToggleStatus();
                   if (v == 'delete') _confirmDelete(context);
                 },
                 itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'recommend', child: Text('Recommended candidates')),
                   PopupMenuItem(value: 'toggle', child: Text(isActive ? l10n.hrClosePosting : l10n.hrReopenPosting)),
                   PopupMenuItem(value: 'delete', child: Text(l10n.delete, style: TextStyle(color: AppColors.error))),
                 ],

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/company_supervisor_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 
 class CompanySupervisorReviewsScreen extends StatefulWidget {
   const CompanySupervisorReviewsScreen({super.key});
@@ -77,7 +77,10 @@ class _CompanySupervisorReviewsScreenState
     }
     try {
       final url = await CompanySupervisorDataService.instance.getReviewFileSignedUrl(path);
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!mounted) return;
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => DocumentPreviewScreen(url: url, fileName: path.split('/').last),
+      ));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open file: $e'), backgroundColor: AppColors.error));

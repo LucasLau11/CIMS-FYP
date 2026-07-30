@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../supervisor/supervisor_students_screen.dart' show StudentDetailScreen;
 
 class AdminStudentsScreen extends StatefulWidget {
   const AdminStudentsScreen({super.key});
@@ -160,7 +161,14 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                         : ListView.builder(
                             padding: const EdgeInsets.only(bottom: 24),
                             itemCount: results.length,
-                            itemBuilder: (_, i) => _StudentCard(data: results[i], onAssign: () => _assign(results[i])),
+                            itemBuilder: (_, i) => _StudentCard(
+                              data: results[i],
+                              onAssign: () => _assign(results[i]),
+                              onTap: () async {
+                                await Navigator.push(context, MaterialPageRoute(builder: (_) => StudentDetailScreen(studentId: results[i]['id'] as String)));
+                                _load();
+                              },
+                            ),
                           ),
                   ),
                 ],
@@ -173,8 +181,9 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
 class _StudentCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final VoidCallback onAssign;
+  final VoidCallback onTap;
 
-  const _StudentCard({required this.data, required this.onAssign});
+  const _StudentCard({required this.data, required this.onAssign, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +193,7 @@ class _StudentCard extends StatelessWidget {
 
     return AccentCard(
       accentColor: isUnassigned ? AppColors.error : AppColors.success,
+      onTap: onTap,
       child: Row(
         children: [
           CircleAvatar(

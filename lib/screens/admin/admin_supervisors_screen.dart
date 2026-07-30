@@ -141,6 +141,7 @@ class _SupervisorDetailScreen extends StatefulWidget {
 
 class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
   bool _isLoading = true;
+  bool _isPromoting = false;
   List<Map<String, dynamic>> _students = [];
 
   @override
@@ -161,6 +162,37 @@ class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _promoteToAdmin() async {
+    final name = (widget.data['full_name'] as String?)?.isNotEmpty == true ? widget.data['full_name'] as String : 'this supervisor';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: const Text('Promote to admin?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+        content: Text(
+          '$name will immediately become a System Administrator — their account will gain full admin access on next login and they will no longer appear in the supervisors list. This cannot be undone from here.',
+          style: const TextStyle(fontFamily: 'Inter', fontSize: 13),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text('Promote', style: TextStyle(color: AppColors.error))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _isPromoting = true);
+    try {
+      await AdminDataService.instance.promoteToAdmin(widget.data['id'] as String);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isPromoting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not promote: $e'), backgroundColor: AppColors.error));
     }
   }
 
@@ -202,6 +234,18 @@ class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
                   Container(
                     decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
                     child: _DetailLine(icon: Icons.email_outlined, label: 'Email', value: (data['email'] as String?) ?? 'Not set'),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _isPromoting ? null : _promoteToAdmin,
+                      icon: _isPromoting
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.admin_panel_settings_outlined, size: 16),
+                      label: const Text('Promote to admin'),
+                      style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Text('Assigned students', style: AppTextStyles.h3),

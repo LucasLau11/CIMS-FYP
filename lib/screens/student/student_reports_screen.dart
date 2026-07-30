@@ -1,12 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 import 'student_profile_screen.dart';
 
 // Parent Acknowledgement Form is intentionally not here — it's submitted by
@@ -266,7 +266,10 @@ class _ReportCard extends StatelessWidget {
               onTap: () async {
                 try {
                   final url = await StudentDataService.instance.getReportSignedUrl(storagePath);
-                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  if (!context.mounted) return;
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => DocumentPreviewScreen(url: url, fileName: (data['file_name'] as String?) ?? storagePath.split('/').last),
+                  ));
                 } catch (_) {}
               },
               child: Row(
@@ -484,7 +487,13 @@ class _DocumentTile extends StatelessWidget {
                 if (value == 'open') {
                   try {
                     final url = await StudentDataService.instance.getDocumentSignedUrl(document!['storage_path'] as String);
-                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    if (!context.mounted) return;
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => DocumentPreviewScreen(
+                        url: url,
+                        fileName: (document!['file_name'] as String?) ?? (document!['storage_path'] as String).split('/').last,
+                      ),
+                    ));
                   } catch (_) {}
                 } else if (value == 'remove') {
                   await StudentDataService.instance

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/supervisor_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
+import '../supervisor/supervisor_students_screen.dart' show StudentDetailScreen;
 
 class AdminMonitorScreen extends StatefulWidget {
   const AdminMonitorScreen({super.key});
@@ -65,6 +66,11 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
     }
   }
 
+  Future<void> _openStudent(String studentId) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => StudentDetailScreen(studentId: studentId)));
+    _load();
+  }
+
   Future<void> _view(Map<String, dynamic> item) async {
     final path = item['storage_path'] as String?;
     if (path == null) {
@@ -73,7 +79,10 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
     }
     try {
       final url = await SupervisorDataService.instance.getReviewFileSignedUrl(path);
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!mounted) return;
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => DocumentPreviewScreen(url: url, fileName: path.split('/').last),
+      ));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open file: $e'), backgroundColor: AppColors.error));
@@ -107,7 +116,7 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _StudentProgressTab(students: _students, onRefresh: _load),
+                      _StudentProgressTab(students: _students, onRefresh: _load, onOpenStudent: _openStudent),
                       _ReviewListTab(items: reports, onRefresh: _load, onView: _view, onApprove: (i) => _review(i, approve: true), onReject: (i) => _review(i, approve: false)),
                       _ReviewListTab(items: documents, onRefresh: _load, onView: _view, onApprove: (i) => _review(i, approve: true), onReject: (i) => _review(i, approve: false)),
                     ],
@@ -122,8 +131,9 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
 class _StudentProgressTab extends StatelessWidget {
   final List<Map<String, dynamic>> students;
   final Future<void> Function() onRefresh;
+  final Future<void> Function(String studentId) onOpenStudent;
 
-  const _StudentProgressTab({required this.students, required this.onRefresh});
+  const _StudentProgressTab({required this.students, required this.onRefresh, required this.onOpenStudent});
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +153,7 @@ class _StudentProgressTab extends StatelessWidget {
           final color = pendingCount > 0 ? AppColors.warning : AppColors.success;
           return AccentCard(
             accentColor: color,
+            onTap: () => onOpenStudent(s['id'] as String),
             child: Row(
               children: [
                 CircleAvatar(

@@ -1,12 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 
 const List<String> _imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
@@ -719,7 +719,9 @@ class _AttachmentContent extends StatelessWidget {
         final url = snapshot.data!;
         if (_isImage(fileName)) {
           return GestureDetector(
-            onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+            onTap: () => Navigator.push(context, MaterialPageRoute(
+              builder: (_) => DocumentPreviewScreen(url: url, fileName: fileName ?? 'Attachment'),
+            )),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.network(url, width: 180, fit: BoxFit.cover,
@@ -732,7 +734,9 @@ class _AttachmentContent extends StatelessWidget {
           );
         }
         return GestureDetector(
-          onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+          onTap: () => Navigator.push(context, MaterialPageRoute(
+            builder: (_) => DocumentPreviewScreen(url: url, fileName: fileName ?? 'Attachment'),
+          )),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(

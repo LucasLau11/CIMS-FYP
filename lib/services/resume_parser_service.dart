@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:docx_to_text/docx_to_text.dart';
 
@@ -38,6 +41,12 @@ class ParsedResumeData {
   final List<String> skills;
   final List<ParsedWorkExperience> workExperience;
 
+  /// 'nlp' if this came from the hybrid spaCy+regex service, 'regex' if it
+  /// came from the local-only fallback parser below. Shown in the UI so
+  /// it's clear which one produced a given result — also the basis for the
+  /// regex-vs-NLP comparison in the FYP report.
+  final String source;
+
   ParsedResumeData({
     this.fullName,
     this.phone,
@@ -49,6 +58,7 @@ class ParsedResumeData {
     this.cgpa,
     this.skills = const [],
     this.workExperience = const [],
+    this.source = 'regex',
   });
 
   bool get foundAnything =>
@@ -71,6 +81,71 @@ class ParsedResumeData {
 class ResumeParserService {
   ResumeParserService._();
   static final ResumeParserService instance = ResumeParserService._();
+
+  /// Base URL of the hybrid spaCy+regex NLP service (nlp_service/). This is
+  /// an ngrok tunnel that gets a new URL every time it's restarted (ngrok's
+  /// free tier doesn't offer a permanent one), so it's stored on-device and
+  /// editable at runtime — see [getNlpServiceUrl]/[setNlpServiceUrl] —
+  /// rather than compiled into the app, which would need a full rebuild
+  /// and reinstall every time it changed (a real problem when testing on a
+  /// physical phone, not just an emulator hot-reloading from source).
+  static const String _defaultNlpServiceBaseUrl = 'https://entrust-nimble-squash.ngrok-free.dev';
+  static const String _nlpServiceUrlPrefsKey = 'cims_nlp_service_url';
+
+  Future<String> getNlpServiceUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_nlpServiceUrlPrefsKey) ?? _defaultNlpServiceBaseUrl;
+  }
+
+  Future<void> setNlpServiceUrl(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Strip a trailing slash so "$base/parse-resume" never ends up with "//".
+    await prefs.setString(_nlpServiceUrlPrefsKey, url.trim().replaceFirst(RegExp(r'/+$'), ''));
+  }
+
+  /// Calls the NLP service's /parse-resume endpoint. Throws on any
+  /// failure (network error, timeout, bad response) — callers should catch
+  /// and fall back to [parse] (the local regex-only parser), never let a
+  /// scan silently do nothing.
+  Future<ParsedResumeData> parseViaNlp(String text) async {
+    final baseUrl = await getNlpServiceUrl();
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/parse-resume'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'text': text}),
+        )
+        .timeout(const Duration(seconds: 20));
+
+    if (response.statusCode != 200) {
+      throw Exception('NLP service returned ${response.statusCode}');
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return ParsedResumeData(
+      fullName: json['fullName'] as String?,
+      phone: json['phone'] as String?,
+      address: json['address'] as String?,
+      dateOfBirth: json['dateOfBirth'] != null ? DateTime.tryParse(json['dateOfBirth'] as String) : null,
+      programme: json['programme'] as String?,
+      faculty: json['faculty'] as String?,
+      semester: json['semester'] as int?,
+      cgpa: (json['cgpa'] as num?)?.toDouble(),
+      skills: (json['skills'] as List).cast<String>(),
+      workExperience: (json['workExperience'] as List).map((w) {
+        final map = w as Map<String, dynamic>;
+        return ParsedWorkExperience(
+          position: map['position'] as String?,
+          companyName: map['companyName'] as String?,
+          startYear: map['startYear'] as int?,
+          endYear: map['endYear'] as int?,
+          isCurrent: map['isCurrent'] as bool? ?? false,
+          description: map['description'] as String?,
+        );
+      }).toList(),
+      source: 'nlp',
+    );
+  }
 
   /// Extracts raw text from a PDF or DOCX file.
   Future<String> extractText(File file) async {

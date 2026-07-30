@@ -123,8 +123,9 @@ class _CimsAppState extends State<CimsApp> with WidgetsBindingObserver {
               // Any other email      → user manually picks: Parent/Guardian,
               //                         HR Personnel, or Company Supervisor
               //
-              // Admin is a hardcoded demo account (see AuthService.isAdminLogin) —
-              // it never goes through sign-up or Supabase at all.
+              // Admin is a real Supabase account too (role='admin'), just
+              // never offered on the sign-up screen — there's only meant
+              // to be one, provisioned directly in the database.
             );
           },
         );

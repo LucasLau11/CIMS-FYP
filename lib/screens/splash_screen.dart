@@ -51,18 +51,16 @@ class _SplashScreenState extends State<SplashScreen>
 
       Widget destination;
       try {
-        final restored = await AuthService.instance
+        final restoredRole = await AuthService.instance
             .checkForRestoredSession()
             .timeout(const Duration(seconds: 8));
         debugPrint('🔵 Splash: session check returned: '
-            '${restored == null ? 'null (go to Login)' : restored.isAdmin ? 'admin' : restored.role}');
+            '${restoredRole == null ? 'null (go to Login)' : restoredRole}');
 
-        if (restored == null) {
+        if (restoredRole == null) {
           destination = const LoginScreen();
-        } else if (restored.isAdmin) {
-          destination = const AdminShell();
         } else {
-          switch (restored.role!) {
+          switch (restoredRole) {
             case UserRole.student:
               destination = const StudentShell();
               break;
@@ -77,6 +75,9 @@ class _SplashScreenState extends State<SplashScreen>
               break;
             case UserRole.parent:
               destination = const ParentShell();
+              break;
+            case UserRole.admin:
+              destination = const AdminShell();
               break;
           }
         }

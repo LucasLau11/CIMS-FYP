@@ -1,6 +1,5 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
@@ -8,6 +7,7 @@ import '../../services/student_data_service.dart';
 import '../../services/resume_parser_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 import 'student_profile_screen.dart';
 
 class StudentApplyScreen extends StatefulWidget {
@@ -270,7 +270,10 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
               : () async {
                   try {
                     final url = await AuthService.instance.getResumeSignedUrl(_resumePath!);
-                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    if (!mounted) return;
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => DocumentPreviewScreen(url: url, fileName: _resumeFilename ?? 'Resume'),
+                    ));
                   } catch (_) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(

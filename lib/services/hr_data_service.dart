@@ -200,6 +200,32 @@ class HrDataService {
   }
 
   // ---------------------------------------------------------------------
+  // Candidate recommendations
+  // ---------------------------------------------------------------------
+
+  /// Students whose `profile_directory.skills` overlap [requiredSkills].
+  /// Sourced from `profile_directory` (not `profiles`) so this works for
+  /// students who haven't applied to any of this company's postings yet —
+  /// the same privacy-safe surface used for supervisor/company_supervisor
+  /// lookups elsewhere in the app.
+  Future<List<Map<String, dynamic>>> getRecommendedCandidates(List<String> requiredSkills) async {
+    if (requiredSkills.isEmpty) return [];
+    final rows = await _client.from('profile_directory').select().eq('role', 'student').overlaps('skills', requiredSkills);
+    final candidates = List<Map<String, dynamic>>.from(rows);
+
+    final results = candidates.map((c) {
+      final skills = List<String>.from(c['skills'] as List? ?? []);
+      final matched = skills.where((s) => requiredSkills.contains(s)).toList();
+      final result = Map<String, dynamic>.from(c);
+      result['matched_skills'] = matched;
+      return result;
+    }).where((c) => (c['matched_skills'] as List).isNotEmpty).toList();
+
+    results.sort((a, b) => (b['matched_skills'] as List).length.compareTo((a['matched_skills'] as List).length));
+    return results;
+  }
+
+  // ---------------------------------------------------------------------
   // Dashboard
   // ---------------------------------------------------------------------
 

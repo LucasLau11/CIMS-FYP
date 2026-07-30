@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
@@ -12,6 +11,7 @@ import '../../services/student_data_service.dart';
 import '../../services/resume_parser_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 import '../login_screen.dart';
 import 'address_picker_screen.dart';
 
@@ -1001,11 +1001,52 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     return null;
   }
 
+  /// Dev-only access point (long-press the "Resume" section header) for
+  /// updating the NLP service's ngrok URL after a tunnel restart — no
+  /// rebuild/reinstall needed, see ResumeParserService.setNlpServiceUrl.
+  Future<void> _showNlpServiceUrlEditor() async {
+    final controller = TextEditingController(text: await ResumeParserService.instance.getNlpServiceUrl());
+    if (!mounted) return;
+    final newUrl = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('NLP service URL', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Update this after restarting the ngrok tunnel — the URL it prints changes every time.',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 10),
+            TextField(controller: controller, decoration: const InputDecoration(hintText: 'https://...ngrok-free.dev')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(dialogContext, controller.text), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (newUrl == null || newUrl.trim().isEmpty || !mounted) return;
+    await ResumeParserService.instance.setNlpServiceUrl(newUrl);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('NLP service URL updated.'), backgroundColor: AppColors.primary));
+  }
+
   Future<void> _offerResumeScan(File file) async {
     ParsedResumeData data;
     try {
       final text = await ResumeParserService.instance.extractText(file);
-      data = ResumeParserService.instance.parse(text);
+      try {
+        data = await ResumeParserService.instance.parseViaNlp(text);
+      } catch (_) {
+        // NLP service unreachable (offline, tunnel restarted, timed out,
+        // etc.) — silently fall back to the local regex-only parser rather
+        // than losing the autofill feature entirely.
+        data = ResumeParserService.instance.parse(text);
+      }
     } catch (e) {
       // Non-fatal — scanning is a bonus feature, upload already succeeded.
       return;
@@ -1043,6 +1084,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               const SizedBox(height: 10),
               Text(foundLines.join('\n'),
                   style: const TextStyle(fontFamily: 'Inter', fontSize: 13)),
+              const SizedBox(height: 10),
+              Text(
+                data.source == 'nlp' ? 'Parsed with AI' : 'Parsed offline',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontStyle: FontStyle.italic, color: AppColors.textMuted),
+              ),
             ],
           ),
         ),
@@ -1107,17 +1153,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     if (_resumePath == null) return;
     try {
       final url = await AuthService.instance.getResumeSignedUrl(_resumePath!);
-      // Not gated behind canLaunchUrl: on Android 11+ that check requires
-      // a <queries> declaration for browser intents that this app doesn't
-      // have, so it reliably reports false for a real https link even
-      // though launchUrl itself opens it fine — canLaunchUrl was blocking
-      // every attempt to view the resume.
-      final launched = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      if (!launched && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Could not open the resume link.'), backgroundColor: AppColors.error),
-        );
-      }
+      if (!mounted) return;
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => DocumentPreviewScreen(url: url, fileName: _resumeFilename ?? 'Resume'),
+      ));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1503,7 +1542,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   const SectionHeader(title: 'Work Experience'),
                   _buildWorkExperienceSection(),
 
-                  SectionHeader(title: l10n.resume),
+                  GestureDetector(
+                    onLongPress: _showNlpServiceUrlEditor,
+                    child: SectionHeader(title: l10n.resume),
+                  ),
                   _buildResumeSection(),
 
                   SectionHeader(title: l10n.account),
