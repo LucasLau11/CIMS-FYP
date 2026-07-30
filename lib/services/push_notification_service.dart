@@ -13,7 +13,7 @@ class PushNotificationService {
   PushNotificationService._();
   static final PushNotificationService instance = PushNotificationService._();
 
-  static const String _oneSignalAppId = 'REPLACE_WITH_ONESIGNAL_APP_ID';
+  static const String _oneSignalAppId = '4f4d4c81-bf4d-423e-9473-b742fe3e5070';
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
