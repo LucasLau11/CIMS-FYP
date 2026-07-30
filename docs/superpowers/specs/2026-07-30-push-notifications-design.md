@@ -79,7 +79,8 @@ Two webhooks, both pointed at the same Edge Function:
   `conversations` to find the other participant (excluding
   `record.sender_id`, so the sender never gets pushed their own message).
   Title is the sender's name (looked up from `profile_directory`), body
-  is the message text (truncated to a reasonable length).
+  is the message text, truncated to 100 characters (append "…" when
+  truncated).
 - Both cases: call OneSignal's REST API
   (`POST https://onesignal.com/api/v1/notifications`) with
   `include_external_user_ids: [recipientId]` and a `data` payload
