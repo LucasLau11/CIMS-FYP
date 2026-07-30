@@ -34,6 +34,11 @@ async function sendOneSignalPush(
       headings: { en: title },
       contents: { en: body },
       data,
+      // High priority tells FCM to wake the device immediately instead of
+      // batching delivery for later (Android defers "normal" priority
+      // messages when the device is idle/Doze mode, which can add minutes
+      // of delay).
+      priority: 10,
     }),
   });
   if (!response.ok) {
@@ -56,11 +61,14 @@ async function handleMessageInsert(record: Record<string, unknown>) {
   const conversationId = record.conversation_id as string;
   const senderId = record.sender_id as string;
 
-  const { data: conversation, error: convError } = await supabase
-    .from('conversations')
-    .select('participant_a, participant_b')
-    .eq('id', conversationId)
-    .single();
+  // These two lookups don't depend on each other — running them in
+  // parallel shaves one round-trip off the delivery path.
+  const [conversationResult, senderResult] = await Promise.all([
+    supabase.from('conversations').select('participant_a, participant_b').eq('id', conversationId).single(),
+    supabase.from('profile_directory').select('full_name').eq('id', senderId).single(),
+  ]);
+
+  const { data: conversation, error: convError } = conversationResult;
   if (convError || !conversation) {
     console.error(`Could not load conversation ${conversationId}: ${convError?.message}`);
     return;
@@ -70,11 +78,7 @@ async function handleMessageInsert(record: Record<string, unknown>) {
     conversation.participant_a === senderId ? conversation.participant_b : conversation.participant_a;
   if (!recipientId) return;
 
-  const { data: sender, error: senderError } = await supabase
-    .from('profile_directory')
-    .select('full_name')
-    .eq('id', senderId)
-    .single();
+  const { data: sender, error: senderError } = senderResult;
   if (senderError) {
     console.error(`Could not load sender ${senderId}: ${senderError.message}`);
   }
