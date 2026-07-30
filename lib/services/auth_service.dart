@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'locale_controller.dart';
+import 'push_notification_service.dart';
 import 'theme_controller.dart';
 
 /// All the possible roles a signed-up user can end up with. 'admin' is a
@@ -76,6 +77,8 @@ class AuthService {
     try {
       final profile = await getCurrentProfile();
       if (profile == null) return null;
+
+      await PushNotificationService.instance.linkUser(session.user.id);
 
       final savedLanguage = profile['language'] as String?;
       if (savedLanguage != null) {
@@ -617,6 +620,8 @@ class AuthService {
           'Incorrect email or password. Please try again.');
     }
 
+    await PushNotificationService.instance.linkUser(user.id);
+
     try {
       final row = await _client
           .from('profiles')
@@ -654,6 +659,7 @@ class AuthService {
   // Log out — clears the current Supabase session.
   // ---------------------------------------------------------------------
   Future<void> signOut() async {
+    await PushNotificationService.instance.unlinkUser();
     await _client.auth.signOut();
   }
 }
