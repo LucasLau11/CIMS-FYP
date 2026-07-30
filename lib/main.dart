@@ -6,6 +6,7 @@ import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'services/locale_controller.dart';
 import 'services/theme_controller.dart';
+import 'services/push_notification_service.dart';
 import 'l10n/app_localizations.dart';
 
 void main() async {
@@ -35,6 +36,8 @@ void main() async {
     // instead of the app just silently sitting on the splash screen.
     debugPrint('❌ Supabase.initialize() failed or timed out: $e');
   }
+
+  PushNotificationService.instance.initialize();
 
   // Lock to portrait orientation
   SystemChrome.setPreferredOrientations([
@@ -93,6 +96,7 @@ class _CimsAppState extends State<CimsApp> with WidgetsBindingObserver {
               WidgetsBinding.instance.platformDispatcher.platformBrightness,
             );
             return MaterialApp(
+              navigatorKey: PushNotificationService.instance.navigatorKey,
               title: 'CIMS',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.theme,
