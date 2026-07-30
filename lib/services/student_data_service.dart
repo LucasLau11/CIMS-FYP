@@ -361,6 +361,22 @@ class StudentDataService {
         .single();
   }
 
+  /// Resolves a conversation id (as delivered in a push notification's data
+  /// payload) into the shape ChatScreen needs — throws if the conversation
+  /// doesn't exist or the signed-in user isn't one of its two participants.
+  Future<Map<String, dynamic>> getConversationById(String conversationId) async {
+    final me = _userId;
+    final conversation = await _client.from('conversations').select().eq('id', conversationId).single();
+    final participantA = conversation['participant_a'] as String;
+    final participantB = conversation['participant_b'] as String;
+    if (participantA != me && participantB != me) {
+      throw Exception('Not a participant in this conversation.');
+    }
+    final otherId = participantA == me ? participantB : participantA;
+    final otherProfile = await _client.from('profile_directory').select().eq('id', otherId).single();
+    return {...conversation, 'other_profile': otherProfile};
+  }
+
   Future<void> setConversationArchived(String conversationId, bool archived) async {
     final me = _userId;
     final convo = await _client
