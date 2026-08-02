@@ -24,6 +24,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
   Map<String, int> _counts = {};
   int _unreadNotifications = 0;
   String _name = '';
+  String? _avatarUrl;
   String? _companyName;
   List<Map<String, dynamic>> _upcomingInterviews = [];
 
@@ -37,6 +38,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
     setState(() => _isLoading = true);
     try {
       final profile = await AuthService.instance.getCurrentProfile();
+      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       final company = await CompanyService.instance.getMyCompany();
       final counts = await HrDataService.instance.getDashboardCounts();
       final unread = await StudentDataService.instance.getUnreadNotificationCount();
@@ -46,6 +48,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
       if (!mounted) return;
       setState(() {
         _name = (profile?['full_name'] as String?)?.isNotEmpty == true ? profile!['full_name'] as String : '';
+        _avatarUrl = resolvedAvatarUrl;
         _companyName = company?['name'] as String?;
         _counts = counts;
         _unreadNotifications = unread;
@@ -97,10 +100,14 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
                                 child: CircleAvatar(
                                   radius: 20,
                                   backgroundColor: Colors.white24,
-                                  child: Text(
-                                    _name.isNotEmpty ? logoLetter(_name) : '👤',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
-                                  ),
+                                  backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+                                  onBackgroundImageError: _avatarUrl != null ? (_, __) {} : null,
+                                  child: _avatarUrl == null
+                                      ? Text(
+                                          _name.isNotEmpty ? logoLetter(_name) : '👤',
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                                        )
+                                      : null,
                                 ),
                               ),
                               NotificationBell(

@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../student/address_picker_screen.dart';
 
 class AdminCompaniesScreen extends StatefulWidget {
   const AdminCompaniesScreen({super.key});
@@ -43,24 +44,23 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
     return _companies.where((c) => (c['name'] as String).toLowerCase().contains(q)).toList();
   }
 
+  List<String> get _existingIndustries {
+    final set = <String>{};
+    for (final c in _companies) {
+      final industry = c['industry'] as String?;
+      if (industry != null && industry.trim().isNotEmpty) set.add(industry.trim());
+    }
+    final list = set.toList()..sort();
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
     final results = _filtered;
     final pendingCount = _companies.where((c) => c['status'] == 'pending').length;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: GradientAppBar(
-        title: 'Companies',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_business_outlined, color: Colors.white),
-            onPressed: () async {
-              final added = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const _AddEditCompanyScreen()));
-              if (added == true) _load();
-            },
-          ),
-        ],
-      ),
+      appBar: const GradientAppBar(title: 'Companies'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
@@ -102,7 +102,7 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
                               onTap: () async {
                                 final changed = await Navigator.push<bool>(
                                   context,
-                                  MaterialPageRoute(builder: (_) => _CompanyDetailScreen(data: results[i])),
+                                  MaterialPageRoute(builder: (_) => _CompanyDetailScreen(data: results[i], existingIndustries: _existingIndustries)),
                                 );
                                 if (changed == true) _load();
                               },
@@ -115,7 +115,10 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
-          final added = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const _AddEditCompanyScreen()));
+          final added = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => _AddEditCompanyScreen(existingIndustries: _existingIndustries)),
+          );
           if (added == true) _load();
         },
         child: const Icon(Icons.add, color: Colors.white),
@@ -168,8 +171,9 @@ class _CompanyCard extends StatelessWidget {
 
 class _CompanyDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
+  final List<String> existingIndustries;
 
-  const _CompanyDetailScreen({required this.data});
+  const _CompanyDetailScreen({required this.data, this.existingIndustries = const []});
 
   @override
   State<_CompanyDetailScreen> createState() => _CompanyDetailScreenState();
@@ -230,7 +234,10 @@ class _CompanyDetailScreenState extends State<_CompanyDetailScreen> {
             IconButton(
               icon: const Icon(Icons.edit_outlined, color: Colors.white),
               onPressed: () async {
-                final edited = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => _AddEditCompanyScreen(company: data)));
+                final edited = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => _AddEditCompanyScreen(company: data, existingIndustries: widget.existingIndustries)),
+                );
                 if (edited == true) {
                   _changed = true;
                   if (!mounted) return;
@@ -336,40 +343,62 @@ class _DetailRow extends StatelessWidget {
 
 class _AddEditCompanyScreen extends StatefulWidget {
   final Map<String, dynamic>? company;
+  final List<String> existingIndustries;
 
-  const _AddEditCompanyScreen({this.company});
+  const _AddEditCompanyScreen({this.company, this.existingIndustries = const []});
 
   @override
   State<_AddEditCompanyScreen> createState() => _AddEditCompanyScreenState();
 }
 
+const String _kOtherIndustryValue = '__other__';
+
 class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
   late bool isEdit;
   late final _nameController = TextEditingController(text: widget.company?['name'] as String? ?? '');
-  late final _locationController = TextEditingController(text: widget.company?['location'] as String? ?? '');
   late final _hrNameController = TextEditingController(text: widget.company?['hr_contact_name'] as String? ?? '');
   late final _hrEmailController = TextEditingController(text: widget.company?['hr_contact_email'] as String? ?? '');
   late final _hrPhoneController = TextEditingController(text: widget.company?['hr_contact_phone'] as String? ?? '');
+  final _industryOtherController = TextEditingController();
   String? _industry;
+  bool _useOtherIndustry = false;
   bool _isSaving = false;
 
-  static const List<String> _industryOptions = [
-    'Technology',
-    'Banking & Finance',
-    'Telecommunications',
-    'Manufacturing',
-    'Retail & E-commerce',
-    'Aviation & Travel',
-    'Oil & Gas',
-    'E-commerce',
-  ];
+  String? _locationText;
+  double? _locationLat;
+  double? _locationLng;
+
+  late final List<String> _industryOptions = widget.existingIndustries;
 
   @override
   void initState() {
     super.initState();
     isEdit = widget.company != null;
     final existingIndustry = widget.company?['industry'] as String?;
-    _industry = existingIndustry != null && _industryOptions.contains(existingIndustry) ? existingIndustry : null;
+    if (existingIndustry != null && existingIndustry.trim().isNotEmpty) {
+      if (_industryOptions.contains(existingIndustry)) {
+        _industry = existingIndustry;
+        _useOtherIndustry = false;
+      } else {
+        _useOtherIndustry = true;
+        _industryOtherController.text = existingIndustry;
+      }
+    }
+    _locationText = widget.company?['location'] as String?;
+  }
+
+  Future<void> _pickLocation() async {
+    final result = await Navigator.push<PickedAddress>(
+      context,
+      MaterialPageRoute(builder: (_) => AddressPickerScreen(initialLat: _locationLat, initialLng: _locationLng)),
+    );
+    if (result != null) {
+      setState(() {
+        _locationText = result.addressText;
+        _locationLat = result.lat;
+        _locationLng = result.lng;
+      });
+    }
   }
 
   Future<void> _save() async {
@@ -378,13 +407,16 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
       return;
     }
     setState(() => _isSaving = true);
+    final industryValue = _useOtherIndustry
+        ? (_industryOtherController.text.trim().isEmpty ? null : _industryOtherController.text.trim())
+        : _industry;
     try {
       if (isEdit) {
         await AdminDataService.instance.updateCompany(
           id: widget.company!['id'] as String,
           name: _nameController.text.trim(),
-          industry: _industry,
-          location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
+          industry: industryValue,
+          location: _locationText == null || _locationText!.trim().isEmpty ? null : _locationText!.trim(),
           hrContactName: _hrNameController.text.trim().isEmpty ? null : _hrNameController.text.trim(),
           hrContactEmail: _hrEmailController.text.trim().isEmpty ? null : _hrEmailController.text.trim(),
           hrContactPhone: _hrPhoneController.text.trim().isEmpty ? null : _hrPhoneController.text.trim(),
@@ -392,8 +424,8 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
       } else {
         await AdminDataService.instance.addCompany(
           name: _nameController.text.trim(),
-          industry: _industry,
-          location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
+          industry: industryValue,
+          location: _locationText == null || _locationText!.trim().isEmpty ? null : _locationText!.trim(),
           hrContactName: _hrNameController.text.trim().isEmpty ? null : _hrNameController.text.trim(),
           hrContactEmail: _hrEmailController.text.trim().isEmpty ? null : _hrEmailController.text.trim(),
           hrContactPhone: _hrPhoneController.text.trim().isEmpty ? null : _hrPhoneController.text.trim(),
@@ -429,12 +461,47 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(labelText: 'Industry'),
-              value: _industry,
-              items: _industryOptions.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13)))).toList(),
-              onChanged: (v) => setState(() => _industry = v),
+              value: _useOtherIndustry ? _kOtherIndustryValue : _industry,
+              items: [
+                ..._industryOptions.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13)))),
+                const DropdownMenuItem(value: _kOtherIndustryValue, child: Text('Other (type below)', style: TextStyle(fontSize: 13))),
+              ],
+              onChanged: (v) => setState(() {
+                if (v == _kOtherIndustryValue) {
+                  _useOtherIndustry = true;
+                  _industry = null;
+                } else {
+                  _useOtherIndustry = false;
+                  _industry = v;
+                }
+              }),
             ),
+            if (_useOtherIndustry) ...[
+              const SizedBox(height: 12),
+              TextFormField(controller: _industryOtherController, decoration: const InputDecoration(labelText: 'Industry name')),
+            ],
             const SizedBox(height: 12),
-            TextFormField(controller: _locationController, decoration: const InputDecoration(labelText: 'Location')),
+            GestureDetector(
+              onTap: _pickLocation,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.border)),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on_outlined, size: 18, color: AppColors.textMuted),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _locationText ?? 'Select location',
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: _locationText != null ? AppColors.textPrimary : AppColors.textMuted),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, size: 18, color: AppColors.textMuted),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
             Text('HR contact', style: AppTextStyles.label),
             const SizedBox(height: 8),

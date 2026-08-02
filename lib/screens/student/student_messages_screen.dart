@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
@@ -16,6 +18,13 @@ bool _isImage(String? fileName) {
   return _imageExtensions.contains(ext);
 }
 
+String _generateLocalMessageId() {
+  final random = Random();
+  const chars = '0123456789abcdef';
+  String hex(int n) => List.generate(n, (_) => chars[random.nextInt(16)]).join();
+  return '${hex(8)}-${hex(4)}-4${hex(3)}-${chars[8 + random.nextInt(4)]}${hex(3)}-${hex(12)}';
+}
+
 class StudentMessagesScreen extends StatefulWidget {
   const StudentMessagesScreen({super.key});
 
@@ -24,8 +33,11 @@ class StudentMessagesScreen extends StatefulWidget {
 }
 
 class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
+  static const _rolesAllowedToStartNewConversations = {'admin', 'academic_supervisor', 'company_hr'};
+
   bool _isLoading = true;
   List<Map<String, dynamic>> _conversations = [];
+  String? _currentUserRole;
 
   @override
   void initState() {
@@ -37,9 +49,11 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
     setState(() => _isLoading = true);
     try {
       final conversations = await StudentDataService.instance.getConversations();
+      final profile = await AuthService.instance.getCurrentProfile();
       if (!mounted) return;
       setState(() {
         _conversations = conversations;
+        _currentUserRole = profile?['role'] as String?;
         _isLoading = false;
       });
     } catch (_) {
@@ -179,10 +193,11 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
             tooltip: 'Archived chats',
             onPressed: _openArchived,
           ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Colors.white),
-            onPressed: _startNewConversation,
-          ),
+          if (_rolesAllowedToStartNewConversations.contains(_currentUserRole))
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.white),
+              onPressed: _startNewConversation,
+            ),
         ],
       ),
       body: _isLoading
@@ -414,8 +429,13 @@ class ChatScreenState extends State<ChatScreen> {
 
   bool _isLoading = true;
   List<Map<String, dynamic>> _messages = [];
+  final List<Map<String, dynamic>> _pendingMessages = [];
   bool _isSending = false;
   bool _isAttaching = false;
+
+  List<Map<String, dynamic>> _visibleMessages(List<Map<String, dynamic>> rows) {
+    return rows.where((m) => !((m['deleted_for'] as List?)?.contains(_myId) ?? false)).toList();
+  }
 
   @override
   void initState() {
@@ -423,7 +443,11 @@ class ChatScreenState extends State<ChatScreen> {
     _load();
     StudentDataService.instance.messagesStream(widget.conversationId).listen((rows) {
       if (!mounted) return;
-      setState(() => _messages = rows);
+      final confirmedIds = rows.map((r) => r['id']).toSet();
+      setState(() {
+        _messages = _visibleMessages(rows);
+        _pendingMessages.removeWhere((p) => confirmedIds.contains(p['id']));
+      });
       _scrollToBottom();
       StudentDataService.instance.markConversationRead(widget.conversationId);
     });
@@ -434,7 +458,7 @@ class ChatScreenState extends State<ChatScreen> {
       final messages = await StudentDataService.instance.getMessages(widget.conversationId);
       if (!mounted) return;
       setState(() {
-        _messages = messages;
+        _messages = _visibleMessages(messages);
         _isLoading = false;
       });
       _scrollToBottom();
@@ -458,10 +482,27 @@ class ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty || _isSending) return;
     setState(() => _isSending = true);
     _messageController.clear();
+
+    final localId = _generateLocalMessageId();
+    setState(() {
+      _pendingMessages.add({
+        'id': localId,
+        'conversation_id': widget.conversationId,
+        'sender_id': _myId,
+        'body': text,
+        'created_at': DateTime.now().toIso8601String(),
+        'read_at': null,
+        'attachment_path': null,
+        'attachment_file_name': null,
+      });
+    });
+    _scrollToBottom();
+
     try {
-      await StudentDataService.instance.sendMessage(conversationId: widget.conversationId, body: text);
+      await StudentDataService.instance.sendMessage(conversationId: widget.conversationId, body: text, clientMessageId: localId);
     } catch (e) {
       if (!mounted) return;
+      setState(() => _pendingMessages.removeWhere((p) => p['id'] == localId));
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Could not send message: $e'), backgroundColor: AppColors.error));
     } finally {
@@ -508,6 +549,109 @@ class ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  bool _isWithinEditWindow(Map<String, dynamic> message) {
+    final createdAt = DateTime.parse(message['created_at'] as String);
+    return DateTime.now().difference(createdAt) <= const Duration(minutes: 15);
+  }
+
+  Future<void> _showMessageActions(Map<String, dynamic> message) async {
+    final isMine = message['sender_id'] == _myId;
+    final body = message['body'] as String?;
+    final canEdit = isMine && body != null && body.isNotEmpty && _isWithinEditWindow(message);
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (canEdit)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Edit'),
+                onTap: () => Navigator.pop(context, 'edit'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.visibility_off_outlined),
+              title: const Text('Delete for me'),
+              onTap: () => Navigator.pop(context, 'delete_for_me'),
+            ),
+            if (isMine)
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: AppColors.error),
+                title: Text('Delete for everyone', style: TextStyle(color: AppColors.error)),
+                onTap: () => Navigator.pop(context, 'delete_for_everyone'),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted || action == null) return;
+    if (action == 'edit') {
+      await _editMessage(message);
+    } else if (action == 'delete_for_me') {
+      await _deleteMessageForMe(message);
+    } else if (action == 'delete_for_everyone') {
+      await _deleteMessage(message);
+    }
+  }
+
+  Future<void> _deleteMessageForMe(Map<String, dynamic> message) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete for me?'),
+        content: const Text('This message will be removed from your view only. The other person will still see it.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await StudentDataService.instance.deleteMessageForMe(message['id'] as String);
+      if (!mounted) return;
+      setState(() => _messages.removeWhere((m) => m['id'] == message['id']));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not delete message: $e'), backgroundColor: AppColors.error));
+    }
+  }
+
+  Future<void> _editMessage(Map<String, dynamic> message) async {
+    final controller = TextEditingController(text: message['body'] as String);
+    final newText = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Edit message'),
+        content: TextField(controller: controller, autofocus: true, maxLines: 4, minLines: 1),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newText == null || newText.isEmpty || !mounted) return;
+    try {
+      await StudentDataService.instance.editMessage(message['id'] as String, newText);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not edit message: $e'), backgroundColor: AppColors.error));
+    }
+  }
+
   Future<void> _deleteMessage(Map<String, dynamic> message) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -548,38 +692,50 @@ class ChatScreenState extends State<ChatScreen> {
     final name = (widget.otherProfile['full_name'] as String?)?.isNotEmpty == true
         ? widget.otherProfile['full_name'] as String
         : 'Unknown user';
-    final role = _roleLabel(widget.otherProfile['role'] as String);
+    final roleValue = widget.otherProfile['role'] as String?;
+    final role = roleValue != null ? _roleLabel(roleValue) : '';
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: nameColor(name).withOpacity(0.2),
-              child: Text(logoLetter(name), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: nameColor(name))),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(name,
-                      style: const TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  Text(role,
-                      style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white70),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                ],
+        title: InkWell(
+          onTap: () async {
+            final deleted = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => _ContactInfoScreen(conversationId: widget.conversationId, otherProfile: widget.otherProfile),
               ),
-            ),
-          ],
+            );
+            if (deleted == true && mounted) Navigator.pop(context);
+          },
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: nameColor(name).withOpacity(0.2),
+                child: Text(logoLetter(name), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: nameColor(name))),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(name,
+                        style: const TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                    Text(role,
+                        style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white70),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       body: Column(
@@ -587,24 +743,29 @@ class ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                : _messages.isEmpty
+                : (_messages.isEmpty && _pendingMessages.isEmpty)
                     ? Center(
                         child: Text('Say hello 👋', style: TextStyle(fontFamily: 'Inter', color: AppColors.textMuted)),
                       )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        itemCount: _messages.length,
-                        itemBuilder: (_, i) {
-                          final message = _messages[i];
-                          final isMine = message['sender_id'] == _myId;
-                          return _MessageBubble(
-                            data: message,
-                            isMine: isMine,
-                            onLongPress: isMine ? () => _deleteMessage(message) : null,
-                          );
-                        },
-                      ),
+                    : Builder(builder: (_) {
+                        final allMessages = [..._messages, ..._pendingMessages];
+                        return ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          itemCount: allMessages.length,
+                          itemBuilder: (_, i) {
+                            final message = allMessages[i];
+                            final isMine = message['sender_id'] == _myId;
+                            final isPending = i >= _messages.length;
+                            return _MessageBubble(
+                              data: message,
+                              isMine: isMine,
+                              isPending: isPending,
+                              onLongPress: !isPending ? () => _showMessageActions(message) : null,
+                            );
+                          },
+                        );
+                      }),
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
@@ -649,9 +810,10 @@ class ChatScreenState extends State<ChatScreen> {
 class _MessageBubble extends StatelessWidget {
   final Map<String, dynamic> data;
   final bool isMine;
+  final bool isPending;
   final VoidCallback? onLongPress;
 
-  const _MessageBubble({required this.data, required this.isMine, required this.onLongPress});
+  const _MessageBubble({required this.data, required this.isMine, required this.isPending, required this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
@@ -690,7 +852,24 @@ class _MessageBubble extends StatelessWidget {
                     Text(body, style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: isMine ? Colors.white : AppColors.textPrimary)),
                   ],
                   const SizedBox(height: 4),
-                  Text(timeLabel, style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: isMine ? Colors.white60 : AppColors.textMuted)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (data['edited_at'] != null) ...[
+                        Text('edited', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: isMine ? Colors.white60 : AppColors.textMuted)),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(timeLabel, style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: isMine ? Colors.white60 : AppColors.textMuted)),
+                      if (isMine) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          isPending ? Icons.done : Icons.done_all,
+                          size: 12,
+                          color: (!isPending && data['read_at'] != null) ? Colors.white : Colors.white60,
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -762,6 +941,198 @@ class _AttachmentContent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _ContactInfoScreen extends StatefulWidget {
+  final String conversationId;
+  final Map<String, dynamic> otherProfile;
+
+  const _ContactInfoScreen({required this.conversationId, required this.otherProfile});
+
+  @override
+  State<_ContactInfoScreen> createState() => _ContactInfoScreenState();
+}
+
+class _ContactInfoScreenState extends State<_ContactInfoScreen> {
+  bool _isLoading = true;
+  String? _phone;
+  List<Map<String, dynamic>> _sharedMedia = [];
+  bool _muted = false;
+  bool _blocked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    try {
+      final otherId = widget.otherProfile['id'] as String;
+      final contactInfo = await StudentDataService.instance.getChatContactInfo(otherId);
+      final media = await StudentDataService.instance.getSharedMedia(widget.conversationId);
+      if (!mounted) return;
+      setState(() {
+        _phone = contactInfo?['phone'] as String?;
+        _sharedMedia = media;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _toggleMute(bool value) async {
+    setState(() => _muted = value);
+    try {
+      await StudentDataService.instance.setConversationMuted(widget.conversationId, value);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _muted = !value);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not update mute: $e'), backgroundColor: AppColors.error));
+    }
+  }
+
+  Future<void> _toggleBlock(bool value) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(value ? 'Block this contact?' : 'Unblock this contact?'),
+        content: Text(value
+            ? 'They will no longer be able to send you messages in this conversation.'
+            : 'They will be able to send you messages again.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(value ? 'Block' : 'Unblock')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _blocked = value);
+    try {
+      await StudentDataService.instance.setConversationBlocked(widget.conversationId, value);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _blocked = !value);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not update block: $e'), backgroundColor: AppColors.error));
+    }
+  }
+
+  Future<void> _deleteConversation() async {
+    final name = (widget.otherProfile['full_name'] as String?)?.isNotEmpty == true
+        ? widget.otherProfile['full_name'] as String
+        : 'this conversation';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete conversation?'),
+        content: Text('This deletes the whole conversation with $name for both of you. This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Delete', style: TextStyle(color: AppColors.error))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await StudentDataService.instance.deleteConversation(widget.conversationId);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not delete conversation: $e'), backgroundColor: AppColors.error));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name = (widget.otherProfile['full_name'] as String?)?.isNotEmpty == true
+        ? widget.otherProfile['full_name'] as String
+        : 'Unknown user';
+    final roleValue = widget.otherProfile['role'] as String?;
+    final role = roleValue != null ? _roleLabel(roleValue) : '';
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        title: const Text('Contact info', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Center(
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 34,
+                        backgroundColor: nameColor(name).withOpacity(0.2),
+                        child: Text(logoLetter(name), style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: nameColor(name))),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(name, style: AppTextStyles.h2),
+                      Text(role, style: AppTextStyles.bodySecondary),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text('Phone', style: AppTextStyles.label),
+                const SizedBox(height: 8),
+                Text(_phone?.isNotEmpty == true ? _phone! : 'Not available', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+                const SizedBox(height: 24),
+                Text('Shared media & files', style: AppTextStyles.label),
+                const SizedBox(height: 8),
+                if (_sharedMedia.isEmpty)
+                  Text('No shared media yet.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary))
+                else
+                  ..._sharedMedia.map((m) {
+                    final fileName = (m['attachment_file_name'] as String?) ?? (m['attachment_path'] as String).split('/').last;
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(_isImage(fileName) ? Icons.image_outlined : Icons.insert_drive_file_outlined, color: AppColors.primary),
+                      title: Text(fileName, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () async {
+                        final url = await StudentDataService.instance.getChatAttachmentSignedUrl(m['attachment_path'] as String);
+                        if (!mounted) return;
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: url, fileName: fileName)));
+                      },
+                    );
+                  }),
+                const SizedBox(height: 24),
+                const Divider(),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Mute notifications'),
+                  value: _muted,
+                  onChanged: _toggleMute,
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Block contact'),
+                  value: _blocked,
+                  onChanged: _toggleBlock,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _deleteConversation,
+                    icon: Icon(Icons.delete_outline, color: AppColors.error),
+                    label: Text('Delete conversation', style: TextStyle(color: AppColors.error)),
+                    style: OutlinedButton.styleFrom(side: BorderSide(color: AppColors.error), padding: const EdgeInsets.symmetric(vertical: 12)),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

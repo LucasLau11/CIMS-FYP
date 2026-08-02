@@ -96,10 +96,8 @@ class _SupervisorEvaluateScreenState extends State<SupervisorEvaluateScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(_studentName,
-                        style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                    Text(subtitle, style: AppTextStyles.bodySecondary, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    Text(subtitle, style: AppTextStyles.bodySecondary),
                   ],
                 ),
               ),

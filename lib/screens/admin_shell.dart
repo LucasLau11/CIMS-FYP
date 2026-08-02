@@ -45,7 +45,13 @@ class _AdminShellState extends State<AdminShell> {
       AdminStudentsScreen(key: ValueKey('students-$_studentsRefreshKey')),
       AdminCompaniesScreen(key: ValueKey('companies-$_companiesRefreshKey')),
       AdminSupervisorsScreen(key: ValueKey('supervisors-$_supervisorsRefreshKey')),
-      const AdminMoreScreen(),
+      // Not `const` — see the comment in student_shell.dart. A const
+      // instance here would be canonicalized and reused identically across
+      // every AdminShell rebuild (e.g. a theme toggle), which makes
+      // Flutter's Element.updateChild skip rebuilding this tab entirely,
+      // leaving it stuck on whichever AppColors brightness was active when
+      // it was first built.
+      AdminMoreScreen(),
     ];
     return Scaffold(
       body: IndexedStack(

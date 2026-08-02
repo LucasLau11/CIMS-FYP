@@ -101,11 +101,13 @@ class _ParentAcknowledgementScreenState extends State<ParentAcknowledgementScree
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.description_outlined, color: AppColors.primary, size: 18),
-                      SizedBox(width: 8),
-                      Text('Parent/Guardian Acknowledgement Form', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                      const Icon(Icons.description_outlined, color: AppColors.primary, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text('Parent/Guardian Acknowledgement Form', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),

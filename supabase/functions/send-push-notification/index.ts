@@ -64,7 +64,7 @@ async function handleMessageInsert(record: Record<string, unknown>) {
   // These two lookups don't depend on each other — running them in
   // parallel shaves one round-trip off the delivery path.
   const [conversationResult, senderResult] = await Promise.all([
-    supabase.from('conversations').select('participant_a, participant_b').eq('id', conversationId).single(),
+    supabase.from('conversations').select('participant_a, participant_b, muted_a, muted_b').eq('id', conversationId).single(),
     supabase.from('profile_directory').select('full_name').eq('id', senderId).single(),
   ]);
 
@@ -77,6 +77,10 @@ async function handleMessageInsert(record: Record<string, unknown>) {
   const recipientId =
     conversation.participant_a === senderId ? conversation.participant_b : conversation.participant_a;
   if (!recipientId) return;
+
+  const recipientHasMuted =
+    conversation.participant_a === recipientId ? conversation.muted_a : conversation.muted_b;
+  if (recipientHasMuted) return;
 
   const { data: sender, error: senderError } = senderResult;
   if (senderError) {

@@ -159,8 +159,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       final profile = await AuthService.instance.getCurrentProfile();
       if (!mounted) return;
 
-      final resolvedAvatarUrl =
-          await AuthService.instance.resolveAvatarPath(profile?['avatar_url'] as String?);
+      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       if (!mounted) return;
 
       final dobRaw = profile?['date_of_birth'] as String?;
@@ -268,10 +267,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
       try {
         final uploadedUrl = await AuthService.instance.uploadAvatar(file);
-        // uploadAvatar reuses the same on-disk path per user, so Flutter's
-        // ImageCache (keyed by path, not content) would otherwise keep
-        // serving the previously-decoded bytes for that path forever.
-        await FileImage(File(uploadedUrl)).evict();
         if (!mounted) return;
         setState(() {
           _avatarUrl = uploadedUrl;
@@ -1445,8 +1440,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 );
                               }
                               if (_avatarUrl != null) {
-                                return Image.file(
-                                  File(_avatarUrl!),
+                                return Image.network(
+                                  _avatarUrl!,
                                   width: 88,
                                   height: 88,
                                   fit: BoxFit.cover,
@@ -1652,12 +1647,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 children: [
                   Icon(Icons.cake_outlined, size: 18, color: AppColors.textMuted),
                   const SizedBox(width: 10),
-                  Text(
-                    _dateOfBirth != null ? _formatDate(_dateOfBirth!) : l10n.tapToSelectDateOfBirth,
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        color: _dateOfBirth != null ? AppColors.textPrimary : AppColors.textMuted),
+                  Expanded(
+                    child: Text(
+                      _dateOfBirth != null ? _formatDate(_dateOfBirth!) : l10n.tapToSelectDateOfBirth,
+                      style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: _dateOfBirth != null ? AppColors.textPrimary : AppColors.textMuted),
+                    ),
                   ),
                 ],
               ),
@@ -1816,7 +1813,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         ? AppLocalizations.of(context)!.assignedBySystem
                         : _academicSupervisorController.text,
                     style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textMuted),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

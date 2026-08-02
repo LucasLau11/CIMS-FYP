@@ -365,7 +365,7 @@ class _InfoChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -400,6 +400,31 @@ class _FilterSheetState extends State<_FilterSheet> {
   late int? _duration = widget.selectedDuration;
   late RangeValues _range = widget.allowanceRange;
 
+  late final TextEditingController _minController = TextEditingController(
+    text: widget.allowanceRange.start > 0 ? widget.allowanceRange.start.round().toString() : '',
+  );
+  late final TextEditingController _maxController = TextEditingController(
+    text: widget.allowanceRange.end.isFinite ? widget.allowanceRange.end.round().toString() : '',
+  );
+
+  @override
+  void dispose() {
+    _minController.dispose();
+    _maxController.dispose();
+    super.dispose();
+  }
+
+  void _updateRange() {
+    final min = double.tryParse(_minController.text.trim());
+    final max = double.tryParse(_maxController.text.trim());
+    setState(() {
+      _range = RangeValues(
+        (min != null && min >= 0) ? min : 0,
+        (max != null && max >= 0) ? max : double.infinity,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -417,6 +442,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                   _location = 'All';
                   _duration = null;
                   _range = const RangeValues(0, 5000);
+                  _minController.clear();
+                  _maxController.text = '5000';
                 }),
                 child: Text('Reset', style: TextStyle(color: AppColors.textSecondary)),
               ),
@@ -434,14 +461,30 @@ class _FilterSheetState extends State<_FilterSheet> {
           const SizedBox(height: 16),
           Text('Allowance range', style: AppTextStyles.label),
           const SizedBox(height: 8),
-          RangeSlider(
-            values: _range,
-            min: 0,
-            max: 5000,
-            divisions: 50,
-            labels: RangeLabels('RM ${_range.start.round()}', 'RM ${_range.end.round()}'),
-            activeColor: AppColors.primary,
-            onChanged: (v) => setState(() => _range = v),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _minController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Min allowance (RM)',
+                  ),
+                  onChanged: (_) => _updateRange(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _maxController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Max allowance (RM)',
+                  ),
+                  onChanged: (_) => _updateRange(),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Text('Duration', style: AppTextStyles.label),

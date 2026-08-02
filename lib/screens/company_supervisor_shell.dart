@@ -69,7 +69,15 @@ class _CompanySupervisorShellState extends State<CompanySupervisorShell> {
     final screens = [
       CompanySupervisorDashboardScreen(key: ValueKey('cs-dashboard-$_dashboardRefreshKey')),
       CompanySupervisorStudentsScreen(key: ValueKey('cs-students-$_studentsRefreshKey')),
-      const CompanySupervisorMessagesScreen(),
+      // Not `const` — see the comment in student_shell.dart. A const
+      // instance here would be canonicalized and reused identically across
+      // every CompanySupervisorShell rebuild (e.g. a theme toggle), which
+      // makes Flutter's Element.updateChild skip rebuilding this tab
+      // entirely, leaving it stuck on whichever AppColors brightness was
+      // active when it was first built. (CompanySupervisorMessagesScreen
+      // itself must also not return a `const` child — see
+      // company_supervisor_messages_screen.dart.)
+      CompanySupervisorMessagesScreen(),
     ];
 
     return Scaffold(

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
@@ -49,8 +48,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     try {
       final profile = await AuthService.instance.getCurrentProfile();
       if (!mounted) return;
-      final resolvedAvatarUrl =
-          await AuthService.instance.resolveAvatarPath(profile?['avatar_url'] as String?);
+      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       if (!mounted) return;
       setState(() {
         _name = profile?['full_name'] as String?;
@@ -137,7 +135,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                 child: CircleAvatar(
                                   radius: 20,
                                   backgroundColor: Colors.white24,
-                                  backgroundImage: _avatarUrl != null ? FileImage(File(_avatarUrl!)) : null,
+                                  backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
                                   onBackgroundImageError: _avatarUrl != null ? (_, __) {} : null,
                                   child: _avatarUrl == null
                                       ? Text(_initials,
@@ -302,7 +300,7 @@ class _RecentActivityTile extends StatelessWidget {
                 if ((data['body'] as String?)?.isNotEmpty == true) ...[
                   const SizedBox(height: 2),
                   Text(data['body'] as String,
-                      style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      style: AppTextStyles.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ],
             ),

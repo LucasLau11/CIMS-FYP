@@ -67,10 +67,26 @@ class _StudentShellState extends State<StudentShell> {
   Widget build(BuildContext context) {
     final screens = [
       StudentDashboardScreen(key: ValueKey('dashboard-$_dashboardRefreshKey')),
-      const StudentSearchScreen(),
+      // Deliberately NOT `const`: these are already rebuilt fresh here on
+      // every StudentShell.build() (e.g. on a theme toggle, since main.dart
+      // rebuilds the whole MaterialApp subtree). If these were `const`,
+      // Dart would canonicalize them to one singleton instance shared
+      // across every rebuild; Flutter's Element.updateChild has a fast
+      // path that skips calling update()/build() entirely when the new
+      // child widget is `identical()` to the old one, which is exactly
+      // what happens with a canonicalized const instance held inside an
+      // always-mounted IndexedStack. That freezes this tab's subtree at
+      // whatever AppColors brightness was active the first time it was
+      // built, so it silently keeps showing the old theme until something
+      // else (e.g. a full navigation away and back) tears down and
+      // recreates the shell from scratch. Non-const still preserves this
+      // tab's State across rebuilds (same runtimeType + null key lets
+      // Flutter update the existing element), it just also makes sure
+      // build() actually reruns so it picks up the current AppColors.
+      StudentSearchScreen(),
       StudentApplicationsScreen(key: ValueKey('applications-$_applicationsRefreshKey')),
       StudentReportsScreen(key: ValueKey('reports-$_reportsRefreshKey')),
-      const StudentMessagesScreen(),
+      StudentMessagesScreen(),
     ];
     return Scaffold(
       body: IndexedStack(

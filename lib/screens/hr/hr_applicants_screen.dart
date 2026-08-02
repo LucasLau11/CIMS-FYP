@@ -166,11 +166,14 @@ class _ApplicantCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(color: AppColors.warningBg, borderRadius: BorderRadius.circular(8)),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.videocam_outlined, size: 15, color: AppColors.warning),
                   const SizedBox(width: 6),
-                  Text(l10n.hrInterviewColon('${DateTime.parse(data['interview_at'] as String).toLocal()}'.split('.').first),
-                      style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warning)),
+                  Flexible(
+                    child: Text(l10n.hrInterviewColon('${DateTime.parse(data['interview_at'] as String).toLocal()}'.split('.').first),
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warning)),
+                  ),
                 ],
               ),
             ),

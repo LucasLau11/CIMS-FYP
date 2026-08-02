@@ -4,6 +4,7 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/hr_data_service.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 import '../student/student_messages_screen.dart' show ChatScreen;
 
 class RecommendedCandidatesScreen extends StatefulWidget {
@@ -169,6 +170,28 @@ class _CandidateProfileScreen extends StatefulWidget {
 
 class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
   bool _isMessaging = false;
+  Map<String, String>? _resume;
+  bool _isLoadingResume = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadResume();
+  }
+
+  Future<void> _loadResume() async {
+    try {
+      final resume = await HrDataService.instance.getCandidateResume(widget.data['id'] as String);
+      if (!mounted) return;
+      setState(() {
+        _resume = resume;
+        _isLoadingResume = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingResume = false);
+    }
+  }
 
   Future<void> _message() async {
     setState(() => _isMessaging = true);
@@ -192,7 +215,6 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
   Widget build(BuildContext context) {
     final data = widget.data;
     final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : 'Unnamed student';
-    final programme = data['programme'] as String?;
     final skills = List<String>.from(data['skills'] as List? ?? []);
     final matched = List<String>.from(data['matched_skills'] as List? ?? []);
 
@@ -216,7 +238,6 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(name, style: AppTextStyles.h2),
-                Text(programme?.isNotEmpty == true ? programme! : 'Programme not set', style: AppTextStyles.bodySecondary),
               ],
             ),
           ),
@@ -242,6 +263,35 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
                       ))
                   .toList(),
             ),
+          if (!_isLoadingResume) ...[
+            const SizedBox(height: 24),
+            Text('Resume', style: AppTextStyles.label),
+            const SizedBox(height: 8),
+            if (_resume == null)
+              Text('No resume uploaded.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary))
+            else
+              InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: _resume!['url']!, fileName: _resume!['filename']!)),
+                ),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.picture_as_pdf_outlined, size: 18, color: AppColors.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(_resume!['filename']!, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500)),
+                      ),
+                      Icon(Icons.chevron_right, size: 18, color: AppColors.textMuted),
+                    ],
+                  ),
+                ),
+              ),
+          ],
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,

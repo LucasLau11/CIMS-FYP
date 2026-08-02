@@ -163,13 +163,17 @@ class _StudentProgressCard extends StatelessWidget {
             children: [
               Icon(hasActive ? Icons.work_outline : Icons.work_off_outlined, size: 13, color: AppColors.textMuted),
               const SizedBox(width: 4),
-              Text(hasActive ? l10n.supActiveInternship : l10n.supNoActiveInternship, style: AppTextStyles.caption),
+              Flexible(
+                child: Text(hasActive ? l10n.supActiveInternship : l10n.supNoActiveInternship, style: AppTextStyles.caption),
+              ),
               const SizedBox(width: 14),
               Icon(Icons.description_outlined, size: 13, color: AppColors.textMuted),
               const SizedBox(width: 4),
-              Text(
-                lastReportAt != null ? l10n.supLastReportAgo(timeAgo(DateTime.parse(lastReportAt))) : l10n.supNoReportsYet,
-                style: AppTextStyles.caption,
+              Flexible(
+                child: Text(
+                  lastReportAt != null ? l10n.supLastReportAgo(timeAgo(DateTime.parse(lastReportAt))) : l10n.supNoReportsYet,
+                  style: AppTextStyles.caption,
+                ),
               ),
             ],
           ),
@@ -247,7 +251,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ChatScreen(conversationId: conversation['id'] as String, otherProfile: _student!),
+          builder: (_) => ChatScreen(conversationId: conversation['id'] as String, otherProfile: {..._student!, 'role': 'student'}),
         ),
       );
     } catch (e) {

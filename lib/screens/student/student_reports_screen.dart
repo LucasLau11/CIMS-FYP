@@ -254,8 +254,10 @@ class _ReportCard extends StatelessWidget {
                 children: [
                   Icon(Icons.check_circle_outline, size: 13, color: AppColors.primary),
                   SizedBox(width: 6),
-                  Text('Approved by company supervisor · awaiting university review',
-                      style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.primary)),
+                  Expanded(
+                    child: Text('Approved by company supervisor · awaiting university review',
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.primary)),
+                  ),
                 ],
               ),
             ),

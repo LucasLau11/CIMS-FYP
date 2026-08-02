@@ -393,7 +393,7 @@ class _MetaItem extends StatelessWidget {
         Icon(icon, size: 13, color: AppColors.textMuted),
         const SizedBox(width: 4),
         Flexible(
-          child: Text(label, style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(label, style: AppTextStyles.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
         ),
       ],
     );

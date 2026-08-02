@@ -279,14 +279,42 @@ class StudentDataService {
   // Messaging
   // ---------------------------------------------------------------------
 
-  /// Other real accounts available to start a conversation with.
+  /// Other real accounts available to start a conversation with — scoped
+  /// by the caller's own role. Only admin/academic_supervisor/company_hr
+  /// get a non-empty list; every other role gets [] (matches the
+  /// conversations_insert_participant RLS policy, which blocks those
+  /// roles from creating a new conversation at all regardless of what
+  /// this method returns — this scoping is for a correct/uncluttered UI
+  /// list, not the actual security boundary).
   Future<List<Map<String, dynamic>>> getDirectory() async {
-    final rows = await _client
-        .from('profile_directory')
-        .select()
-        .neq('id', _userId)
-        .order('full_name', ascending: true);
-    return List<Map<String, dynamic>>.from(rows);
+    final profile = await _client.from('profiles').select('role, company_id').eq('id', _userId).single();
+    final role = profile['role'] as String;
+
+    switch (role) {
+      case 'admin':
+        final rows = await _client.from('profile_directory').select().neq('id', _userId).order('full_name', ascending: true);
+        return List<Map<String, dynamic>>.from(rows);
+      case 'academic_supervisor':
+        final rows = await _client
+            .from('profiles')
+            .select('id, full_name, avatar_url, role')
+            .eq('role', 'student')
+            .eq('academic_supervisor_id', _userId)
+            .order('full_name', ascending: true);
+        return List<Map<String, dynamic>>.from(rows);
+      case 'company_hr':
+        final companyId = profile['company_id'] as String?;
+        if (companyId == null) return [];
+        final rows = await _client
+            .from('profiles')
+            .select('id, full_name, avatar_url, role')
+            .eq('role', 'company_supervisor')
+            .eq('company_id', companyId)
+            .order('full_name', ascending: true);
+        return List<Map<String, dynamic>>.from(rows);
+      default:
+        return [];
+    }
   }
 
   Future<List<Map<String, dynamic>>> getConversations({bool archived = false}) async {
@@ -388,6 +416,40 @@ class StudentDataService {
     await _client.from('conversations').update({myArchiveColumn: archived}).eq('id', conversationId);
   }
 
+  Future<Map<String, dynamic>?> getChatContactInfo(String otherUserId) async {
+    try {
+      final rows = await _client.rpc('get_chat_contact_info', params: {'other_user_id': otherUserId});
+      final list = List<Map<String, dynamic>>.from(rows as List);
+      return list.isEmpty ? null : list.first;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSharedMedia(String conversationId) async {
+    final rows = await _client
+        .from('messages')
+        .select()
+        .eq('conversation_id', conversationId)
+        .not('attachment_path', 'is', null)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  Future<void> setConversationMuted(String conversationId, bool muted) async {
+    final me = _userId;
+    final convo = await _client.from('conversations').select('participant_a').eq('id', conversationId).single();
+    final myMuteColumn = convo['participant_a'] == me ? 'muted_a' : 'muted_b';
+    await _client.from('conversations').update({myMuteColumn: muted}).eq('id', conversationId);
+  }
+
+  Future<void> setConversationBlocked(String conversationId, bool blocked) async {
+    final me = _userId;
+    final convo = await _client.from('conversations').select('participant_a').eq('id', conversationId).single();
+    final myBlockColumn = convo['participant_a'] == me ? 'blocked_by_a' : 'blocked_by_b';
+    await _client.from('conversations').update({myBlockColumn: blocked}).eq('id', conversationId);
+  }
+
   Future<void> deleteConversation(String conversationId) async {
     await _client.from('conversations').delete().eq('id', conversationId);
   }
@@ -415,8 +477,10 @@ class StudentDataService {
     String? attachmentPath,
     String? attachmentFileName,
     int? attachmentSizeBytes,
+    String? clientMessageId,
   }) async {
     await _client.from('messages').insert({
+      if (clientMessageId != null) 'id': clientMessageId,
       'conversation_id': conversationId,
       'sender_id': _userId,
       'body': (body == null || body.trim().isEmpty) ? null : body.trim(),
@@ -424,6 +488,17 @@ class StudentDataService {
       'attachment_file_name': attachmentFileName,
       'attachment_size_bytes': attachmentSizeBytes,
     });
+  }
+
+  Future<void> editMessage(String messageId, String newBody) async {
+    await _client.rpc('edit_message', params: {
+      'p_message_id': messageId,
+      'p_new_body': newBody.trim(),
+    });
+  }
+
+  Future<void> deleteMessageForMe(String messageId) async {
+    await _client.rpc('delete_message_for_me', params: {'p_message_id': messageId});
   }
 
   Future<void> deleteMessage(String messageId, {String? attachmentPath}) async {

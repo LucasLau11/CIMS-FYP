@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
+import '../../services/auth_service.dart';
 import '../../utils/format_utils.dart';
 import '../admin_shell.dart';
+import '../staff_profile_screen.dart';
 import 'admin_companies_screen.dart';
 import 'admin_students_screen.dart';
+import 'admin_monitor_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -18,6 +21,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _isLoading = true;
   Map<String, int> _counts = const {};
   List<Map<String, dynamic>> _recentStudents = [];
+  String? _name;
+  String? _avatarUrl;
 
   @override
   void initState() {
@@ -28,10 +33,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
+      final profile = await AuthService.instance.getCurrentProfile();
+      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       final counts = await AdminDataService.instance.getDashboardCounts();
       final recentStudents = await AdminDataService.instance.getRecentStudents();
       if (!mounted) return;
       setState(() {
+        _name = profile?['full_name'] as String?;
+        _avatarUrl = resolvedAvatarUrl;
         _counts = counts;
         _recentStudents = recentStudents;
         _isLoading = false;
@@ -91,12 +100,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   ),
                                 ],
                               ),
-                              NotificationBell(count: 0, onTap: () {}),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () async {
+                                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffProfileScreen()));
+                                      _load();
+                                    },
+                                    child: CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: Colors.white24,
+                                      backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+                                      onBackgroundImageError: _avatarUrl != null ? (_, __) {} : null,
+                                      child: _avatarUrl == null
+                                          ? Text(
+                                              (_name?.isNotEmpty ?? false) ? logoLetter(_name!) : 'A',
+                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+                                            )
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  NotificationBell(count: 0, onTap: () {}),
+                                ],
+                              ),
                             ],
                           ),
                           const SizedBox(height: 10),
-                          const Text('Welcome back, Admin',
-                              style: TextStyle(fontFamily: 'Poppins', fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                          Text('Welcome back, ${(_name?.isNotEmpty ?? false) ? _name : 'Admin'}',
+                              style: const TextStyle(fontFamily: 'Poppins', fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
                         ],
                       ),
                     ),
@@ -122,13 +154,46 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         crossAxisSpacing: 10,
                         childAspectRatio: 1.1,
                         children: [
-                          MetricCard(label: 'Total students', value: '${_counts['students'] ?? 0}', icon: Icons.school_outlined, color: AppColors.primary),
                           MetricCard(
-                              label: 'Active internships', value: '${_counts['activeInternships'] ?? 0}', icon: Icons.work_outline, color: AppColors.success),
+                            label: 'Total students',
+                            value: '${_counts['students'] ?? 0}',
+                            icon: Icons.school_outlined,
+                            color: AppColors.primary,
+                            onTap: () async {
+                              await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminStudentsScreen()));
+                              _load();
+                            },
+                          ),
                           MetricCard(
-                              label: 'Partner companies', value: '${_counts['companies'] ?? 0}', icon: Icons.business_outlined, color: AppColors.primaryLight),
+                            label: 'Active internships',
+                            value: '${_counts['activeInternships'] ?? 0}',
+                            icon: Icons.work_outline,
+                            color: AppColors.success,
+                            onTap: () async {
+                              await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMonitorScreen()));
+                              _load();
+                            },
+                          ),
                           MetricCard(
-                              label: 'Pending reviews', value: '${_counts['pendingReviews'] ?? 0}', icon: Icons.pending_actions_outlined, color: AppColors.warning),
+                            label: 'Partner companies',
+                            value: '${_counts['companies'] ?? 0}',
+                            icon: Icons.business_outlined,
+                            color: AppColors.primaryLight,
+                            onTap: () async {
+                              await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCompaniesScreen()));
+                              _load();
+                            },
+                          ),
+                          MetricCard(
+                            label: 'Pending reviews',
+                            value: '${_counts['pendingReviews'] ?? 0}',
+                            icon: Icons.pending_actions_outlined,
+                            color: AppColors.warning,
+                            onTap: () async {
+                              await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMonitorScreen()));
+                              _load();
+                            },
+                          ),
                         ],
                       ),
                     ),

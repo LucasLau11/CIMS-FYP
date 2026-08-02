@@ -73,7 +73,14 @@ class _HrShellState extends State<HrShell> {
       HrDashboardScreen(key: ValueKey('hr-dashboard-$_dashboardRefreshKey')),
       HrPostingsScreen(key: ValueKey('hr-postings-$_postingsRefreshKey')),
       HrApplicantsScreen(key: ValueKey('hr-applicants-$_applicantsRefreshKey')),
-      const HrMessagesScreen(),
+      // Not `const` — see the comment in student_shell.dart. A const
+      // instance here would be canonicalized and reused identically across
+      // every HrShell rebuild (e.g. a theme toggle), which makes Flutter's
+      // Element.updateChild skip rebuilding this tab entirely, leaving it
+      // stuck on whichever AppColors brightness was active when it was
+      // first built. (HrMessagesScreen itself must also not return a
+      // `const` child — see hr_messages_screen.dart.)
+      HrMessagesScreen(),
     ];
 
     return Scaffold(

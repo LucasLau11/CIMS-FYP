@@ -55,6 +55,7 @@ class HrDataService {
     required List<String> requiredSkills,
     String? jobType,
     DateTime? applicationDeadline,
+    DateTime? postingClosesAt,
   }) async {
     final companyId = await _companyId;
     if (companyId == null) throw Exception('Join or register a company before posting.');
@@ -72,6 +73,7 @@ class HrDataService {
       'required_skills': requiredSkills,
       'job_type': jobType,
       'application_deadline': applicationDeadline?.toIso8601String().split('T').first,
+      'posting_closes_at': postingClosesAt?.toIso8601String(),
       'status': 'open',
       'posted_at': DateTime.now().toIso8601String(),
     });
@@ -88,6 +90,7 @@ class HrDataService {
     required List<String> requiredSkills,
     String? jobType,
     DateTime? applicationDeadline,
+    DateTime? postingClosesAt,
   }) async {
     await _client.from('internships').update({
       'title': title.trim(),
@@ -99,6 +102,7 @@ class HrDataService {
       'required_skills': requiredSkills,
       'job_type': jobType,
       'application_deadline': applicationDeadline?.toIso8601String().split('T').first,
+      'posting_closes_at': postingClosesAt?.toIso8601String(),
     }).eq('id', id);
   }
 
@@ -197,6 +201,23 @@ class HrDataService {
 
   Future<String> getResumeSignedUrl(String storagePath) async {
     return await _client.storage.from('resumes').createSignedUrl(storagePath, 300);
+  }
+
+  /// Resume for a matched-but-not-applied candidate. Only returns data if
+  /// the RLS policy on `profiles`/`storage.objects` grants access (the
+  /// student's skills currently overlap an open posting at this HR's
+  /// company) — returns null otherwise, treated as "no resume" by callers,
+  /// not an error.
+  Future<Map<String, String>?> getCandidateResume(String candidateId) async {
+    final row = await _client
+        .from('profiles')
+        .select('resume_path, resume_filename')
+        .eq('id', candidateId)
+        .maybeSingle();
+    final path = row?['resume_path'] as String?;
+    if (path == null) return null;
+    final url = await _client.storage.from('resumes').createSignedUrl(path, 300);
+    return {'url': url, 'filename': (row?['resume_filename'] as String?) ?? path.split('/').last};
   }
 
   // ---------------------------------------------------------------------

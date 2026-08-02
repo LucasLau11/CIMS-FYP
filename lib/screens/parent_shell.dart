@@ -21,6 +21,8 @@ class _ParentShellState extends State<ParentShell> {
   Map<String, dynamic>? _child;
   Map<String, dynamic>? _activeApplication;
   String _selectedThemeCode = 'system';
+  String? _name;
+  String? _avatarUrl;
 
   @override
   void initState() {
@@ -37,11 +39,14 @@ class _ParentShellState extends State<ParentShell> {
         application = await ParentDataService.instance.getChildActiveApplication(child['id'] as String);
       }
       final profile = await AuthService.instance.getCurrentProfile();
+      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       if (!mounted) return;
       setState(() {
         _child = child;
         _activeApplication = application;
         _selectedThemeCode = profile?['theme_mode'] as String? ?? 'system';
+        _name = profile?['full_name'] as String?;
+        _avatarUrl = resolvedAvatarUrl;
         _isLoading = false;
       });
     } catch (_) {
@@ -158,8 +163,33 @@ class _ParentShellState extends State<ParentShell> {
                             ],
                           ),
                           const SizedBox(height: 14),
-                          const Text('Welcome, Parent', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
-                          const Text('Monitor your child\'s internship progress', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white70)),
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Colors.white24,
+                                backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+                                onBackgroundImageError: _avatarUrl != null ? (_, __) {} : null,
+                                child: _avatarUrl == null
+                                    ? Text(
+                                        _name?.isNotEmpty == true ? logoLetter(_name!) : '👤',
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_name?.isNotEmpty == true ? 'Welcome, $_name' : 'Welcome, Parent',
+                                        style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                                    const Text('Monitor your child\'s internship progress', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white70)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -303,10 +333,12 @@ class _ActionCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                child: Text(status, style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                  child: Text(status, style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+                ),
               ),
               const Spacer(),
               ElevatedButton(

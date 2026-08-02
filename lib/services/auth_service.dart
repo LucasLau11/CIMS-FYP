@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'locale_controller.dart';
 import 'push_notification_service.dart';
 import 'theme_controller.dart';
@@ -215,43 +214,11 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------
-  // Avatar — stored LOCALLY on-device (not Supabase Storage).
-  //
-  // Why: Supabase Storage uploads kept failing with a row-level-security
-  // error even after confirming the policies were correct and even after
-  // testing with a maximally permissive "is authenticated" check — meaning
-  // auth.uid() wasn't reaching Postgres for storage calls specifically.
-  // Rather than fight that further, the photo is saved to the app's local
-  // documents folder, and the *local file path* is saved in the profiles
-  // table's avatar_url column (same column, different meaning now).
-  //
-  // Tradeoff to be aware of: this means the photo only exists on the
-  // device it was set on — it won't appear if the student logs in on a
-  // different device, and it's lost if the app is uninstalled/data is
-  // cleared. The `profiles.avatar_url` value still travels with the
-  // account, but there's no file behind it on another device.
+  // Avatar upload — stored in the PUBLIC 'avatars' Storage bucket (unlike
+  // resumes, which are private). Public because avatars are meant to be
+  // visible to other users across the app (e.g. in messaging, candidate
+  // cards), not just the owner.
   // ---------------------------------------------------------------------
-  /// Verifies the locally-stored avatar file still exists on this install.
-  /// It won't after a fresh install/reinstall — the app's documents folder
-  /// (and the file in it) is wiped, but `profiles.avatar_url` is remote and
-  /// survives. Self-heals by clearing the stale DB reference so the UI
-  /// doesn't keep failing to load a dead path or offer to remove/replace a
-  /// photo that's already gone.
-  Future<String?> resolveAvatarPath(String? storedPath) async {
-    if (storedPath == null) return null;
-    if (await File(storedPath).exists()) return storedPath;
-
-    final userId = currentUserId;
-    if (userId != null) {
-      try {
-        await _client.from('profiles').update({'avatar_url': null}).eq('id', userId);
-      } catch (_) {
-        // Non-fatal — worst case it re-checks and retries next load.
-      }
-    }
-    return null;
-  }
-
   Future<String> uploadAvatar(File file) async {
     final userId = currentUserId;
     if (userId == null) {
@@ -259,33 +226,35 @@ class AuthService {
     }
 
     final ext = file.path.split('.').last.toLowerCase();
-    final docsDir = await getApplicationDocumentsDirectory();
-    final avatarsDir = Directory('${docsDir.path}/avatars');
-    if (!await avatarsDir.exists()) {
-      await avatarsDir.create(recursive: true);
-    }
+    final storagePath = '$userId.$ext';
 
-    final localPath = '${avatarsDir.path}/$userId.$ext';
-    await file.copy(localPath);
+    await _client.storage.from('avatars').upload(
+          storagePath,
+          file,
+          fileOptions: const FileOptions(upsert: true),
+        );
 
-    await _client.from('profiles').update({'avatar_url': localPath}).eq('id', userId);
+    // Supabase returns the same public URL for the same storage path, so a
+    // re-uploaded photo needs a cache-busting query param — otherwise both
+    // Flutter's NetworkImage cache and any CDN in front of the public
+    // bucket would keep serving the previous photo's bytes.
+    final publicUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+    final cacheBustedUrl = '$publicUrl?updated=${DateTime.now().millisecondsSinceEpoch}';
+    await _client.from('profiles').update({'avatar_url': cacheBustedUrl}).eq('id', userId);
 
-    return localPath;
+    return cacheBustedUrl;
   }
 
-  /// Removes the current user's locally-stored avatar and clears the DB column.
+  /// Removes the current user's avatar from Storage and clears the DB column.
   Future<void> removeAvatar() async {
     final userId = currentUserId;
     if (userId == null) return;
 
     try {
-      final docsDir = await getApplicationDocumentsDirectory();
-      final avatarsDir = Directory('${docsDir.path}/avatars');
-      if (await avatarsDir.exists()) {
-        final files = avatarsDir.listSync().where((f) => f.path.contains('/$userId.'));
-        for (final f in files) {
-          await f.delete();
-        }
+      final files = await _client.storage.from('avatars').list();
+      final userFiles = files.where((f) => f.name.startsWith('$userId.')).map((f) => f.name).toList();
+      if (userFiles.isNotEmpty) {
+        await _client.storage.from('avatars').remove(userFiles);
       }
     } catch (_) {
       // Non-fatal — proceed to clear the DB reference regardless.

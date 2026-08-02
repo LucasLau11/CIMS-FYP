@@ -227,7 +227,7 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: AppTextStyles.h3),
+          Expanded(child: Text(title, style: AppTextStyles.h3)),
           if (actionIcon != null)
             GestureDetector(
               onTap: onAction,

@@ -177,7 +177,7 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
         MaterialPageRoute(
           builder: (_) => ChatScreen(
             conversationId: conversation['id'] as String,
-            otherProfile: {'id': widget.data['id'], 'full_name': widget.data['full_name']},
+            otherProfile: {'id': widget.data['id'], 'full_name': widget.data['full_name'], 'role': 'student'},
           ),
         ),
       );

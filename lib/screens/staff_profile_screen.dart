@@ -72,7 +72,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     try {
       final profile = await AuthService.instance.getCurrentProfile();
       if (!mounted) return;
-      final resolvedAvatarUrl = await AuthService.instance.resolveAvatarPath(profile?['avatar_url'] as String?);
+      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       if (!mounted) return;
 
       final rawPrefs = profile?['notification_prefs'] as Map<String, dynamic>?;
@@ -143,7 +143,6 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
 
       try {
         final uploadedUrl = await AuthService.instance.uploadAvatar(file);
-        await FileImage(File(uploadedUrl)).evict();
         if (!mounted) return;
         setState(() {
           _avatarUrl = uploadedUrl;
@@ -625,7 +624,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                                 return Image.file(_localPreviewImage!, width: 88, height: 88, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => initials);
                               }
                               if (_avatarUrl != null) {
-                                return Image.file(File(_avatarUrl!), width: 88, height: 88, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => initials);
+                                return Image.network(_avatarUrl!, width: 88, height: 88, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => initials);
                               }
                               return initials;
                             }),

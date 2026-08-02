@@ -21,6 +21,7 @@ class SupervisorDashboardScreen extends StatefulWidget {
 class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
   bool _isLoading = true;
   String? _name;
+  String? _avatarUrl;
   String? _faculty;
   int _unreadNotifications = 0;
   Map<String, int> _counts = const {'students': 0, 'pendingReviews': 0, 'approvedThisMonth': 0};
@@ -38,6 +39,7 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
     setState(() => _isLoading = true);
     try {
       final profile = await AuthService.instance.getCurrentProfile();
+      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       final counts = await SupervisorDataService.instance.getDashboardCounts();
       final unreadNotifications = await StudentDataService.instance.getUnreadNotificationCount();
       final unreadMessages = await StudentDataService.instance.getUnreadMessageCount();
@@ -46,6 +48,7 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
       if (!mounted) return;
       setState(() {
         _name = profile?['full_name'] as String?;
+        _avatarUrl = resolvedAvatarUrl;
         _faculty = profile?['faculty'] as String?;
         _counts = counts;
         _unreadNotifications = unreadNotifications;
@@ -100,10 +103,14 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
                                 child: CircleAvatar(
                                   radius: 20,
                                   backgroundColor: Colors.white24,
-                                  child: Text(
-                                    _name?.isNotEmpty == true ? logoLetter(_name!) : '👤',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
-                                  ),
+                                  backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+                                  onBackgroundImageError: _avatarUrl != null ? (_, __) {} : null,
+                                  child: _avatarUrl == null
+                                      ? Text(
+                                          _name?.isNotEmpty == true ? logoLetter(_name!) : '👤',
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                                        )
+                                      : null,
                                 ),
                               ),
                               NotificationBell(count: _unreadNotifications, onTap: () {}),
@@ -307,7 +314,7 @@ class _StudentAvatarTile extends StatelessWidget {
             Text(name,
                 style: const TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis),
             const SizedBox(height: 2),
             Text(

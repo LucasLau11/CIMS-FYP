@@ -154,7 +154,7 @@ class _PostingCard extends StatelessWidget {
               const SizedBox(width: 3),
               Flexible(
                 child: Text((data['location'] as String?) ?? l10n.notSpecified,
-                    style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    style: AppTextStyles.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
               ),
               const SizedBox(width: 12),
               Icon(Icons.schedule, size: 13, color: AppColors.textMuted),
@@ -182,7 +182,11 @@ class _PostingCard extends StatelessWidget {
                     style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary)),
               ),
               const Spacer(),
-              if (data['posted_at'] != null) Text(l10n.hrPostedAgo(timeAgo(DateTime.parse(data['posted_at'] as String))), style: AppTextStyles.caption),
+              if (data['posted_at'] != null)
+                Flexible(
+                  child: Text(l10n.hrPostedAgo(timeAgo(DateTime.parse(data['posted_at'] as String))),
+                      style: AppTextStyles.caption, textAlign: TextAlign.end),
+                ),
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
                 onSelected: (v) {
@@ -227,6 +231,7 @@ class _PostingCard extends StatelessWidget {
 }
 
 const _kCategories = ['Software', 'Data', 'Design', 'Network', 'Business'];
+const _kCustomCategoryOption = '__custom__';
 
 class _AddEditPostingScreen extends StatefulWidget {
   final Map<String, dynamic>? posting;
@@ -244,10 +249,13 @@ class _AddEditPostingScreenState extends State<_AddEditPostingScreen> {
   final _descriptionController = TextEditingController();
   final _allowanceController = TextEditingController();
   final _skillController = TextEditingController();
+  final _customCategoryController = TextEditingController();
   String _category = _kCategories.first;
+  bool _isCustomCategory = false;
   int _durationMonths = 3;
   String? _jobType;
   DateTime? _deadline;
+  DateTime? _closesAt;
   String? _locationText;
   double? _locationLat;
   double? _locationLng;
@@ -264,10 +272,16 @@ class _AddEditPostingScreenState extends State<_AddEditPostingScreen> {
       _locationText = p['location'] as String?;
       _allowanceController.text = p['allowance_month'] != null ? '${parseNum(p['allowance_month'])}' : '';
       _category = (p['category'] as String?) ?? _kCategories.first;
+      if (!_kCategories.contains(_category)) {
+        _isCustomCategory = true;
+        _customCategoryController.text = _category;
+      }
       _durationMonths = p['duration_months'] as int? ?? 3;
       _jobType = p['job_type'] as String?;
       final deadlineRaw = p['application_deadline'] as String?;
       _deadline = deadlineRaw != null ? DateTime.tryParse(deadlineRaw) : null;
+      final closesAtRaw = p['posting_closes_at'] as String?;
+      _closesAt = closesAtRaw != null ? DateTime.tryParse(closesAtRaw) : null;
       _skills.addAll(List<String>.from(p['required_skills'] as List? ?? []));
     }
   }
@@ -296,6 +310,16 @@ class _AddEditPostingScreenState extends State<_AddEditPostingScreen> {
     if (picked != null) setState(() => _deadline = picked);
   }
 
+  Future<void> _pickClosesAt() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _closesAt ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) setState(() => _closesAt = picked);
+  }
+
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     if (_titleController.text.trim().isEmpty || _locationText == null || _locationText!.trim().isEmpty) {
@@ -315,6 +339,11 @@ class _AddEditPostingScreenState extends State<_AddEditPostingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.hrSkillRequired), backgroundColor: AppColors.error));
       return;
     }
+    if (_isCustomCategory && _customCategoryController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Enter a custom category or pick one from the list.'), backgroundColor: AppColors.error));
+      return;
+    }
+    final category = _isCustomCategory ? _customCategoryController.text.trim() : _category;
     setState(() => _isSaving = true);
     try {
       if (isEdit) {
@@ -322,25 +351,27 @@ class _AddEditPostingScreenState extends State<_AddEditPostingScreen> {
           id: widget.posting!['id'] as String,
           title: _titleController.text,
           description: _descriptionController.text,
-          category: _category,
+          category: category,
           location: _locationText!,
           durationMonths: _durationMonths,
           allowanceMonth: allowance,
           requiredSkills: _skills,
           jobType: _jobType,
           applicationDeadline: _deadline,
+          postingClosesAt: _closesAt,
         );
       } else {
         await HrDataService.instance.createPosting(
           title: _titleController.text,
           description: _descriptionController.text,
-          category: _category,
+          category: category,
           location: _locationText!,
           durationMonths: _durationMonths,
           allowanceMonth: allowance,
           requiredSkills: _skills,
           jobType: _jobType,
           applicationDeadline: _deadline,
+          postingClosesAt: _closesAt,
         );
       }
       if (!mounted) return;
@@ -391,10 +422,29 @@ class _AddEditPostingScreenState extends State<_AddEditPostingScreen> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               decoration: InputDecoration(labelText: l10n.hrCategory),
-              value: _category,
-              items: _kCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
-              onChanged: (v) => setState(() => _category = v ?? _category),
+              value: _isCustomCategory ? _kCustomCategoryOption : _category,
+              items: [
+                ..._kCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))),
+                const DropdownMenuItem(value: _kCustomCategoryOption, child: Text('Custom…', style: TextStyle(fontSize: 13))),
+              ],
+              onChanged: (v) {
+                setState(() {
+                  if (v == _kCustomCategoryOption) {
+                    _isCustomCategory = true;
+                  } else {
+                    _isCustomCategory = false;
+                    _category = v ?? _category;
+                  }
+                });
+              },
             ),
+            if (_isCustomCategory) ...[
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _customCategoryController,
+                decoration: const InputDecoration(labelText: 'Custom category', hintText: 'e.g. Marketing'),
+              ),
+            ],
             const SizedBox(height: 20),
             Text(l10n.hrLogistics, style: AppTextStyles.label),
             const SizedBox(height: 8),
@@ -453,6 +503,51 @@ class _AddEditPostingScreenState extends State<_AddEditPostingScreen> {
                       _deadline != null ? l10n.hrDeadlineLabel('${_deadline!.day}/${_deadline!.month}/${_deadline!.year}') : l10n.hrApplicationDeadlineOptional,
                       style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: _deadline != null ? AppColors.textPrimary : AppColors.textMuted),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text('Posting closes automatically after (optional)', style: AppTextStyles.caption),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [7, 14, 30, 60, 90].map((days) {
+                final target = DateTime.now().add(Duration(days: days));
+                final selected = _closesAt != null && _closesAt!.year == target.year && _closesAt!.month == target.month && _closesAt!.day == target.day;
+                return ChoiceChip(
+                  label: Text('${days}d', style: const TextStyle(fontFamily: 'Inter', fontSize: 12)),
+                  selected: selected,
+                  selectedColor: AppColors.accent,
+                  onSelected: (_) => setState(() => _closesAt = target),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _pickClosesAt,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.border)),
+                child: Row(
+                  children: [
+                    Icon(Icons.lock_clock_outlined, size: 18, color: AppColors.textMuted),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _closesAt != null ? 'Posting closes on ${_closesAt!.day}/${_closesAt!.month}/${_closesAt!.year}' : 'Auto-close date (optional)',
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: _closesAt != null ? AppColors.textPrimary : AppColors.textMuted),
+                      ),
+                    ),
+                    if (_closesAt != null)
+                      IconButton(
+                        icon: Icon(Icons.close, size: 16, color: AppColors.textMuted),
+                        onPressed: () => setState(() => _closesAt = null),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                   ],
                 ),
               ),
