@@ -23,6 +23,8 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
   Map<String, dynamic>? _companyDetails;
   late bool _applied = widget.applied;
 
+  bool get _isVerified => _isLoadingCompany || _companyDetails?['status'] == 'verified';
+
   @override
   void initState() {
     super.initState();
@@ -166,12 +168,21 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
               ),
             ),
           const SizedBox(height: 24),
+          if (!_isLoadingCompany && !_applied && !_isVerified) ...[
+            Text(
+              'You\'ll be able to apply once this company is verified.',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+          ],
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _applied ? null : _apply,
+              onPressed: (_applied || !_isVerified) ? null : _apply,
               style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-              child: Text(_applied ? 'Already applied' : 'Apply now'),
+              child: Text(_applied
+                  ? 'Already applied'
+                  : (!_isVerified ? 'Company pending verification' : 'Apply now')),
             ),
           ),
           const SizedBox(height: 16),

@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../../utils/profanity_filter.dart';
 import '../document_preview_screen.dart';
 
 const List<String> _imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -849,7 +850,7 @@ class _MessageBubble extends StatelessWidget {
                   if (attachmentPath != null) _AttachmentContent(path: attachmentPath, fileName: attachmentFileName, isMine: isMine),
                   if (body != null && body.isNotEmpty) ...[
                     if (attachmentPath != null) const SizedBox(height: 6),
-                    Text(body, style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: isMine ? Colors.white : AppColors.textPrimary)),
+                    Text(censorProfanity(body), style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: isMine ? Colors.white : AppColors.textPrimary)),
                   ],
                   const SizedBox(height: 4),
                   Row(

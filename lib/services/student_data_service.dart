@@ -31,7 +31,7 @@ class StudentDataService {
   Future<List<Map<String, dynamic>>> getOpenInternships() async {
     final rows = await _client
         .from('internships')
-        .select()
+        .select('*, companies(status)')
         .eq('status', 'open')
         .order('posted_at', ascending: false);
     return List<Map<String, dynamic>>.from(rows);
@@ -72,6 +72,9 @@ class StudentDataService {
     } on PostgrestException catch (e) {
       if (e.code == '23505') {
         throw Exception('You have already applied to this internship.');
+      }
+      if (e.code == '42501') {
+        throw Exception('This company hasn\'t been verified yet, so applications aren\'t open.');
       }
       throw Exception('Could not submit application: ${e.message}');
     }

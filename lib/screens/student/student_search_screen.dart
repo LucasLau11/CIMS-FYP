@@ -294,6 +294,12 @@ class _InternshipCard extends StatelessWidget {
                   backgroundColor: AppColors.successBg,
                   textColor: AppColors.success,
                 ),
+              if ((data['companies'] as Map<String, dynamic>?)?['status'] != 'verified')
+                StatusBadge(
+                  label: 'Pending verification',
+                  backgroundColor: AppColors.warningBg,
+                  textColor: AppColors.warning,
+                ),
             ],
           ),
           const SizedBox(height: 10),
