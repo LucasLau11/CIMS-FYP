@@ -217,7 +217,7 @@ class _ReviewCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Text(l10n.supSubmittedAgo('${data['student_name']} · ${timeAgo(DateTime.parse(data['submitted_at'] as String))}'),
+                    Text(l10n.supSubmittedAgo('${data['student_name']} · ${timeAgo(context, DateTime.parse(data['submitted_at'] as String))}'),
                         style: AppTextStyles.caption),
                   ],
                 ),

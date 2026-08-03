@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
@@ -54,6 +55,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
   }
 
   Future<void> _assign(Map<String, dynamic> student) async {
+    final l10n = AppLocalizations.of(context)!;
     final selected = await showModalBottomSheet<Map<String, dynamic>?>(
       context: context,
       isScrollControlled: true,
@@ -66,7 +68,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Align(alignment: Alignment.centerLeft, child: Text('Assign supervisor', style: AppTextStyles.h3)),
+              child: Align(alignment: Alignment.centerLeft, child: Text(l10n.adminAssignSupervisor, style: AppTextStyles.h3)),
             ),
             Expanded(
               child: ListView(
@@ -75,7 +77,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                   if (student['supervisor_name'] != null)
                     ListTile(
                       leading: Icon(Icons.person_off_outlined, color: AppColors.error),
-                      title: Text('Unassign', style: TextStyle(color: AppColors.error)),
+                      title: Text(l10n.adminUnassign, style: TextStyle(color: AppColors.error)),
                       onTap: () => Navigator.pop(context, <String, dynamic>{}),
                     ),
                   ..._supervisors.map((sup) => ListTile(
@@ -84,8 +86,8 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                           child: Text(logoLetter(sup['full_name'] as String? ?? '?'),
                               style: TextStyle(fontWeight: FontWeight.w700, color: nameColor(sup['full_name'] as String? ?? ''))),
                         ),
-                        title: Text((sup['full_name'] as String?)?.isNotEmpty == true ? sup['full_name'] as String : 'Unnamed'),
-                        subtitle: Text('${sup['student_count']} students'),
+                        title: Text((sup['full_name'] as String?)?.isNotEmpty == true ? sup['full_name'] as String : l10n.adminUnnamed),
+                        subtitle: Text(l10n.supStudentsCount(sup['student_count'] as int)),
                         onTap: () => Navigator.pop(context, sup),
                       )),
                 ],
@@ -105,16 +107,19 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not assign: $e'), backgroundColor: AppColors.error));
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotAssign(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final filterLabels = {'All': l10n.adminFilterAll, 'Assigned': l10n.adminFilterAssigned, 'Unassigned': l10n.adminFilterUnassigned};
     final results = _filtered;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const GradientAppBar(title: 'Students'),
+      appBar: GradientAppBar(title: l10n.adminStudentsTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
@@ -126,7 +131,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(hintText: 'Search by name...', prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted)),
+                      decoration: InputDecoration(hintText: l10n.adminSearchByNameHint, prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted)),
                     ),
                   ),
                   SizedBox(
@@ -138,7 +143,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                           .map((s) => Padding(
                                 padding: const EdgeInsets.only(right: 8),
                                 child: FilterChip(
-                                  label: Text(s),
+                                  label: Text(filterLabels[s]!),
                                   selected: _filter == s,
                                   onSelected: (_) => setState(() => _filter = s),
                                   labelStyle: TextStyle(
@@ -153,11 +158,11 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-                    child: Row(children: [Text('${results.length} students', style: AppTextStyles.caption)]),
+                    child: Row(children: [Text(l10n.supStudentsCount(results.length), style: AppTextStyles.caption)]),
                   ),
                   Expanded(
                     child: results.isEmpty
-                        ? const EmptyState(icon: Icons.school_outlined, title: 'No students found', description: 'Try adjusting your search or filters.')
+                        ? EmptyState(icon: Icons.school_outlined, title: l10n.adminNoStudentsFoundTitle, description: l10n.adminNoStudentsFoundDescription)
                         : ListView.builder(
                             padding: const EdgeInsets.only(bottom: 24),
                             itemCount: results.length,
@@ -187,7 +192,8 @@ class _StudentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : 'Unnamed student';
+    final l10n = AppLocalizations.of(context)!;
+    final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : l10n.adminUnnamedStudent;
     final supervisorName = data['supervisor_name'] as String?;
     final isUnassigned = supervisorName == null;
 
@@ -207,15 +213,15 @@ class _StudentCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                Text((data['programme'] as String?) ?? 'Programme not set', style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
+                Text((data['programme'] as String?) ?? l10n.adminProgrammeNotSet, style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
                 Text(
-                  supervisorName != null ? 'Supervisor: $supervisorName' : 'No supervisor assigned',
+                  supervisorName != null ? l10n.adminSupervisorColonName(supervisorName) : l10n.adminNoSupervisorAssigned,
                   style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: isUnassigned ? AppColors.error : AppColors.primary),
                 ),
               ],
             ),
           ),
-          TextButton(onPressed: onAssign, child: const Text('Assign')),
+          TextButton(onPressed: onAssign, child: Text(l10n.adminAssign)),
         ],
       ),
     );

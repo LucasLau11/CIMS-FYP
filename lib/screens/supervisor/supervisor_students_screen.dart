@@ -171,7 +171,7 @@ class _StudentProgressCard extends StatelessWidget {
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
-                  lastReportAt != null ? l10n.supLastReportAgo(timeAgo(DateTime.parse(lastReportAt))) : l10n.supNoReportsYet,
+                  lastReportAt != null ? l10n.supLastReportAgo(timeAgo(context, DateTime.parse(lastReportAt))) : l10n.supNoReportsYet,
                   style: AppTextStyles.caption,
                 ),
               ),
@@ -341,7 +341,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     const Icon(Icons.star, color: Colors.white, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(l10n.supSubmittedAgo(timeAgo(DateTime.parse(_evaluations.first['created_at'] as String))),
+                      child: Text(l10n.supSubmittedAgo(timeAgo(context, DateTime.parse(_evaluations.first['created_at'] as String))),
                           style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
                     ),
                     Text(parseNum(_evaluations.first['average_score'])?.toStringAsFixed(1) ?? '-',
@@ -396,14 +396,14 @@ class _SubmissionTile extends StatelessWidget {
     }
   }
 
-  StatusBadge get _badge {
+  StatusBadge _badge(BuildContext context) {
     switch (status) {
       case 'approved':
-        return StatusBadge.approved();
+        return StatusBadge.approved(context);
       case 'rejected':
-        return StatusBadge.rejected();
+        return StatusBadge.rejected(context);
       default:
-        return StatusBadge.pending();
+        return StatusBadge.pending(context);
     }
   }
 
@@ -417,7 +417,7 @@ class _SubmissionTile extends StatelessWidget {
           Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 10),
           Expanded(child: Text(title, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600))),
-          _badge,
+          _badge(context),
         ],
       ),
     );

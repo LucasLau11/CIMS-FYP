@@ -7,6 +7,7 @@ import '../../services/student_data_service.dart';
 import '../../services/resume_parser_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../../l10n/app_localizations.dart';
 import '../document_preview_screen.dart';
 import 'student_profile_screen.dart';
 
@@ -71,6 +72,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
   }
 
   Future<void> _uploadCoverLetter() async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['pdf', 'docx'], withData: true);
     if (result == null || result.files.isEmpty) return;
     final picked = result.files.single;
@@ -85,18 +87,19 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
         _isExtractingCoverLetter = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cover letter loaded from file — review and edit before continuing.'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(l10n.coverLetterLoadedFromFile), backgroundColor: AppColors.primary),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isExtractingCoverLetter = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not read file: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotReadFile(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   bool get _hasResume => _resumeFilename != null && _resumeFilename!.trim().isNotEmpty;
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _isSubmitting = true;
       _submitError = null;
@@ -108,8 +111,8 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
         skills: _selectedSkills,
       );
       await StudentDataService.instance.createSelfNotification(
-        title: 'Application submitted',
-        body: 'Your application to ${widget.internship['company_name']} has been sent.',
+        title: l10n.notifApplicationSubmittedTitle,
+        body: l10n.notifApplicationSubmittedBody(widget.internship['company_name'] as String),
         type: 'application',
         relatedId: widget.internship['id'] as String,
       );
@@ -129,6 +132,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_submitted) {
       return _SuccessScreen(internship: widget.internship);
     }
@@ -143,8 +147,8 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
             icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () => Navigator.pop(context, false),
           ),
-          title: const Text('Apply',
-              style: TextStyle(
+          title: Text(l10n.apply,
+              style: const TextStyle(
                   fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
         ),
         body: Column(
@@ -195,7 +199,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: ProgressStepper(
-                steps: const ['Resume', 'Cover Letter', 'Skills', 'Review'],
+                steps: [l10n.resume, l10n.coverLetter, l10n.hrSkills, l10n.review],
                 currentStep: _currentStep,
               ),
             ),
@@ -223,7 +227,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: _isSubmitting ? null : () => setState(() => _currentStep--),
-                        child: const Text('Back'),
+                        child: Text(l10n.back),
                       ),
                     ),
                   if (_currentStep > 0) const SizedBox(width: 12),
@@ -245,7 +249,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
-                          : Text(_currentStep == 3 ? 'Submit application' : 'Continue'),
+                          : Text(_currentStep == 3 ? l10n.submitApplication : l10n.continueLabel),
                     ),
                   ),
                 ],
@@ -268,16 +272,17 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
           onViewResume: _resumePath == null
               ? null
               : () async {
+                  final l10n = AppLocalizations.of(context)!;
                   try {
                     final url = await AuthService.instance.getResumeSignedUrl(_resumePath!);
                     if (!mounted) return;
                     Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => DocumentPreviewScreen(url: url, fileName: _resumeFilename ?? 'Resume'),
+                      builder: (_) => DocumentPreviewScreen(url: url, fileName: _resumeFilename ?? l10n.resume),
                     ));
                   } catch (_) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: const Text('Could not open resume.'), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(l10n.errorCouldNotOpenResume), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -334,6 +339,7 @@ class _ResumeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (isLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
@@ -344,9 +350,9 @@ class _ResumeStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Resume / CV', style: AppTextStyles.h3),
+        Text(l10n.resumeCvHeading, style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        Text('This is the resume that will be submitted with your application.',
+        Text(l10n.resumeSubmittedWithApplicationNote,
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 20),
         if (hasResume)
@@ -398,7 +404,7 @@ class _ResumeStep extends StatelessWidget {
                     Icon(Icons.warning_amber_rounded, size: 20, color: AppColors.error),
                     SizedBox(width: 8),
                     Expanded(
-                      child: Text('No resume on file',
+                      child: Text(l10n.noResumeOnFile,
                           style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 14,
@@ -408,10 +414,10 @@ class _ResumeStep extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Upload a resume to your profile before applying.',
+                Text(l10n.uploadResumeBeforeApplyingNote,
                     style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
                 const SizedBox(height: 12),
-                OutlinedButton(onPressed: onGoToProfile, child: const Text('Go to profile')),
+                OutlinedButton(onPressed: onGoToProfile, child: Text(l10n.goToProfile)),
               ],
             ),
           ),
@@ -429,12 +435,13 @@ class _CoverLetterStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Cover letter', style: AppTextStyles.h3),
+        Text(l10n.coverLetter, style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        Text('Tell the company why you are a great fit — type it yourself or upload a file.',
+        Text(l10n.coverLetterIntroNote,
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 12),
         OutlinedButton.icon(
@@ -442,14 +449,14 @@ class _CoverLetterStep extends StatelessWidget {
           icon: isExtracting
               ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.upload_file_outlined, size: 16),
-          label: Text(isExtracting ? 'Reading file...' : 'Upload cover letter (PDF/DOCX)'),
+          label: Text(isExtracting ? l10n.readingFile : l10n.uploadCoverLetterButton),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: controller,
           maxLines: 12,
-          decoration: const InputDecoration(
-            hintText: 'Dear Hiring Manager,\n\nI am writing to express my interest in...',
+          decoration: InputDecoration(
+            hintText: l10n.coverLetterHint,
           ),
         ),
         const SizedBox(height: 12),
@@ -458,7 +465,7 @@ class _CoverLetterStep extends StatelessWidget {
           children: [
             Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
             const SizedBox(width: 4),
-            Text('Tip: Mention relevant skills and experiences.',
+            Text(l10n.coverLetterTip,
                 style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted)),
           ],
         ),
@@ -476,12 +483,13 @@ class _SkillsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Relevant skills', style: AppTextStyles.h3),
+        Text(l10n.relevantSkillsHeading, style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        Text('Select skills that match this internship.',
+        Text(l10n.selectMatchingSkillsNote,
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 20),
         Wrap(
@@ -538,16 +546,17 @@ class _ReviewStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Review your application', style: AppTextStyles.h3),
+        Text(l10n.reviewYourApplication, style: AppTextStyles.h3),
         const SizedBox(height: 4),
-        Text('Please review before submitting.',
+        Text(l10n.pleaseReviewBeforeSubmitting,
             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 20),
         _ReviewSection(
-          title: 'Position',
+          title: l10n.position,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -560,13 +569,13 @@ class _ReviewStep extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         _ReviewSection(
-          title: 'Resume',
+          title: l10n.resume,
           child: Row(
             children: [
               const Icon(Icons.picture_as_pdf_outlined, size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(resumeFilename ?? 'No resume',
+                child: Text(resumeFilename ?? l10n.noResume,
                     style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
@@ -576,10 +585,10 @@ class _ReviewStep extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         _ReviewSection(
-          title: 'Cover letter',
+          title: l10n.coverLetter,
           child: Text(
             coverLetter.isEmpty
-                ? 'No cover letter provided'
+                ? l10n.noCoverLetterProvided
                 : coverLetter.length > 100
                     ? '${coverLetter.substring(0, 100)}...'
                     : coverLetter,
@@ -591,7 +600,7 @@ class _ReviewStep extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         _ReviewSection(
-          title: 'Skills',
+          title: l10n.hrSkills,
           child: Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -615,7 +624,7 @@ class _ReviewStep extends StatelessWidget {
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Once submitted, your application cannot be edited.',
+                  l10n.applicationCannotBeEditedNote,
                   style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.warning),
                 ),
               ),
@@ -661,6 +670,7 @@ class _SuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
@@ -676,10 +686,10 @@ class _SuccessScreen extends StatelessWidget {
                 child: Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
               ),
               const SizedBox(height: 24),
-              Text('Application submitted!', style: AppTextStyles.h2, textAlign: TextAlign.center),
+              Text(l10n.applicationSubmittedExclaim, style: AppTextStyles.h2, textAlign: TextAlign.center),
               const SizedBox(height: 10),
               Text(
-                'Your application to ${internship['company_name']} has been sent. You will be notified when there is an update.',
+                l10n.applicationSubmittedDetail(internship['company_name'] as String),
                 style: AppTextStyles.bodySecondary,
                 textAlign: TextAlign.center,
               ),
@@ -688,7 +698,7 @@ class _SuccessScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Back to search'),
+                  child: Text(l10n.backToSearch),
                 ),
               ),
             ],

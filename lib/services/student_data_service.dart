@@ -93,6 +93,55 @@ class StudentDataService {
   }
 
   // ---------------------------------------------------------------------
+  // Company profile: postings, past interns, ratings & reviews
+  // ---------------------------------------------------------------------
+
+  Future<List<Map<String, dynamic>>> getCompanyPostings(String companyId) async {
+    final rows = await _client.from('internships').select().eq('company_id', companyId).order('posted_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  /// Count only, not names — avoids exposing other students' identities to
+  /// anyone browsing a company's profile.
+  Future<int> getCompanyInternCount(String companyId) async {
+    final rows = await _client
+        .from('applications')
+        .select('student_id, internships!inner(company_id)')
+        .eq('internships.company_id', companyId)
+        .eq('status', 'active');
+    return List<Map<String, dynamic>>.from(rows).map((r) => r['student_id']).toSet().length;
+  }
+
+  /// Rating + review text only — student_id is deliberately never selected
+  /// here so reviews render anonymously even though each row is attributed
+  /// internally (for the one-review-per-student uniqueness constraint).
+  Future<List<Map<String, dynamic>>> getCompanyReviews(String companyId) async {
+    final rows = await _client.from('company_reviews').select('rating, review, created_at').eq('company_id', companyId).order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  /// Whether the current student has ever applied to this company (the
+  /// review-eligibility gate — matches company_reviews_insert_own's RLS).
+  Future<bool> canReviewCompany(String companyId) async {
+    final rows = await _client.from('applications').select('id, internships!inner(company_id)').eq('internships.company_id', companyId).eq('student_id', _userId).limit(1);
+    return List.from(rows).isNotEmpty;
+  }
+
+  Future<Map<String, dynamic>?> getMyCompanyReview(String companyId) async {
+    return await _client.from('company_reviews').select().eq('company_id', companyId).eq('student_id', _userId).maybeSingle();
+  }
+
+  Future<void> submitCompanyReview({required String companyId, required int rating, String? review}) async {
+    await _client.from('company_reviews').upsert({
+      'company_id': companyId,
+      'student_id': _userId,
+      'rating': rating,
+      'review': review?.trim().isEmpty == true ? null : review?.trim(),
+      'updated_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'company_id,student_id');
+  }
+
+  // ---------------------------------------------------------------------
   // Work experience
   // ---------------------------------------------------------------------
 
@@ -314,6 +363,12 @@ class StudentDataService {
             .eq('role', 'company_supervisor')
             .eq('company_id', companyId)
             .order('full_name', ascending: true);
+        return List<Map<String, dynamic>>.from(rows);
+      case 'parent':
+        final links = await _client.from('parent_child_links').select('student_id').eq('parent_id', _userId).eq('status', 'approved');
+        final childIds = List<Map<String, dynamic>>.from(links).map((l) => l['student_id'] as String).toList();
+        if (childIds.isEmpty) return [];
+        final rows = await _client.from('profile_directory').select().inFilter('id', childIds).order('full_name', ascending: true);
         return List<Map<String, dynamic>>.from(rows);
       default:
         return [];
@@ -589,6 +644,17 @@ class StudentDataService {
       'type': type,
       'related_id': relatedId,
     });
+  }
+
+  /// Approves or rejects a pending parent-link request addressed to this
+  /// student. [requestId] is the `parent_child_links.id`, which is also the
+  /// notification's `related_id`.
+  Future<void> respondToParentLinkRequest({required String requestId, required bool approve}) async {
+    await _client
+        .from('parent_child_links')
+        .update({'status': approve ? 'approved' : 'rejected', 'responded_at': DateTime.now().toIso8601String()})
+        .eq('id', requestId)
+        .eq('status', 'pending');
   }
 
   // ---------------------------------------------------------------------

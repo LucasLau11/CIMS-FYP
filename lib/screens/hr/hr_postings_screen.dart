@@ -144,7 +144,7 @@ class _PostingCard extends StatelessWidget {
               Expanded(
                 child: Text(data['title'] as String, style: TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
               ),
-              isActive ? StatusBadge.active() : StatusBadge(label: l10n.hrClosedStatus, backgroundColor: const Color(0xFFF1EFE8), textColor: const Color(0xFF5F5E5A)),
+              isActive ? StatusBadge.active(context) : StatusBadge(label: l10n.hrClosedStatus, backgroundColor: const Color(0xFFF1EFE8), textColor: const Color(0xFF5F5E5A)),
             ],
           ),
           const SizedBox(height: 8),
@@ -184,7 +184,7 @@ class _PostingCard extends StatelessWidget {
               const Spacer(),
               if (data['posted_at'] != null)
                 Flexible(
-                  child: Text(l10n.hrPostedAgo(timeAgo(DateTime.parse(data['posted_at'] as String))),
+                  child: Text(l10n.hrPostedAgo(timeAgo(context, DateTime.parse(data['posted_at'] as String))),
                       style: AppTextStyles.caption, textAlign: TextAlign.end),
                 ),
               PopupMenuButton<String>(

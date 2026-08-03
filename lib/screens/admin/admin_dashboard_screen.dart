@@ -4,6 +4,7 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/format_utils.dart';
+import '../../l10n/app_localizations.dart';
 import '../admin_shell.dart';
 import '../staff_profile_screen.dart';
 import 'admin_companies_screen.dart';
@@ -53,6 +54,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
@@ -90,12 +92,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     child: const CimsLogoMark(size: 26),
                                   ),
                                   const SizedBox(width: 10),
-                                  const Column(
+                                  Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('CIMS Admin',
-                                          style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                                      Text('TARUMT', style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white70)),
+                                      Text(l10n.adminBrandLabel,
+                                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                                      Text(l10n.tarumt, style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white70)),
                                     ],
                                   ),
                                 ],
@@ -127,7 +129,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Text('Welcome back, ${(_name?.isNotEmpty ?? false) ? _name : 'Admin'}',
+                          Text(l10n.adminWelcomeBack((_name?.isNotEmpty ?? false) ? _name! : l10n.adminFallbackName),
                               style: const TextStyle(fontFamily: 'Poppins', fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
                         ],
                       ),
@@ -143,7 +145,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionHeader(title: 'System overview'),
+                    SectionHeader(title: l10n.adminSystemOverview),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: GridView.count(
@@ -155,7 +157,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         childAspectRatio: 1.1,
                         children: [
                           MetricCard(
-                            label: 'Total students',
+                            label: l10n.adminTotalStudents,
                             value: '${_counts['students'] ?? 0}',
                             icon: Icons.school_outlined,
                             color: AppColors.primary,
@@ -165,7 +167,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             },
                           ),
                           MetricCard(
-                            label: 'Active internships',
+                            label: l10n.adminActiveInternships,
                             value: '${_counts['activeInternships'] ?? 0}',
                             icon: Icons.work_outline,
                             color: AppColors.success,
@@ -175,7 +177,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             },
                           ),
                           MetricCard(
-                            label: 'Partner companies',
+                            label: l10n.adminPartnerCompanies,
                             value: '${_counts['companies'] ?? 0}',
                             icon: Icons.business_outlined,
                             color: AppColors.primaryLight,
@@ -185,7 +187,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             },
                           ),
                           MetricCard(
-                            label: 'Pending reviews',
+                            label: l10n.supPendingReviews,
                             value: '${_counts['pendingReviews'] ?? 0}',
                             icon: Icons.pending_actions_outlined,
                             color: AppColors.warning,
@@ -197,11 +199,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ],
                       ),
                     ),
-                    const SectionHeader(title: 'Needs attention'),
+                    SectionHeader(title: l10n.adminNeedsAttention),
                     if ((_counts['unassignedStudents'] ?? 0) == 0 && (_counts['pendingReviews'] ?? 0) == 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Text('All clear — nothing needs your attention right now.',
+                        child: Text(l10n.adminAllClear,
                             style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
                       ),
                     if ((_counts['unassignedStudents'] ?? 0) > 0)
@@ -223,9 +225,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('${_counts['unassignedStudents']} students unassigned',
+                                  Text(l10n.adminStudentsUnassignedCount(_counts['unassignedStudents'] ?? 0),
                                       style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                  Text('No academic supervisor assigned yet',
+                                  Text(l10n.adminNoSupervisorAssignedYet,
                                       style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textSecondary)),
                                 ],
                               ),
@@ -249,9 +251,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('${_counts['pendingReviews']} submissions pending review',
+                                  Text(l10n.adminSubmissionsPendingReviewCount(_counts['pendingReviews'] ?? 0),
                                       style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                  Text('Awaiting supervisor or admin review',
+                                  Text(l10n.adminAwaitingReview,
                                       style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textSecondary)),
                                 ],
                               ),
@@ -259,7 +261,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ],
                         ),
                       ),
-                    const SectionHeader(title: 'Quick actions'),
+                    SectionHeader(title: l10n.quickActions),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: GridView.count(
@@ -272,7 +274,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         children: [
                           _QuickAction(
                             icon: Icons.add_business_outlined,
-                            label: 'Add Company',
+                            label: l10n.adminAddCompany,
                             onTap: () async {
                               await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCompaniesScreen()));
                               _load();
@@ -280,7 +282,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                           _QuickAction(
                             icon: Icons.link_outlined,
-                            label: 'Assign Supervisor',
+                            label: l10n.adminAssignSupervisor,
                             onTap: () async {
                               await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminStudentsScreen()));
                               _load();
@@ -289,17 +291,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ],
                       ),
                     ),
-                    const SectionHeader(title: 'Recently registered'),
+                    SectionHeader(title: l10n.adminRecentlyRegistered),
                     if (_recentStudents.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Text('No students yet.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+                        child: Text(l10n.supNoStudentsYet, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
                       )
                     else
                       ..._recentStudents.map((s) => _ActivityItem(
                             icon: Icons.person_add_alt_outlined,
-                            text: '${(s['full_name'] as String?)?.isNotEmpty == true ? s['full_name'] : 'Unnamed student'} registered',
-                            time: timeAgo(DateTime.parse(s['created_at'] as String)),
+                            text: l10n.adminStudentRegisteredActivity(
+                                (s['full_name'] as String?)?.isNotEmpty == true ? s['full_name'] as String : l10n.adminUnnamedStudent),
+                            time: timeAgo(context, DateTime.parse(s['created_at'] as String)),
                             color: AppColors.primary,
                           )),
                     const SizedBox(height: 24),

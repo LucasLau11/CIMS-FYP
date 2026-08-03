@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../l10n/app_localizations.dart';
 
 // Gradient wave app bar used throughout the app
 class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -154,32 +155,32 @@ class StatusBadge extends StatelessWidget {
     required this.textColor,
   });
 
-  factory StatusBadge.pending() => StatusBadge(
-    label: 'Pending',
+  factory StatusBadge.pending(BuildContext context) => StatusBadge(
+    label: AppLocalizations.of(context)!.pending,
     backgroundColor: AppColors.warningBg,
     textColor: AppColors.warning,
   );
 
-  factory StatusBadge.approved() => StatusBadge(
-    label: 'Approved',
+  factory StatusBadge.approved(BuildContext context) => StatusBadge(
+    label: AppLocalizations.of(context)!.statusApproved,
     backgroundColor: AppColors.successBg,
     textColor: AppColors.success,
   );
 
-  factory StatusBadge.rejected() => StatusBadge(
-    label: 'Rejected',
+  factory StatusBadge.rejected(BuildContext context) => StatusBadge(
+    label: AppLocalizations.of(context)!.rejected,
     backgroundColor: AppColors.errorBg,
     textColor: AppColors.error,
   );
 
-  factory StatusBadge.submitted() => StatusBadge(
-    label: 'Submitted',
+  factory StatusBadge.submitted(BuildContext context) => StatusBadge(
+    label: AppLocalizations.of(context)!.statusSubmitted,
     backgroundColor: AppColors.infoBg,
     textColor: AppColors.info,
   );
 
-  factory StatusBadge.active() => StatusBadge(
-    label: 'Active',
+  factory StatusBadge.active(BuildContext context) => StatusBadge(
+    label: AppLocalizations.of(context)!.active,
     backgroundColor: AppColors.successBg,
     textColor: AppColors.success,
   );

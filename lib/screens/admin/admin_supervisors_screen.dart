@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../../l10n/app_localizations.dart';
 
 class AdminSupervisorsScreen extends StatefulWidget {
   const AdminSupervisorsScreen({super.key});
@@ -45,10 +46,11 @@ class _AdminSupervisorsScreenState extends State<AdminSupervisorsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final results = _filtered;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const GradientAppBar(title: 'Supervisors'),
+      appBar: GradientAppBar(title: l10n.adminSupervisorsTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
@@ -60,16 +62,16 @@ class _AdminSupervisorsScreenState extends State<AdminSupervisorsScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(hintText: 'Search supervisors...', prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted)),
+                      decoration: InputDecoration(hintText: l10n.adminSearchSupervisorsHint, prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted)),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: Row(children: [Text('${results.length} academic supervisors', style: AppTextStyles.caption)]),
+                    child: Row(children: [Text(l10n.adminAcademicSupervisorsCount(results.length), style: AppTextStyles.caption)]),
                   ),
                   Expanded(
                     child: results.isEmpty
-                        ? const EmptyState(icon: Icons.supervisor_account_outlined, title: 'No supervisors found', description: 'No academic supervisor accounts have signed up yet.')
+                        ? EmptyState(icon: Icons.supervisor_account_outlined, title: l10n.adminNoSupervisorsFoundTitle, description: l10n.adminNoSupervisorsFoundDescription)
                         : ListView.builder(
                             padding: const EdgeInsets.only(top: 6, bottom: 24),
                             itemCount: results.length,
@@ -97,7 +99,8 @@ class _SupervisorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : 'Unnamed';
+    final l10n = AppLocalizations.of(context)!;
+    final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : l10n.adminUnnamed;
     return AccentCard(
       onTap: onTap,
       child: Row(
@@ -114,14 +117,14 @@ class _SupervisorCard extends StatelessWidget {
               children: [
                 Text(name, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 Text((data['email'] as String?) ?? '', style: AppTextStyles.caption),
-                Text((data['faculty'] as String?) ?? 'Faculty not set', style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
+                Text((data['faculty'] as String?) ?? l10n.adminFacultyNotSet, style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(20)),
-            child: Text('${data['student_count']} students',
+            child: Text(l10n.supStudentsCount(data['student_count'] as int),
                 style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary)),
           ),
         ],
@@ -166,19 +169,20 @@ class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
   }
 
   Future<void> _promoteToAdmin() async {
-    final name = (widget.data['full_name'] as String?)?.isNotEmpty == true ? widget.data['full_name'] as String : 'this supervisor';
+    final l10n = AppLocalizations.of(context)!;
+    final name = (widget.data['full_name'] as String?)?.isNotEmpty == true ? widget.data['full_name'] as String : l10n.adminThisSupervisorFallback;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text('Promote to admin?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+        title: Text(l10n.adminPromoteToAdminTitle, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
         content: Text(
-          '$name will immediately become a System Administrator — their account will gain full admin access on next login and they will no longer appear in the supervisors list. This cannot be undone from here.',
+          l10n.adminPromoteToAdminMessage(name),
           style: const TextStyle(fontFamily: 'Inter', fontSize: 13),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text('Promote', style: TextStyle(color: AppColors.error))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(l10n.adminPromote, style: TextStyle(color: AppColors.error))),
         ],
       ),
     );
@@ -192,21 +196,22 @@ class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isPromoting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not promote: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotPromote(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final data = widget.data;
-    final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : 'Unnamed';
+    final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : l10n.adminUnnamed;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: const Text('Supervisor details', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+        title: Text(l10n.adminSupervisorDetailsTitle, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
@@ -226,14 +231,14 @@ class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
                         const SizedBox(height: 10),
                         Text(name, style: AppTextStyles.h2),
                         const SizedBox(height: 2),
-                        Text((data['faculty'] as String?) ?? 'Faculty not set', style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
+                        Text((data['faculty'] as String?) ?? l10n.adminFacultyNotSet, style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-                    child: _DetailLine(icon: Icons.email_outlined, label: 'Email', value: (data['email'] as String?) ?? 'Not set'),
+                    child: _DetailLine(icon: Icons.email_outlined, label: l10n.email, value: (data['email'] as String?) ?? l10n.notSet),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -243,17 +248,17 @@ class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
                       icon: _isPromoting
                           ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.admin_panel_settings_outlined, size: 16),
-                      label: const Text('Promote to admin'),
+                      label: Text(l10n.adminPromoteToAdminButton),
                       style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text('Assigned students', style: AppTextStyles.h3),
+                  Text(l10n.supAssignedStudents, style: AppTextStyles.h3),
                   const SizedBox(height: 8),
                   if (_students.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No students assigned yet.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+                      child: Text(l10n.adminNoStudentsAssignedYet, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
                     )
                   else
                     ..._students.map((s) => Container(
@@ -273,8 +278,8 @@ class _SupervisorDetailScreenState extends State<_SupervisorDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text((s['full_name'] as String?) ?? 'Unnamed', style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600)),
-                                    Text((s['programme'] as String?) ?? 'Programme not set', style: AppTextStyles.caption),
+                                    Text((s['full_name'] as String?) ?? l10n.adminUnnamed, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600)),
+                                    Text((s['programme'] as String?) ?? l10n.adminProgrammeNotSet, style: AppTextStyles.caption),
                                   ],
                                 ),
                               ),

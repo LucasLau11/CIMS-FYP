@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
 import 'student_apply_screen.dart';
+import 'student_company_profile_screen.dart';
 
 /// Landing page for a tapped internship — job details first, "Apply" only
 /// proceeds to the resume/cover-letter/skills flow once the student has
@@ -59,6 +61,7 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final internship = widget.internship;
     final companyName = internship['company_name'] as String;
     final skills = (internship['required_skills'] as List?)?.cast<String>() ?? [];
@@ -70,7 +73,7 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context, _applied)),
-        title: const Text('Internship details', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+        title: Text(l10n.internshipDetails, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -92,11 +95,29 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(internship['title'] as String, style: TextStyle(fontFamily: 'Poppins', fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                    Text(companyName, style: AppTextStyles.bodySecondary),
+                    if (internship['company_id'] != null)
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => StudentCompanyProfileScreen(companyId: internship['company_id'] as String, companyName: companyName),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(companyName, style: AppTextStyles.bodySecondary.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                            const SizedBox(width: 2),
+                            Icon(Icons.chevron_right, size: 16, color: AppColors.primary),
+                          ],
+                        ),
+                      )
+                    else
+                      Text(companyName, style: AppTextStyles.bodySecondary),
                   ],
                 ),
               ),
-              if (_applied) StatusBadge(label: 'Applied', backgroundColor: AppColors.successBg, textColor: AppColors.success),
+              if (_applied) StatusBadge(label: l10n.stepApplied, backgroundColor: AppColors.successBg, textColor: AppColors.success),
             ],
           ),
           const SizedBox(height: 20),
@@ -105,32 +126,32 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
             decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
             child: Column(
               children: [
-                _DetailRow(icon: Icons.work_outline, label: 'Position', value: internship['title'] as String),
+                _DetailRow(icon: Icons.work_outline, label: l10n.position, value: internship['title'] as String),
                 const Divider(height: 20),
-                _DetailRow(icon: Icons.badge_outlined, label: 'Job type', value: (internship['job_type'] as String?) ?? 'Not specified'),
+                _DetailRow(icon: Icons.badge_outlined, label: l10n.hrJobType, value: (internship['job_type'] as String?) ?? l10n.notSpecified),
                 const Divider(height: 20),
-                _DetailRow(icon: Icons.attach_money, label: 'Monthly allowance', value: formatAllowance(parseNum(internship['allowance_month']))),
+                _DetailRow(icon: Icons.attach_money, label: l10n.monthlyAllowance, value: formatAllowance(parseNum(internship['allowance_month']))),
                 const Divider(height: 20),
-                _DetailRow(icon: Icons.schedule, label: 'Duration', value: formatDuration(internship['duration_months'] as int)),
+                _DetailRow(icon: Icons.schedule, label: l10n.hrDuration, value: formatDuration(internship['duration_months'] as int)),
                 const Divider(height: 20),
-                _DetailRow(icon: Icons.location_on_outlined, label: 'Address', value: internship['location'] as String),
+                _DetailRow(icon: Icons.location_on_outlined, label: l10n.address, value: internship['location'] as String),
                 const Divider(height: 20),
                 _DetailRow(
                   icon: Icons.event_busy_outlined,
-                  label: 'Application deadline',
-                  value: deadline != null ? '${deadline.day}/${deadline.month}/${deadline.year}' : 'Open until filled',
+                  label: l10n.applicationDeadline,
+                  value: deadline != null ? '${deadline.day}/${deadline.month}/${deadline.year}' : l10n.openUntilFilled,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 20),
-          Text('Job description', style: AppTextStyles.h3),
+          Text(l10n.hrJobDescription, style: AppTextStyles.h3),
           const SizedBox(height: 8),
-          Text((internship['description'] as String?) ?? 'No description provided.',
+          Text((internship['description'] as String?) ?? l10n.noDescriptionProvided,
               style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary, height: 1.5)),
           if (skills.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text('Skills required', style: AppTextStyles.h3),
+            Text(l10n.hrSkillsRequired, style: AppTextStyles.h3),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -145,7 +166,7 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
             ),
           ],
           const SizedBox(height: 20),
-          Text('About the company', style: AppTextStyles.h3),
+          Text(l10n.aboutTheCompany, style: AppTextStyles.h3),
           const SizedBox(height: 8),
           if (_isLoadingCompany)
             const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
@@ -155,14 +176,14 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
               decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
               child: Column(
                 children: [
-                  _DetailRow(icon: Icons.category_outlined, label: 'Industry', value: (_companyDetails?['industry'] as String?) ?? (internship['company_industry'] as String?) ?? 'Not specified'),
+                  _DetailRow(icon: Icons.category_outlined, label: l10n.industry, value: (_companyDetails?['industry'] as String?) ?? (internship['company_industry'] as String?) ?? l10n.notSpecified),
                   if (_companyDetails?['hr_contact_name'] != null) ...[
                     const Divider(height: 20),
-                    _DetailRow(icon: Icons.person_outline, label: 'HR contact', value: _companyDetails!['hr_contact_name'] as String),
+                    _DetailRow(icon: Icons.person_outline, label: l10n.hrContact, value: _companyDetails!['hr_contact_name'] as String),
                   ],
                   if (_companyDetails?['hr_contact_email'] != null) ...[
                     const Divider(height: 20),
-                    _DetailRow(icon: Icons.email_outlined, label: 'Contact email', value: _companyDetails!['hr_contact_email'] as String),
+                    _DetailRow(icon: Icons.email_outlined, label: l10n.contactEmail, value: _companyDetails!['hr_contact_email'] as String),
                   ],
                 ],
               ),
@@ -170,7 +191,7 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
           const SizedBox(height: 24),
           if (!_isLoadingCompany && !_applied && !_isVerified) ...[
             Text(
-              'You\'ll be able to apply once this company is verified.',
+              l10n.applyOnceVerifiedNote,
               style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 8),
@@ -181,8 +202,8 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
               onPressed: (_applied || !_isVerified) ? null : _apply,
               style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
               child: Text(_applied
-                  ? 'Already applied'
-                  : (!_isVerified ? 'Company pending verification' : 'Apply now')),
+                  ? l10n.alreadyApplied
+                  : (!_isVerified ? l10n.companyPendingVerification : l10n.applyNow)),
             ),
           ),
           const SizedBox(height: 16),

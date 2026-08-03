@@ -175,7 +175,7 @@ class _ReportCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(data['title'] as String, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                    Text(l10n.supSubmittedAgo('${data['student_name']} · ${timeAgo(DateTime.parse(data['submitted_at'] as String))}'), style: AppTextStyles.caption),
+                    Text(l10n.supSubmittedAgo('${data['student_name']} · ${timeAgo(context, DateTime.parse(data['submitted_at'] as String))}'), style: AppTextStyles.caption),
                   ],
                 ),
               ),

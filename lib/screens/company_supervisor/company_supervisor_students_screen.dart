@@ -266,11 +266,11 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(r['title'] as String, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                            Text(l10n.supSubmittedAgo(timeAgo(DateTime.parse(r['submitted_at'] as String))), style: AppTextStyles.caption),
+                            Text(l10n.supSubmittedAgo(timeAgo(context, DateTime.parse(r['submitted_at'] as String))), style: AppTextStyles.caption),
                           ],
                         ),
                       ),
-                      r['status'] == 'approved' ? StatusBadge.approved() : (r['status'] == 'rejected' ? StatusBadge.rejected() : StatusBadge.pending()),
+                      r['status'] == 'approved' ? StatusBadge.approved(context) : (r['status'] == 'rejected' ? StatusBadge.rejected(context) : StatusBadge.pending(context)),
                     ],
                   ),
                 )),

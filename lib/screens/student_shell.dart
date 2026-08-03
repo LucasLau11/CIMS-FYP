@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/student_data_service.dart';
 import 'student/student_dashboard_screen.dart';
@@ -65,6 +66,7 @@ class _StudentShellState extends State<StudentShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screens = [
       StudentDashboardScreen(key: ValueKey('dashboard-$_dashboardRefreshKey')),
       // Deliberately NOT `const`: these are already rebuilt fresh here on
@@ -101,30 +103,30 @@ class _StudentShellState extends State<StudentShell> {
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
           items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.dashboard_outlined),
+              activeIcon: const Icon(Icons.dashboard),
+              label: l10n.dashboard,
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.search_outlined),
-              activeIcon: Icon(Icons.search),
-              label: 'Search',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.search_outlined),
+              activeIcon: const Icon(Icons.search),
+              label: l10n.search,
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.work_outline),
-              activeIcon: Icon(Icons.work),
-              label: 'Applications',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.work_outline),
+              activeIcon: const Icon(Icons.work),
+              label: l10n.applications,
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.assignment_outlined),
-              activeIcon: Icon(Icons.assignment),
-              label: 'Reports',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.assignment_outlined),
+              activeIcon: const Icon(Icons.assignment),
+              label: l10n.reports,
             ),
             BottomNavigationBarItem(
               icon: _MessagesIcon(count: _unreadMessageCount, filled: false),
               activeIcon: _MessagesIcon(count: _unreadMessageCount, filled: true),
-              label: 'Messages',
+              label: l10n.profileMessages,
             ),
           ],
         ),

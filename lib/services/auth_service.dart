@@ -434,6 +434,7 @@ class AuthService {
     required int semester,
     required String faculty,
     required double cgpa,
+    String? studentRegNo,
   }) async {
     final userId = currentUserId;
     if (userId == null) {
@@ -445,6 +446,7 @@ class AuthService {
       'semester': semester,
       'faculty': faculty,
       'cgpa': cgpa,
+      if (studentRegNo != null) 'student_reg_no': studentRegNo.trim(),
     }).eq('id', userId);
   }
 

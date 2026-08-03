@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../utils/format_utils.dart';
@@ -16,6 +17,7 @@ class StudentInterviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final internship = application['internships'] as Map;
     final companyName = internship['company_name'] as String;
     final interviewAt = application['interview_at'] != null ? DateTime.parse(application['interview_at'] as String) : null;
@@ -28,7 +30,7 @@ class StudentInterviewScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: const Text('Interview', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+        title: Text(l10n.interview, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -58,7 +60,7 @@ class StudentInterviewScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           if (interviewAt == null)
-            const EmptyState(icon: Icons.event_busy_outlined, title: 'No interview scheduled', description: 'You will be notified once the company schedules your interview.')
+            EmptyState(icon: Icons.event_busy_outlined, title: l10n.noInterviewScheduled, description: l10n.interviewNotifiedOnceScheduled)
           else ...[
             Container(
               padding: const EdgeInsets.all(16),
@@ -73,7 +75,7 @@ class StudentInterviewScreen extends StatelessWidget {
                     children: [
                       Icon(isOnline ? Icons.videocam_outlined : Icons.business_outlined, color: Colors.white, size: 20),
                       const SizedBox(width: 8),
-                      Text(isOnline ? 'Online interview' : 'In-person interview',
+                      Text(isOnline ? l10n.onlineInterviewLabel : l10n.inPersonInterviewLabel,
                           style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
                     ],
                   ),
@@ -86,7 +88,7 @@ class StudentInterviewScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             if (location != null && location.isNotEmpty) ...[
-              Text(isOnline ? 'Meeting link' : 'Location', style: AppTextStyles.label),
+              Text(isOnline ? l10n.hrMeetingLink : l10n.hrLocation, style: AppTextStyles.label),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -101,14 +103,14 @@ class StudentInterviewScreen extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: (isOnline && location != null && location.isNotEmpty) ? () => _join(context, location) : null,
                 icon: const Icon(Icons.videocam_outlined, size: 18),
-                label: Text(isOnline ? 'Join interview' : 'Directions unavailable — see address above'),
+                label: Text(isOnline ? l10n.joinInterview : l10n.directionsUnavailableNote),
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
               ),
             ),
             if (!isOnline)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text('This is an in-person interview — no online join link is needed.',
+                child: Text(l10n.inPersonNoJoinLinkNote,
                     style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textMuted), textAlign: TextAlign.center),
               ),
           ],
@@ -124,7 +126,8 @@ class StudentInterviewScreen extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Could not open the meeting link.'), backgroundColor: AppColors.error));
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotOpenMeetingLink), backgroundColor: AppColors.error));
     }
   }
 

@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/shared_widgets.dart';
 import '../services/auth_service.dart';
+import 'photo_crop_screen.dart';
 import 'student/address_picker_screen.dart';
 import 'login_screen.dart';
 
@@ -136,13 +137,20 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
         return;
       }
 
+      if (!mounted) return;
+      final croppedFile = await Navigator.push<File>(
+        context,
+        MaterialPageRoute(builder: (_) => PhotoCropScreen(imageFile: file)),
+      );
+      if (croppedFile == null) return;
+
       setState(() {
-        _localPreviewImage = file;
+        _localPreviewImage = croppedFile;
         _isUploadingAvatar = true;
       });
 
       try {
-        final uploadedUrl = await AuthService.instance.uploadAvatar(file);
+        final uploadedUrl = await AuthService.instance.uploadAvatar(croppedFile);
         if (!mounted) return;
         setState(() {
           _avatarUrl = uploadedUrl;
