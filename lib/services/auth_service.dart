@@ -168,35 +168,67 @@ class AuthService {
   // ---------------------------------------------------------------------
   String? get currentUserId => _client.auth.currentUser?.id;
 
-  /// Fetches the current user's full profile row (id, email, role, avatar_url).
+  /// Fetches the current user's full profile row (profile_id, email, role,
+  /// avatar_url, plus role-specific fields). Students read from
+  /// `v_student_profile` (base profile columns + students subtype columns
+  /// already joined); every other role reads the base `profiles` row, with
+  /// `company_id` merged in from the matching subtype table for company_hr/
+  /// company_supervisor. The returned map's keys intentionally match the
+  /// flat shape the old single-table schema used to return, since every
+  /// screen that calls this was written against that shape.
   Future<Map<String, dynamic>?> getCurrentProfile() async {
     final userId = currentUserId;
     if (userId == null) return null;
 
-    final row = await _client
+    final role = await _client
         .from('profiles')
-        .select('id, email, role, avatar_url, full_name, phone, date_of_birth, '
-        'address_text, address_lat, address_lng, language, theme_mode, notification_prefs, '
-        'resume_path, resume_filename, resume_size_bytes, resume_uploaded_at, '
-        'programme, semester, faculty, cgpa, skills, academic_supervisor_id, academic_supervisor_name')
-        .eq('id', userId)
-        .single();
+        .select('role')
+        .eq('profile_id', userId)
+        .single()
+        .then((r) => r['role'] as String);
 
-    // academic_supervisor_name is a legacy column that's never written to —
-    // assignment only sets academic_supervisor_id (see AdminDataService.
-    // assignSupervisor). Resolve the name dynamically via profile_directory
-    // instead, which every authenticated user can read.
-    final supervisorId = row['academic_supervisor_id'] as String?;
-    if (supervisorId != null) {
-      try {
-        final supervisor = await _client
-            .from('profile_directory')
-            .select('full_name')
-            .eq('id', supervisorId)
+    Map<String, dynamic> row;
+    if (role == 'student') {
+      row = Map<String, dynamic>.from(
+        await _client.from('v_student_profile').select().eq('profile_id', userId).single(),
+      );
+      row['role'] = role;
+
+      // academic_supervisor_name isn't a real column anywhere — assignment
+      // only sets academic_supervisor_id (see AdminDataService.
+      // assignSupervisor). Resolve the name dynamically via
+      // profile_directory instead, which every authenticated user can read.
+      final supervisorId = row['academic_supervisor_id'] as String?;
+      if (supervisorId != null) {
+        try {
+          final supervisor = await _client
+              .from('profile_directory')
+              .select('full_name')
+              .eq('profile_id', supervisorId)
+              .maybeSingle();
+          row['academic_supervisor_name'] = supervisor?['full_name'] as String?;
+        } catch (_) {
+          // Non-fatal — falls back to whatever was in the (likely null) column.
+        }
+      }
+    } else {
+      row = Map<String, dynamic>.from(
+        await _client
+            .from('profiles')
+            .select('profile_id, email, role, avatar_url, full_name, phone, date_of_birth, '
+                'address_text, address_lat, address_lng, language, theme_mode, notification_prefs')
+            .eq('profile_id', userId)
+            .single(),
+      );
+
+      if (role == 'company_hr' || role == 'company_supervisor') {
+        final subtypeTable = role == 'company_hr' ? 'company_hr' : 'company_supervisors';
+        final subtype = await _client
+            .from(subtypeTable)
+            .select('company_id')
+            .eq('profile_id', userId)
             .maybeSingle();
-        row['academic_supervisor_name'] = supervisor?['full_name'] as String?;
-      } catch (_) {
-        // Non-fatal — falls back to whatever was in the (likely null) column.
+        row['company_id'] = subtype?['company_id'] as String?;
       }
     }
 
@@ -204,13 +236,13 @@ class AuthService {
   }
 
   /// Updates the current user's skills list (extracted from resume and/or
-  /// entered manually).
+  /// entered manually). Skills live on the `students` subtype table.
   Future<void> updateSkills(List<String> skills) async {
     final userId = currentUserId;
     if (userId == null) {
       throw Exception('You must be logged in to update your profile.');
     }
-    await _client.from('profiles').update({'skills': skills}).eq('id', userId);
+    await _client.from('students').update({'skills': skills}).eq('profile_id', userId);
   }
 
   // ---------------------------------------------------------------------
@@ -240,7 +272,7 @@ class AuthService {
     // bucket would keep serving the previous photo's bytes.
     final publicUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
     final cacheBustedUrl = '$publicUrl?updated=${DateTime.now().millisecondsSinceEpoch}';
-    await _client.from('profiles').update({'avatar_url': cacheBustedUrl}).eq('id', userId);
+    await _client.from('profiles').update({'avatar_url': cacheBustedUrl}).eq('profile_id', userId);
 
     return cacheBustedUrl;
   }
@@ -260,7 +292,7 @@ class AuthService {
       // Non-fatal — proceed to clear the DB reference regardless.
     }
 
-    await _client.from('profiles').update({'avatar_url': null}).eq('id', userId);
+    await _client.from('profiles').update({'avatar_url': null}).eq('profile_id', userId);
   }
 
   // ---------------------------------------------------------------------
@@ -300,12 +332,14 @@ class AuthService {
       fileOptions: const FileOptions(upsert: true),
     );
 
-    await _client.from('profiles').update({
+    // Resume fields live on the `students` subtype table, not `profiles` —
+    // resumes only make sense for the student role.
+    await _client.from('students').update({
       'resume_path': storagePath,
       'resume_filename': originalFilename,
       'resume_size_bytes': sizeBytes,
       'resume_uploaded_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    }).eq('profile_id', userId);
   }
 
   Future<void> removeResume() async {
@@ -323,12 +357,12 @@ class AuthService {
       // Non-fatal — proceed to clear the DB reference regardless.
     }
 
-    await _client.from('profiles').update({
+    await _client.from('students').update({
       'resume_path': null,
       'resume_filename': null,
       'resume_size_bytes': null,
       'resume_uploaded_at': null,
-    }).eq('id', userId);
+    }).eq('profile_id', userId);
   }
 
   /// Generates a short-lived signed URL to view/download the resume,
@@ -364,7 +398,7 @@ class AuthService {
       'address_text': addressText.trim(),
       'address_lat': addressLat,
       'address_lng': addressLng,
-    }).eq('id', userId);
+    }).eq('profile_id', userId);
   }
 
   /// Updates just the display name — for roles (e.g. academic supervisor)
@@ -375,7 +409,7 @@ class AuthService {
     if (userId == null) {
       throw Exception('You must be logged in to update your profile.');
     }
-    await _client.from('profiles').update({'full_name': fullName.trim()}).eq('id', userId);
+    await _client.from('profiles').update({'full_name': fullName.trim()}).eq('profile_id', userId);
   }
 
   /// Same fields as [updatePersonalInfo] minus date of birth — for staff
@@ -398,7 +432,7 @@ class AuthService {
       if (addressText != null) 'address_text': addressText.trim(),
       if (addressLat != null) 'address_lat': addressLat,
       if (addressLng != null) 'address_lng': addressLng,
-    }).eq('id', userId);
+    }).eq('profile_id', userId);
   }
 
   // ---------------------------------------------------------------------
@@ -409,21 +443,21 @@ class AuthService {
   Future<void> updateNotificationPrefs(Map<String, bool> prefs) async {
     final userId = currentUserId;
     if (userId == null) return;
-    await _client.from('profiles').update({'notification_prefs': prefs}).eq('id', userId);
+    await _client.from('profiles').update({'notification_prefs': prefs}).eq('profile_id', userId);
   }
 
   Future<void> updateLanguage(String language) async {
     await LocaleController.instance.setLanguageByDisplayName(language);
     final userId = currentUserId;
     if (userId == null) return;
-    await _client.from('profiles').update({'language': language}).eq('id', userId);
+    await _client.from('profiles').update({'language': language}).eq('profile_id', userId);
   }
 
   Future<void> updateThemeMode(String themeMode) async {
     await ThemeController.instance.setThemeModeByCode(themeMode);
     final userId = currentUserId;
     if (userId == null) return;
-    await _client.from('profiles').update({'theme_mode': themeMode}).eq('id', userId);
+    await _client.from('profiles').update({'theme_mode': themeMode}).eq('profile_id', userId);
   }
 
   // ---------------------------------------------------------------------
@@ -441,13 +475,14 @@ class AuthService {
       throw Exception('You must be logged in to update your profile.');
     }
 
-    await _client.from('profiles').update({
+    // Academic fields live on the `students` subtype table, not `profiles`.
+    await _client.from('students').update({
       'programme': programme,
       'semester': semester,
       'faculty': faculty,
       'cgpa': cgpa,
       if (studentRegNo != null) 'student_reg_no': studentRegNo.trim(),
-    }).eq('id', userId);
+    }).eq('profile_id', userId);
   }
 
   // ---------------------------------------------------------------------
@@ -510,11 +545,16 @@ class AuthService {
       roleFromEmailDomain(email) == null && isPersonalEmailDomain(email);
 
   // ---------------------------------------------------------------------
-  // Sign up: creates the Supabase auth account. The `profiles` row is
-  // created automatically by a database trigger (see migration
-  // auto_create_profile_trigger) using the role passed here as metadata —
-  // this guarantees every auth user always has a matching profile, even if
-  // the app is closed/interrupted right after sign-up.
+  // Sign up: creates the Supabase auth account, then calls the
+  // `create_profile_with_subtype` RPC to create the `profiles` row and its
+  // matching subtype row (students/academic_supervisors/parents/
+  // company_hr/company_supervisors) as one atomic transaction — a failure
+  // partway through never leaves an orphaned base-only profile. There is no
+  // longer a database trigger doing this automatically; the new normalized
+  // schema's `profiles_insert_own` / `*_insert_own` RLS policies require an
+  // authenticated client-side insert, which is exactly what the RPC does
+  // (using auth.uid(), never a client-supplied id). Admin accounts can
+  // never come out of this path — the RPC itself rejects p_role = 'admin'.
   // ---------------------------------------------------------------------
   Future<UserRole> signUp({
     required String email,
@@ -528,10 +568,12 @@ class AuthService {
       throw Exception('A role must be selected for this email.');
     }
 
+    final trimmedEmail = email.trim();
+
     AuthResponse response;
     try {
       response = await _client.auth.signUp(
-        email: email.trim(),
+        email: trimmedEmail,
         password: password,
         data: {'app_role': role.dbValue},
       );
@@ -549,6 +591,15 @@ class AuthService {
     final user = response.user;
     if (user == null) {
       throw Exception('Sign-up failed — no user returned.');
+    }
+
+    try {
+      await _client.rpc('create_profile_with_subtype', params: {
+        'p_role': role.dbValue,
+        'p_email': trimmedEmail,
+      });
+    } on PostgrestException catch (e) {
+      throw Exception('Sign-up failed while creating your profile: ${e.message}');
     }
 
     return role;
@@ -597,7 +648,7 @@ class AuthService {
       final row = await _client
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('profile_id', user.id)
           .single();
       return UserRoleX.fromDbValue(row['role'] as String);
     } on PostgrestException catch (e) {
