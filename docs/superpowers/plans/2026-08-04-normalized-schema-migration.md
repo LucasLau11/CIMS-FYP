@@ -882,18 +882,18 @@ create trigger sync_profile_directory_on_student after insert or update on stude
 **Rationale:** this is the durability piece — the service layer reads through these views for the highest-traffic joins, so a future column tweak inside `students`/`profiles` touches the table + the view, not every call site.
 
 ```sql
-create view v_student_profile as
+create view v_student_profile with (security_invoker = true) as
   select p.profile_id, p.full_name, p.email, p.avatar_url, p.phone, p.date_of_birth,
          p.address_text, p.address_lat, p.address_lng, p.language, p.notification_prefs, p.theme_mode,
          s.academic_supervisor_id, s.programme, s.semester, s.faculty, s.cgpa, s.skills,
          s.resume_path, s.resume_filename, s.resume_size_bytes, s.resume_uploaded_at, s.student_reg_no
   from profiles p join students s on s.profile_id = p.profile_id;
 
-create view v_application_with_interview as
+create view v_application_with_interview with (security_invoker = true) as
   select a.*, i.interview_id, i.scheduled_at as interview_scheduled_at, i.mode as interview_mode, i.location as interview_location
   from applications a left join interviews i on i.application_id = a.application_id;
 
-create view v_report_with_reviews as
+create view v_report_with_reviews with (security_invoker = true) as
   select r.*,
          arr.status as academic_status, arr.feedback as academic_feedback, arr.reviewer_id as academic_reviewer_id, arr.reviewed_at as academic_reviewed_at,
          crr.status as company_status, crr.feedback as company_feedback, crr.reviewer_id as company_reviewer_id, crr.reviewed_at as company_reviewed_at
@@ -901,14 +901,15 @@ create view v_report_with_reviews as
   left join academic_report_reviews arr on arr.report_id = r.report_id
   left join company_report_reviews crr on crr.report_id = r.report_id;
 
-create view v_document_with_review as
+create view v_document_with_review with (security_invoker = true) as
   select d.*, dr.feedback as review_feedback, dr.reviewer_id, dr.reviewed_at
   from documents d left join document_reviews dr on dr.document_id = d.document_id;
 ```
 
-> Views inherit RLS from their underlying tables automatically (Postgres enforces the base tables' RLS when querying through a view owned by the same role) — no separate RLS needed here, but verify this with `get_advisors` after creating them.
+> **Post-review correction: `security_invoker = true` is required, not optional.** The original note here claimed "views inherit RLS automatically, no separate RLS needed" — that's only true if the view runs with the QUERYING user's permissions. By default in Postgres, a view runs with the VIEW OWNER's permissions for RLS purposes, and every migration in this project is applied via the `postgres` role, which has `rolbypassrls = true` (confirmed live via `pg_roles`). Without `security_invoker = true` (Postgres 15+, available here — this project runs 17.6.1.155), all four views would silently give every authenticated user unrestricted read access to every row of `students`/`applications`/`reports`/`documents` and their joined tables, completely bypassing the RLS built and reviewed in Tasks 2-5. This is a real data-exposure bug, not a style preference — do not omit `security_invoker = true`.
 
 - [ ] Write, apply, verify each view returns the expected joined shape for a seeded test row (after Task 25).
+- [ ] **Verify RLS is actually enforced through each view, not just assumed**: confirm live via `select relname, reloptions from pg_class where relname like 'v_%'` that `security_invoker=true` appears in `reloptions` for all four views. `get_advisors` does not reliably flag this class of issue on its own (it's not one of the standard lint categories) — the `pg_class.reloptions` check is the real verification, don't skip it.
 - [ ] Commit.
 
 ---
