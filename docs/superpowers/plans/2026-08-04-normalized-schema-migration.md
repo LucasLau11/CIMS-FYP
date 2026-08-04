@@ -320,13 +320,21 @@ alter table applications enable row level security;
 alter table interviews enable row level security;
 
 create policy categories_select_authenticated on categories for select to authenticated using (true);
-create policy categories_write_admin on categories for all to authenticated
+create policy categories_insert_admin on categories for insert to authenticated
+  with check ((select current_user_role()) = 'admin');
+create policy categories_update_admin on categories for update to authenticated
   using ((select current_user_role()) = 'admin') with check ((select current_user_role()) = 'admin');
+create policy categories_delete_admin on categories for delete to authenticated
+  using ((select current_user_role()) = 'admin');
 
 create policy job_postings_select_authenticated on job_postings for select to authenticated using (true);
-create policy job_postings_write_own_company on job_postings for all to authenticated
+create policy job_postings_insert_own_company on job_postings for insert to authenticated
+  with check (is_my_company(company_id) or (select current_user_role()) = 'admin');
+create policy job_postings_update_own_company on job_postings for update to authenticated
   using (is_my_company(company_id) or (select current_user_role()) = 'admin')
   with check (is_my_company(company_id) or (select current_user_role()) = 'admin');
+create policy job_postings_delete_own_company on job_postings for delete to authenticated
+  using (is_my_company(company_id) or (select current_user_role()) = 'admin');
 
 create policy applications_select_involved on applications for select to authenticated
   using (
@@ -351,11 +359,21 @@ create policy interviews_select_involved on interviews for select to authenticat
     and (a.student_id = (select auth.uid()) or (select current_user_role()) = 'admin'
          or exists (select 1 from job_postings jp where jp.job_posting_id = a.job_posting_id and is_my_company(jp.company_id)))
   ));
-create policy interviews_write_company on interviews for all to authenticated
-  using (exists (
+
+create or replace function can_manage_interview(p_application_id uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
     select 1 from applications a join job_postings jp on jp.job_posting_id = a.job_posting_id
-    where a.application_id = interviews.application_id and (is_my_company(jp.company_id) or (select current_user_role()) = 'admin')
-  ));
+    where a.application_id = p_application_id and (is_my_company(jp.company_id) or (select current_user_role()) = 'admin')
+  );
+$$;
+
+create policy interviews_insert_company on interviews for insert to authenticated
+  with check (can_manage_interview(application_id));
+create policy interviews_update_company on interviews for update to authenticated
+  using (can_manage_interview(application_id)) with check (can_manage_interview(application_id));
+create policy interviews_delete_company on interviews for delete to authenticated
+  using (can_manage_interview(application_id));
 
 create index if not exists idx_job_postings_company_id on job_postings(company_id);
 create index if not exists idx_job_postings_category_id on job_postings(category_id);
@@ -363,6 +381,14 @@ create index if not exists idx_applications_student_id on applications(student_i
 create index if not exists idx_applications_job_posting_id on applications(job_posting_id);
 create index if not exists idx_interviews_application_id on interviews(application_id);
 ```
+
+> **Post-review correction:** `categories_write_admin`, `job_postings_write_own_company`,
+> and `interviews_write_company` were each `for all` policies coexisting with a
+> separate `for select` policy on the same table — both get evaluated on every
+> SELECT (`multiple_permissive_policies`). Split each into insert/update/delete.
+> `can_manage_interview()` avoids tripling the 2-table join inline across
+> interviews' three policies — `revoke execute ... from public, anon` /
+> `grant ... to authenticated` on it, same as the other helper functions.
 
 - [ ] Write, apply, verify (`list_tables`, `get_advisors` security **and performance**, RLS impersonation for student/HR/company_supervisor).
 - [ ] Commit.
@@ -419,20 +445,40 @@ create policy reports_insert_own on reports for insert to authenticated with che
 create policy academic_report_reviews_select_involved on academic_report_reviews for select to authenticated
   using (exists (select 1 from reports r where r.report_id = academic_report_reviews.report_id
                  and (r.student_id = (select auth.uid()) or (select current_user_role()) = 'admin' or is_academic_supervisor_of(r.student_id))));
-create policy academic_report_reviews_write_supervisor on academic_report_reviews for all to authenticated
-  using ((select current_user_role()) = 'admin'
-         or exists (select 1 from reports r where r.report_id = academic_report_reviews.report_id and is_academic_supervisor_of(r.student_id)));
+
+create or replace function can_manage_academic_review(p_report_id uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select (select current_user_role()) = 'admin'
+         or exists (select 1 from reports r where r.report_id = p_report_id and is_academic_supervisor_of(r.student_id));
+$$;
+
+create policy academic_report_reviews_insert_supervisor on academic_report_reviews for insert to authenticated
+  with check (can_manage_academic_review(report_id));
+create policy academic_report_reviews_update_supervisor on academic_report_reviews for update to authenticated
+  using (can_manage_academic_review(report_id)) with check (can_manage_academic_review(report_id));
+create policy academic_report_reviews_delete_supervisor on academic_report_reviews for delete to authenticated
+  using (can_manage_academic_review(report_id));
 
 create policy company_report_reviews_select_involved on company_report_reviews for select to authenticated
   using (exists (select 1 from reports r where r.report_id = company_report_reviews.report_id
                  and (r.student_id = (select auth.uid())
                       or exists (select 1 from applications a join job_postings jp on jp.job_posting_id = a.job_posting_id
                                   where a.student_id = r.student_id and is_my_company(jp.company_id)))));
-create policy company_report_reviews_write_company_supervisor on company_report_reviews for all to authenticated
-  using (exists (select 1 from reports r join applications a on a.student_id = r.student_id
+
+create or replace function can_manage_company_review(p_report_id uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from reports r join applications a on a.student_id = r.student_id
                  join job_postings jp on jp.job_posting_id = a.job_posting_id
-                 where r.report_id = company_report_reviews.report_id and is_my_company(jp.company_id)
-                 and (select current_user_role()) = 'company_supervisor'));
+                 where r.report_id = p_report_id and is_my_company(jp.company_id)
+                 and (select current_user_role()) = 'company_supervisor');
+$$;
+
+create policy company_report_reviews_insert_company_supervisor on company_report_reviews for insert to authenticated
+  with check (can_manage_company_review(report_id));
+create policy company_report_reviews_update_company_supervisor on company_report_reviews for update to authenticated
+  using (can_manage_company_review(report_id)) with check (can_manage_company_review(report_id));
+create policy company_report_reviews_delete_company_supervisor on company_report_reviews for delete to authenticated
+  using (can_manage_company_review(report_id));
 
 create index if not exists idx_reports_student_id on reports(student_id);
 create index if not exists idx_academic_report_reviews_reviewer_id on academic_report_reviews(reviewer_id);
@@ -441,7 +487,7 @@ create index if not exists idx_company_report_reviews_reviewer_id on company_rep
 
 > Note: per the earlier RLS finding, admin does **not** get `company_report_reviews` write access — that boundary is intentional (confirmed by the user) and preserved here.
 >
-> **Post-review correction (see Task 2's note):** replaced `same_company_as(auth.uid())` with `is_my_company(jp.company_id)`, correlated against the joined `job_postings` row rather than the caller compared to themselves. Wrapped bare `auth.uid()`/`current_user_role()` calls in `(select ...)`.
+> **Post-review correction (see Task 2's note):** replaced `same_company_as(auth.uid())` with `is_my_company(jp.company_id)`, correlated against the joined `job_postings` row rather than the caller compared to themselves. Wrapped bare `auth.uid()`/`current_user_role()` calls in `(select ...)`. Also split both `for all` write policies into insert/update/delete (see Task 3's note on `multiple_permissive_policies`) via two new helper functions, `can_manage_academic_review`/`can_manage_company_review` — `revoke execute ... from public, anon` / `grant ... to authenticated` on both, same as the other helpers. Note `can_manage_company_review` deliberately has no admin clause — that's the intentional admin-excluded-from-company-review boundary, unchanged.
 
 - [ ] Write, apply, verify (impersonate student/academic_supervisor/company_supervisor/admin — confirm admin is blocked from writing `company_report_reviews`, matching current live-schema behavior).
 - [ ] Verify `get_advisors` security **and performance** are both clean before marking this task done — the plan's own bar (see Task 2's ledger for why this matters).
@@ -479,23 +525,39 @@ alter table documents enable row level security;
 alter table document_reviews enable row level security;
 
 create policy documents_select_involved on documents for select to authenticated
-  using (student_id = auth.uid() or current_user_role() = 'admin'
+  using (student_id = (select auth.uid()) or (select current_user_role()) = 'admin'
          or is_academic_supervisor_of(student_id) or is_approved_parent_of(student_id));
-create policy documents_insert_own on documents for insert to authenticated with check (student_id = auth.uid());
+create policy documents_insert_own on documents for insert to authenticated with check (student_id = (select auth.uid()));
 create policy documents_update_supervisor on documents for update to authenticated
-  using (current_user_role() = 'admin' or is_academic_supervisor_of(student_id) or student_id = auth.uid());
+  using ((select current_user_role()) = 'admin' or is_academic_supervisor_of(student_id) or student_id = (select auth.uid()));
 
 create policy document_reviews_select_involved on document_reviews for select to authenticated
   using (exists (select 1 from documents d where d.document_id = document_reviews.document_id
-                 and (d.student_id = auth.uid() or current_user_role() = 'admin' or is_academic_supervisor_of(d.student_id))));
-create policy document_reviews_write_academic_or_admin on document_reviews for all to authenticated
-  using (current_user_role() = 'admin'
-         or exists (select 1 from documents d where d.document_id = document_reviews.document_id and is_academic_supervisor_of(d.student_id)));
+                 and (d.student_id = (select auth.uid()) or (select current_user_role()) = 'admin' or is_academic_supervisor_of(d.student_id))));
+
+create or replace function can_manage_document_review(p_document_id uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select (select current_user_role()) = 'admin'
+         or exists (select 1 from documents d where d.document_id = p_document_id and is_academic_supervisor_of(d.student_id));
+$$;
+
+create policy document_reviews_insert_academic_or_admin on document_reviews for insert to authenticated
+  with check (can_manage_document_review(document_id));
+create policy document_reviews_update_academic_or_admin on document_reviews for update to authenticated
+  using (can_manage_document_review(document_id)) with check (can_manage_document_review(document_id));
+create policy document_reviews_delete_academic_or_admin on document_reviews for delete to authenticated
+  using (can_manage_document_review(document_id));
+
+create index if not exists idx_documents_student_id on documents(student_id);
+create index if not exists idx_document_reviews_reviewer_id on document_reviews(reviewer_id);
 ```
 
 > Per the earlier finding: `company_supervisor` is deliberately excluded — document review is internal (academic supervisor + admin only).
+>
+> **Post-review correction (see Tasks 2-3's notes):** wrapped bare `auth.uid()`/`current_user_role()` in `(select ...)`. Split `document_reviews_write_academic_or_admin` (a `for all` policy coexisting with a separate select policy) into insert/update/delete via a new `can_manage_document_review()` helper — `revoke execute ... from public, anon` / `grant ... to authenticated` on it, same as the other helpers.
 
 - [ ] Write, apply, verify.
+- [ ] Verify `get_advisors` security **and performance** are both clean (see Task 2's ledger).
 - [ ] Commit.
 
 ---
@@ -555,29 +617,48 @@ alter table company_reviews enable row level security;
 alter table parent_child_links enable row level security;
 
 create policy evaluations_select_involved on evaluations for select to authenticated
-  using (student_id = auth.uid() or supervisor_id = auth.uid() or current_user_role() = 'admin'
+  using (student_id = (select auth.uid()) or supervisor_id = (select auth.uid()) or (select current_user_role()) = 'admin'
          or is_approved_parent_of(student_id));
 create policy evaluations_insert_supervisor on evaluations for insert to authenticated
-  with check (supervisor_id = auth.uid()
-              and current_user_role() in ('academic_supervisor','company_supervisor','admin'));
+  with check (supervisor_id = (select auth.uid())
+              and (select current_user_role()) in ('academic_supervisor','company_supervisor','admin'));
 
 create policy work_experiences_select_authenticated on work_experiences for select to authenticated using (true);
-create policy work_experiences_write_own on work_experiences for all to authenticated
-  using (student_id = auth.uid()) with check (student_id = auth.uid());
+create policy work_experiences_insert_own on work_experiences for insert to authenticated
+  with check (student_id = (select auth.uid()));
+create policy work_experiences_update_own on work_experiences for update to authenticated
+  using (student_id = (select auth.uid())) with check (student_id = (select auth.uid()));
+create policy work_experiences_delete_own on work_experiences for delete to authenticated
+  using (student_id = (select auth.uid()));
 
 create policy company_reviews_select_authenticated on company_reviews for select to authenticated using (true);
-create policy company_reviews_write_own on company_reviews for all to authenticated
-  using (student_id = auth.uid()) with check (student_id = auth.uid());
+create policy company_reviews_insert_own on company_reviews for insert to authenticated
+  with check (student_id = (select auth.uid()));
+create policy company_reviews_update_own on company_reviews for update to authenticated
+  using (student_id = (select auth.uid())) with check (student_id = (select auth.uid()));
+create policy company_reviews_delete_own on company_reviews for delete to authenticated
+  using (student_id = (select auth.uid()));
 
 create policy parent_child_links_select_involved on parent_child_links for select to authenticated
-  using (parent_id = auth.uid() or student_id = auth.uid() or current_user_role() = 'admin');
+  using (parent_id = (select auth.uid()) or student_id = (select auth.uid()) or (select current_user_role()) = 'admin');
 create policy parent_child_links_insert_parent on parent_child_links for insert to authenticated
-  with check (parent_id = auth.uid());
+  with check (parent_id = (select auth.uid()));
 create policy parent_child_links_update_student_or_admin on parent_child_links for update to authenticated
-  using (student_id = auth.uid() or current_user_role() = 'admin');
+  using (student_id = (select auth.uid()) or (select current_user_role()) = 'admin');
+
+create index if not exists idx_evaluations_student_id on evaluations(student_id);
+create index if not exists idx_evaluations_supervisor_id on evaluations(supervisor_id);
+create index if not exists idx_work_experiences_student_id on work_experiences(student_id);
+create index if not exists idx_company_reviews_company_id on company_reviews(company_id);
+create index if not exists idx_company_reviews_student_id on company_reviews(student_id);
+create index if not exists idx_parent_child_links_parent_id on parent_child_links(parent_id);
+create index if not exists idx_parent_child_links_student_id on parent_child_links(student_id);
 ```
 
+> **Post-review correction (see Tasks 2-3's notes):** wrapped bare `auth.uid()`/`current_user_role()` in `(select ...)`. Split `work_experiences_write_own` and `company_reviews_write_own` (each a `for all` policy coexisting with a separate select policy) into insert/update/delete — no new helper function needed here since the condition is a single equality check, not worth the indirection.
+
 - [ ] Write, apply, verify.
+- [ ] Verify `get_advisors` security **and performance** are both clean (see Task 2's ledger).
 - [ ] Commit.
 
 ---
@@ -636,16 +717,20 @@ create policy conversations_insert_authenticated on conversations for insert to 
 create policy profile_conversations_select_member on profile_conversations for select to authenticated
   using (is_conversation_member(conversation_id));
 create policy profile_conversations_insert_self on profile_conversations for insert to authenticated
-  with check (profile_id = auth.uid());
+  with check (profile_id = (select auth.uid()));
 create policy profile_conversations_update_self on profile_conversations for update to authenticated
-  using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+  using (profile_id = (select auth.uid())) with check (profile_id = (select auth.uid()));
 
 create policy messages_select_member on messages for select to authenticated
   using (is_conversation_member(conversation_id));
 create policy messages_insert_member on messages for insert to authenticated
-  with check (sender_id = auth.uid() and is_conversation_member(conversation_id));
+  with check (sender_id = (select auth.uid()) and is_conversation_member(conversation_id));
 create policy messages_update_sender on messages for update to authenticated
-  using (sender_id = auth.uid() or is_conversation_member(conversation_id)); -- non-sender member can only touch deleted_for; enforce column-level via RPC, see below
+  using (sender_id = (select auth.uid()) or is_conversation_member(conversation_id)); -- non-sender member can only touch deleted_for; enforce column-level via RPC, see below
+
+create index if not exists idx_profile_conversations_profile_id on profile_conversations(profile_id);
+create index if not exists idx_messages_conversation_id on messages(conversation_id);
+create index if not exists idx_messages_sender_id on messages(sender_id);
 
 -- edit_message / delete_message_for_me RPCs replace direct client-side UPDATE for their specific fields.
 create or replace function edit_message(p_message_id uuid, p_new_body text) returns void
@@ -665,7 +750,10 @@ end;
 $$;
 ```
 
+> **Post-review correction (see Tasks 2-3's notes):** wrapped bare `auth.uid()` calls in `(select ...)`. No `for all`/`multiple_permissive_policies` conflicts in this task — every table here uses separate insert/update policies already, not `for all`. `is_conversation_member(conversation_id)` calls correctly stay unwrapped since the argument varies per row (the optimization only applies to row-independent calls like bare `auth.uid()`).
+
 - [ ] Write, apply, verify. Confirm `messages_update_sender` policy is tightened by removing the broad member-update clause once `edit_message`/`delete_message_for_me` RPCs are the only write path used by the service layer (Task 22) — flag as a TODO comment in the migration if the RPC-only approach isn't ready to enforce yet, and don't silently leave it broader than intended.
+- [ ] Verify `get_advisors` security **and performance** are both clean (see Task 2's ledger).
 - [ ] Commit.
 
 ---
@@ -724,21 +812,31 @@ alter table document_templates enable row level security;
 alter table document_submissions enable row level security;
 alter table profile_directory enable row level security;
 
-create policy notifications_select_own on notifications for select to authenticated using (user_id = auth.uid());
+create policy notifications_select_own on notifications for select to authenticated using (user_id = (select auth.uid()));
 create policy notifications_insert_system on notifications for insert to authenticated with check (true);
-create policy notifications_update_own on notifications for update to authenticated using (user_id = auth.uid());
+create policy notifications_update_own on notifications for update to authenticated using (user_id = (select auth.uid()));
 
 create policy document_templates_select_authenticated on document_templates for select to authenticated using (true);
-create policy document_templates_write_admin on document_templates for all to authenticated
-  using (current_user_role() = 'admin') with check (current_user_role() = 'admin');
+create policy document_templates_insert_admin on document_templates for insert to authenticated
+  with check ((select current_user_role()) = 'admin');
+create policy document_templates_update_admin on document_templates for update to authenticated
+  using ((select current_user_role()) = 'admin') with check ((select current_user_role()) = 'admin');
+create policy document_templates_delete_admin on document_templates for delete to authenticated
+  using ((select current_user_role()) = 'admin');
 
 create policy document_submissions_select_involved on document_submissions for select to authenticated
-  using (submitted_by = auth.uid() or student_id = auth.uid() or current_user_role() = 'admin'
+  using (submitted_by = (select auth.uid()) or student_id = (select auth.uid()) or (select current_user_role()) = 'admin'
          or is_approved_parent_of(student_id));
 create policy document_submissions_insert_own on document_submissions for insert to authenticated
-  with check (submitted_by = auth.uid() and (student_id = auth.uid() or is_approved_parent_of(student_id)));
+  with check (submitted_by = (select auth.uid()) and (student_id = (select auth.uid()) or is_approved_parent_of(student_id)));
 
 create policy profile_directory_select_authenticated on profile_directory for select to authenticated using (true);
+
+create index if not exists idx_notifications_user_id on notifications(user_id);
+create index if not exists idx_document_templates_created_by on document_templates(created_by);
+create index if not exists idx_document_submissions_template_id on document_submissions(template_id);
+create index if not exists idx_document_submissions_student_id on document_submissions(student_id);
+create index if not exists idx_document_submissions_submitted_by on document_submissions(submitted_by);
 
 -- sync trigger: keeps profile_directory in step with profiles + students without the app writing to it directly
 create or replace function sync_profile_directory() returns trigger
@@ -768,7 +866,10 @@ create trigger sync_profile_directory_on_student after insert or update on stude
   for each row execute function sync_profile_directory_from_students();
 ```
 
+> **Post-review correction (see Tasks 2-3's notes):** wrapped bare `auth.uid()`/`current_user_role()` in `(select ...)`. Split `document_templates_write_admin` (a `for all` policy coexisting with a separate select policy) into insert/update/delete.
+
 - [ ] Write, apply, verify — insert a test profile, confirm `profile_directory` row appears via trigger without an explicit app-side insert.
+- [ ] Verify `get_advisors` security **and performance** are both clean (see Task 2's ledger).
 - [ ] Commit.
 
 ---
