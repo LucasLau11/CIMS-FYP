@@ -95,10 +95,10 @@ class ParentDataService {
 
   /// Withdraws a still-pending request this parent sent.
   ///
-  /// NOTE: `parent_child_links` has no DELETE RLS policy in the normalized
-  /// schema, so this succeeds (no exception) but silently deletes 0 rows —
-  /// same limitation documented for `StudentDataService.withdrawApplication`.
-  /// See Task 19 report.
+  /// Deletes the caller's own still-pending link request (RLS:
+  /// `parent_child_links_delete_own_pending`). Once a student has responded
+  /// (approved/rejected), the row stands as the consent/audit trail and is
+  /// no longer deletable by either side.
   Future<void> cancelLinkRequest(String requestId) async {
     await _client.from('parent_child_links').delete().eq('pc_link_id', requestId).eq('status', 'pending');
   }
