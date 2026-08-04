@@ -207,20 +207,17 @@ class HrDataService {
     }).eq('application_id', applicationId);
 
     // Interview scheduling now lives on its own table, not on `applications`.
+    // `interviews.application_id` has a unique constraint (migration 00011),
+    // so a single upsert handles both first-time scheduling and rescheduling
+    // atomically -- no read-then-branch race between concurrent callers.
     if (interviewAt != null) {
-      final existing =
-          await _client.from('interviews').select('interview_id').eq('application_id', applicationId).maybeSingle();
       final payload = {
         'application_id': applicationId,
         'scheduled_at': interviewAt.toIso8601String(),
         'mode': interviewMode,
         'location': interviewLocation,
       };
-      if (existing != null) {
-        await _client.from('interviews').update(payload).eq('interview_id', existing['interview_id'] as String);
-      } else {
-        await _client.from('interviews').insert(payload);
-      }
+      await _client.from('interviews').upsert(payload, onConflict: 'application_id');
     }
 
     final roleLabel = internshipTitle ?? 'your application';
