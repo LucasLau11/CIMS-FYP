@@ -186,7 +186,7 @@ class _CompanySetupScreenState extends State<CompanySetupScreen> {
                     EmptyState(icon: Icons.business_outlined, title: l10n.setupNoCompaniesYet, description: l10n.setupSwitchToRegister)
                   else ...[
                     ..._companies.map((c) => RadioListTile<String>(
-                          value: c['id'] as String,
+                          value: c['company_id'] as String,
                           groupValue: _selectedCompanyId,
                           onChanged: (v) => setState(() => _selectedCompanyId = v),
                           title: Text(c['name'] as String, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600)),
