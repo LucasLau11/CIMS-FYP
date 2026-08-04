@@ -77,8 +77,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
   }
 
-  String get _programmeSemesterLine {
-    final programme = _programme ?? 'Programme not set';
+  String _programmeSemesterLine(AppLocalizations l10n) {
+    final programme = _programme ?? l10n.programmeNotSet;
     final semesterPart = _semester != null ? ' · Sem $_semester' : '';
     return '$programme$semesterPart';
   }
@@ -168,7 +168,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _programmeSemesterLine,
+                            _programmeSemesterLine(l10n),
                             style: const TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 13,
@@ -207,28 +207,28 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         childAspectRatio: 1.1,
                         children: [
                           MetricCard(
-                            label: 'Applications sent',
+                            label: l10n.applicationsSent,
                             value: '${_counts['applications'] ?? 0}',
                             icon: Icons.send_outlined,
                             color: AppColors.primary,
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentApplicationsScreen())),
                           ),
                           MetricCard(
-                            label: 'Interviews scheduled',
+                            label: l10n.interviewsScheduled,
                             value: '${_counts['interviews'] ?? 0}',
                             icon: Icons.calendar_today_outlined,
                             color: AppColors.warning,
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentApplicationsScreen())),
                           ),
                           MetricCard(
-                            label: 'Reports submitted',
+                            label: l10n.reportsSubmitted,
                             value: '${_counts['reports'] ?? 0}',
                             icon: Icons.assignment_turned_in_outlined,
                             color: AppColors.success,
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentReportsScreen())),
                           ),
                           MetricCard(
-                            label: 'Unread messages',
+                            label: l10n.supUnreadMessages,
                             value: '${_counts['unreadMessages'] ?? 0}',
                             icon: Icons.chat_bubble_outline,
                             color: AppColors.primaryLight,
@@ -240,7 +240,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
                     // Recent activity
                     SectionHeader(
-                      title: 'Recent activity',
+                      title: l10n.recentActivity,
                       actionLabel: l10n.viewAll,
                       onAction: () async {
                         await Navigator.push(context,
@@ -252,7 +252,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Text(
-                          'Nothing here yet — apply to an internship or submit a report to get started.',
+                          l10n.dashboardEmptyActivityMessage,
                           style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
                         ),
                       )
@@ -306,7 +306,7 @@ class _RecentActivityTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(timeAgo(createdAt), style: AppTextStyles.caption),
+          Text(timeAgo(context, createdAt), style: AppTextStyles.caption),
         ],
       ),
     );

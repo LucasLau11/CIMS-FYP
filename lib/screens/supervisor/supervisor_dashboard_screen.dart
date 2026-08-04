@@ -229,12 +229,12 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
                                           style: TextStyle(
                                               fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                                       Text(
-                                          l10n.supSubmittedAgo('${item['student_name']} · ${timeAgo(DateTime.parse(item['submitted_at'] as String))}'),
+                                          l10n.supSubmittedAgo('${item['student_name']} · ${timeAgo(context, DateTime.parse(item['submitted_at'] as String))}'),
                                           style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textSecondary)),
                                     ],
                                   ),
                                 ),
-                                StatusBadge.pending(),
+                                StatusBadge.pending(context),
                               ],
                             ),
                           )),

@@ -13,6 +13,7 @@ import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
 import '../login_screen.dart';
+import '../photo_crop_screen.dart';
 import 'address_picker_screen.dart';
 
 class StudentProfileScreen extends StatefulWidget {
@@ -58,11 +59,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String? _faculty;
   final _cgpaController = TextEditingController();
   final _academicSupervisorController = TextEditingController();
+  final _studentRegNoController = TextEditingController();
 
   String? _originalProgramme;
   int? _originalSemester;
   String? _originalFaculty;
   String _originalCgpaText = '';
+  String _originalStudentRegNo = '';
 
   static const List<String> _programmeOptions = [
     'Bachelor of Computer Science (Hons)',
@@ -136,6 +139,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     _phoneController.dispose();
     _cgpaController.dispose();
     _academicSupervisorController.dispose();
+    _studentRegNoController.dispose();
     _skillInputController.dispose();
     super.dispose();
   }
@@ -205,11 +209,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         final cgpaVal = parseNum(profile?['cgpa'])?.toDouble();
         _cgpaController.text = cgpaVal != null ? cgpaVal.toStringAsFixed(2) : '';
         _academicSupervisorController.text = profile?['academic_supervisor_name'] as String? ?? '';
+        _studentRegNoController.text = profile?['student_reg_no'] as String? ?? '';
 
         _originalProgramme = _programme;
         _originalSemester = _semester;
         _originalFaculty = _faculty;
         _originalCgpaText = _cgpaController.text;
+        _originalStudentRegNo = _studentRegNoController.text;
 
         _skills = List<String>.from(profile?['skills'] as List? ?? []);
         _originalSkills = List<String>.from(_skills);
@@ -227,6 +233,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   // =====================================================================
 
   Future<void> _pickProfileImage(ImageSource source) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final picked = await ImagePicker().pickImage(source: source, imageQuality: 80, maxWidth: 800);
       if (picked == null) return;
@@ -236,7 +243,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Unsupported file format. Please upload a JPG, JPEG, or PNG image.'),
+            content: Text(l10n.errorUnsupportedImageFormat),
             backgroundColor: AppColors.error,
           ),
         );
@@ -252,21 +259,28 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(exists
-                ? 'The selected photo is empty (0 bytes). Try a different photo.'
-                : 'The selected photo could not be found on disk.'),
+                ? l10n.errorPhotoEmpty
+                : l10n.errorPhotoNotFound),
             backgroundColor: AppColors.error,
           ),
         );
         return;
       }
 
+      if (!mounted) return;
+      final croppedFile = await Navigator.push<File>(
+        context,
+        MaterialPageRoute(builder: (_) => PhotoCropScreen(imageFile: file)),
+      );
+      if (croppedFile == null) return;
+
       setState(() {
-        _localPreviewImage = file;
+        _localPreviewImage = croppedFile;
         _isUploadingAvatar = true;
       });
 
       try {
-        final uploadedUrl = await AuthService.instance.uploadAvatar(file);
+        final uploadedUrl = await AuthService.instance.uploadAvatar(croppedFile);
         if (!mounted) return;
         setState(() {
           _avatarUrl = uploadedUrl;
@@ -274,7 +288,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           _isUploadingAvatar = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo updated.'), backgroundColor: AppColors.primary),
+          SnackBar(content: Text(l10n.profilePhotoUpdated), backgroundColor: AppColors.primary),
         );
       } catch (e) {
         if (!mounted) return;
@@ -283,18 +297,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           _isUploadingAvatar = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(l10n.errorUploadFailed(e.toString())), backgroundColor: AppColors.error),
         );
       }
     } catch (e) {
       if (!mounted) return;
+      final sourceLabel = source == ImageSource.camera ? 'camera' : 'gallery';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not access ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e')),
+        SnackBar(content: Text(l10n.errorCouldNotAccessSource(sourceLabel, e.toString()))),
       );
     }
   }
 
   Future<void> _removePhoto() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isUploadingAvatar = true);
     try {
       await AuthService.instance.removeAvatar();
@@ -308,12 +324,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       setState(() => _isUploadingAvatar = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not remove photo: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotRemovePhoto(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
 
   void _showPhotoOptions() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
@@ -321,17 +338,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Update profile photo',
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700)),
+                child: Text(l10n.profileUpdatePhoto,
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700)),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
-              title: const Text('Take a photo'),
+              title: Text(l10n.profileTakePhoto),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _pickProfileImage(ImageSource.camera);
@@ -339,7 +356,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
-              title: const Text('Choose from gallery'),
+              title: Text(l10n.profileChooseFromGallery),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _pickProfileImage(ImageSource.gallery);
@@ -348,7 +365,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             if (_avatarUrl != null || _localPreviewImage != null)
               ListTile(
                 leading: Icon(Icons.delete_outline, color: AppColors.error),
-                title: Text('Remove photo', style: TextStyle(color: AppColors.error)),
+                title: Text(l10n.profileRemovePhoto, style: TextStyle(color: AppColors.error)),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _removePhoto();
@@ -366,6 +383,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   // =====================================================================
 
   Future<void> _pickDateOfBirth() async {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final maxDob = DateTime(now.year - 17, now.month, now.day); // must be 17+
     final picked = await showDatePicker(
@@ -373,7 +391,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       initialDate: _dateOfBirth ?? DateTime(now.year - 20),
       firstDate: DateTime(now.year - 100),
       lastDate: maxDob,
-      helpText: 'Select date of birth',
+      helpText: l10n.selectDateOfBirthHelpText,
     );
     if (picked != null) {
       setState(() => _dateOfBirth = picked);
@@ -397,33 +415,35 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   String? _validatePersonalInfo() {
+    final l10n = AppLocalizations.of(context)!;
     if (_nameController.text.trim().isEmpty) {
-      return 'Full name cannot be blank.';
+      return l10n.errorFullNameBlank;
     }
     if (_phoneController.text.trim().isEmpty) {
-      return 'Phone number cannot be blank.';
+      return l10n.errorPhoneBlank;
     }
     if (!RegExp(r'^[0-9+\-\s]{7,15}$').hasMatch(_phoneController.text.trim())) {
-      return 'Enter a valid phone number.';
+      return l10n.errorInvalidPhone;
     }
     if (_dateOfBirth == null) {
-      return 'Please select your date of birth.';
+      return l10n.errorSelectDob;
     }
     final now = DateTime.now();
     if (_dateOfBirth!.isAfter(now)) {
-      return 'Date of birth cannot be in the future.';
+      return l10n.errorDobInFuture;
     }
     final minAgeDate = DateTime(now.year - 17, now.month, now.day);
     if (_dateOfBirth!.isAfter(minAgeDate)) {
-      return 'You must be at least 17 years old.';
+      return l10n.errorMinAge17;
     }
     if (_addressText == null || _addressText!.trim().isEmpty) {
-      return 'Please select your address on the map.';
+      return l10n.errorSelectAddress;
     }
     return null;
   }
 
   Future<void> _savePersonalInfo() async {
+    final l10n = AppLocalizations.of(context)!;
     final error = _validatePersonalInfo();
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -454,13 +474,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         _isSavingPersonalInfo = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Personal information updated.'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(l10n.personalInfoUpdated), backgroundColor: AppColors.primary),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSavingPersonalInfo = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
@@ -482,21 +502,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   // =====================================================================
 
   String? _validateAcademicInfo() {
-    if (_programme == null) return 'Please select your programme.';
-    if (_faculty == null) return 'Please select your faculty.';
-    if (_semester == null) return 'Please select your semester.';
+    final l10n = AppLocalizations.of(context)!;
+    if (_programme == null) return l10n.errorSelectProgramme;
+    if (_faculty == null) return l10n.errorSelectFaculty;
+    if (_semester == null) return l10n.errorSelectSemester;
 
     final cgpaText = _cgpaController.text.trim();
-    if (cgpaText.isEmpty) return 'CGPA cannot be blank.';
+    if (cgpaText.isEmpty) return l10n.errorCgpaBlank;
     final cgpaValue = double.tryParse(cgpaText);
     if (cgpaValue == null || cgpaValue < 0 || cgpaValue > 4.0) {
-      return 'Enter a valid CGPA between 0.00 and 4.00.';
+      return l10n.errorInvalidCgpaRange;
     }
 
     return null;
   }
 
   Future<void> _saveAcademicInfo() async {
+    final l10n = AppLocalizations.of(context)!;
     final error = _validateAcademicInfo();
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -512,6 +534,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         semester: _semester!,
         faculty: _faculty!,
         cgpa: double.parse(_cgpaController.text.trim()),
+        studentRegNo: _studentRegNoController.text,
       );
       if (!mounted) return;
       setState(() {
@@ -519,17 +542,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         _originalSemester = _semester;
         _originalFaculty = _faculty;
         _originalCgpaText = _cgpaController.text;
+        _originalStudentRegNo = _studentRegNoController.text;
         _isEditingAcademicInfo = false;
         _isSavingAcademicInfo = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Academic information updated.'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(l10n.academicInfoUpdated), backgroundColor: AppColors.primary),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSavingAcademicInfo = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
@@ -540,6 +564,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       _semester = _originalSemester;
       _faculty = _originalFaculty;
       _cgpaController.text = _originalCgpaText;
+      _studentRegNoController.text = _originalStudentRegNo;
       _isEditingAcademicInfo = false;
     });
   }
@@ -564,6 +589,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   void _removeSkill(String skill) => setState(() => _skills.remove(skill));
 
   Future<void> _saveSkills() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSavingSkills = true);
     try {
       await AuthService.instance.updateSkills(_skills);
@@ -574,13 +600,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         _isSavingSkills = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Skills updated.'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(l10n.skillsUpdated), backgroundColor: AppColors.primary),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSavingSkills = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
@@ -611,17 +637,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final l10n = AppLocalizations.of(context)!;
             return AlertDialog(
-              title: Text(existing == null ? 'Add work experience' : 'Edit work experience',
+              title: Text(existing == null ? l10n.addWorkExperience : l10n.editWorkExperience,
                   style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(controller: positionController, decoration: const InputDecoration(labelText: 'Position / Job title')),
+                    TextField(controller: positionController, decoration: InputDecoration(labelText: l10n.positionJobTitleLabel)),
                     const SizedBox(height: 12),
-                    TextField(controller: companyController, decoration: const InputDecoration(labelText: 'Company name')),
+                    TextField(controller: companyController, decoration: InputDecoration(labelText: l10n.setupCompanyName)),
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -629,7 +656,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           child: TextField(
                             controller: startYearController,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(labelText: 'Start year', hintText: 'e.g. 2023'),
+                            decoration: InputDecoration(labelText: l10n.startYearLabel, hintText: l10n.startYearHint),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -638,7 +665,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             controller: endYearController,
                             enabled: !isCurrent,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(labelText: 'End year'),
+                            decoration: InputDecoration(labelText: l10n.endYearLabel),
                           ),
                         ),
                       ],
@@ -647,14 +674,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
                       value: isCurrent,
-                      title: const Text('I currently work here', style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
+                      title: Text(l10n.iCurrentlyWorkHere, style: const TextStyle(fontFamily: 'Inter', fontSize: 13)),
                       activeColor: AppColors.primary,
                       onChanged: (v) => setDialogState(() => isCurrent = v ?? false),
                     ),
                     TextField(
                       controller: descriptionController,
                       maxLines: 3,
-                      decoration: const InputDecoration(labelText: 'Description (optional)'),
+                      decoration: InputDecoration(labelText: l10n.descriptionOptionalLabel),
                     ),
                     if (error != null) ...[
                       const SizedBox(height: 10),
@@ -664,13 +691,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: isSaving ? null : () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+                TextButton(onPressed: isSaving ? null : () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
                 ElevatedButton(
                   onPressed: isSaving
                       ? null
                       : () async {
                           if (positionController.text.trim().isEmpty || companyController.text.trim().isEmpty) {
-                            setDialogState(() => error = 'Position and company are required.');
+                            setDialogState(() => error = l10n.errorPositionCompanyRequired);
                             return;
                           }
                           setDialogState(() {
@@ -706,13 +733,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           } catch (e) {
                             setDialogState(() {
                               isSaving = false;
-                              error = 'Could not save: $e';
+                              error = l10n.errorCouldNotSave(e.toString());
                             });
                           }
                         },
                   child: isSaving
                       ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Save'),
+                      : Text(l10n.save),
                 ),
               ],
             );
@@ -723,13 +750,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Future<void> _deleteWorkExperience(String id) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Remove this entry?'),
+        title: Text(l10n.removeThisEntryTitle),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Remove', style: TextStyle(color: AppColors.error))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.remove, style: TextStyle(color: AppColors.error))),
         ],
       ),
     );
@@ -739,15 +767,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       _loadWorkExperience();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not remove: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotRemove(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   Future<void> _acceptSuggestedWorkExperience(ParsedWorkExperience entry) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await StudentDataService.instance.addWorkExperience(
-        companyName: entry.companyName ?? 'Unknown company',
-        position: entry.position ?? 'Unknown position',
+        companyName: entry.companyName ?? l10n.unknownCompany,
+        position: entry.position ?? l10n.unknownPosition,
         description: entry.description,
         startYear: entry.startYear,
         endYear: entry.endYear,
@@ -845,7 +874,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       ? null
                       : () async {
                     if (currentController.text.isEmpty) {
-                      setDialogState(() => errorText = 'Enter your current password.');
+                      setDialogState(() => errorText = l10n.errorEnterCurrentPassword);
                       return;
                     }
                     final strengthError = AuthService.instance.validatePassword(newController.text);
@@ -854,7 +883,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       return;
                     }
                     if (newController.text != confirmController.text) {
-                      setDialogState(() => errorText = 'New passwords do not match.');
+                      setDialogState(() => errorText = l10n.errorNewPasswordsMismatch);
                       return;
                     }
 
@@ -872,8 +901,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       Navigator.pop(dialogContext);
                       setState(() => _isChangingPassword = false);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Password changed successfully.'),
+                        SnackBar(
+                            content: Text(l10n.profilePasswordChanged),
                             backgroundColor: AppColors.primary),
                       );
                     } catch (e) {
@@ -908,6 +937,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Future<void> _pickAndUploadResume() async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'docx'],
@@ -932,7 +962,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('The file is not in an acceptable format. Only PDF or DOCX files are allowed.'),
+          content: Text(l10n.errorInvalidResumeFormat),
           backgroundColor: AppColors.error,
         ),
       );
@@ -943,7 +973,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('File is too large. Maximum size is 5MB.'),
+          content: Text(l10n.errorFileTooLarge5mb),
           backgroundColor: AppColors.error,
         ),
       );
@@ -966,7 +996,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         _isUploadingResume = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Resume uploaded.'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(l10n.resumeUploaded), backgroundColor: AppColors.primary),
       );
 
       // Offer to scan the resume for autofill (problem 6 — regex-based,
@@ -976,7 +1006,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       setState(() => _isUploadingResume = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorUploadFailed(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
@@ -1031,6 +1061,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Future<void> _offerResumeScan(File file) async {
+    final l10n = AppLocalizations.of(context)!;
     ParsedResumeData data;
     try {
       final text = await ResumeParserService.instance.extractText(file);
@@ -1065,15 +1096,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     final apply = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Autofill from resume?',
-            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+        title: Text(l10n.autofillFromResumeTitle,
+            style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'We found the following details in your resume. Review and edit before saving — nothing is saved automatically.',
+                l10n.resumeScanFoundDetailsNote,
                 style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 10),
@@ -1081,15 +1112,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   style: const TextStyle(fontFamily: 'Inter', fontSize: 13)),
               const SizedBox(height: 10),
               Text(
-                data.source == 'nlp' ? 'Parsed with AI' : 'Parsed offline',
+                data.source == 'nlp' ? l10n.parsedWithAi : l10n.parsedOffline,
                 style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontStyle: FontStyle.italic, color: AppColors.textMuted),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Discard')),
-          ElevatedButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Review & apply')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.discard)),
+          ElevatedButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(l10n.reviewAndApply)),
         ],
       ),
     );
@@ -1137,8 +1168,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fields filled in below — review and tap Save (or Add, for work experience) to confirm.'),
+      SnackBar(
+        content: Text(l10n.fieldsFilledReviewNote),
         backgroundColor: AppColors.primary,
       ),
     );
@@ -1149,13 +1180,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     try {
       final url = await AuthService.instance.getResumeSignedUrl(_resumePath!);
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       Navigator.push(context, MaterialPageRoute(
-        builder: (_) => DocumentPreviewScreen(url: url, fileName: _resumeFilename ?? 'Resume'),
+        builder: (_) => DocumentPreviewScreen(url: url, fileName: _resumeFilename ?? l10n.resume),
       ));
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open resume: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotOpenResumeColon(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
@@ -1175,8 +1208,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isUploadingResume = false);
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not remove resume: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotRemoveResume(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
@@ -1185,7 +1219,21 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   // PREFERENCES (persisted)
   // =====================================================================
 
+  String _prefLabel(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'Application updates':
+        return l10n.prefApplicationUpdates;
+      case 'Report deadlines':
+        return l10n.prefReportDeadlines;
+      case 'Messages':
+        return l10n.prefMessages;
+      default:
+        return l10n.prefSupervisorFeedback;
+    }
+  }
+
   void _showNotificationPreferences() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1200,16 +1248,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Notification preferences',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text(l10n.notificationPreferences,
+                        style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
-                    Text('Choose what you want to be notified about.',
+                    Text(l10n.profileChooseWhatToBeNotified,
                         style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
                     const SizedBox(height: 12),
                     ..._notificationPrefs.keys.map((key) {
                       return SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(key, style: const TextStyle(fontFamily: 'Inter', fontSize: 14)),
+                        title: Text(_prefLabel(l10n, key), style: const TextStyle(fontFamily: 'Inter', fontSize: 14)),
                         value: _notificationPrefs[key]!,
                         activeColor: AppColors.primary,
                         onChanged: (val) {
@@ -1232,18 +1280,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             if (!sheetContext.mounted) return;
                             Navigator.pop(sheetContext);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Notification preferences updated.'),
+                              SnackBar(
+                                  content: Text(l10n.profileNotificationPrefsUpdated),
                                   backgroundColor: AppColors.primary),
                             );
                           } catch (e) {
                             if (!sheetContext.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error),
+                              SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
                             );
                           }
                         },
-                        child: const Text('Save'),
+                        child: Text(l10n.save),
                       ),
                     ),
                   ],
@@ -1257,12 +1305,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   void _showLanguagePicker() {
+    final l10n = AppLocalizations.of(context)!;
     const languages = ['English', 'Bahasa Malaysia', '中文'];
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Select language', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+          title: Text(l10n.profileSelectLanguage, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: languages.map((lang) {
@@ -1280,7 +1329,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not save language: $e'), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(l10n.errorCouldNotSaveLanguage(e.toString())), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -1288,7 +1337,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             }).toList(),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
           ],
         );
       },
@@ -1324,7 +1373,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not save theme: $e'), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(l10n.errorCouldNotSaveTheme(e.toString())), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -1522,7 +1571,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   _isEditingAcademicInfo ? _buildAcademicInfoEditForm() : _buildAcademicInfoView(),
 
                   SectionHeader(
-                    title: 'Skills',
+                    title: l10n.hrSkills,
                     actionIcon: _isEditingSkills ? Icons.close : Icons.edit_outlined,
                     onAction: () {
                       if (_isEditingSkills) {
@@ -1534,7 +1583,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   ),
                   _isEditingSkills ? _buildSkillsEditForm() : _buildSkillsView(),
 
-                  const SectionHeader(title: 'Work Experience'),
+                  SectionHeader(title: l10n.workExperience),
                   _buildWorkExperienceSection(),
 
                   GestureDetector(
@@ -1723,6 +1772,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     return _InfoSection(
       items: [
         _InfoItem(icon: Icons.school_outlined, label: l10n.programme, value: _programme ?? l10n.notSet),
+        _InfoItem(
+            icon: Icons.badge_outlined,
+            label: l10n.studentRegNo,
+            value: _studentRegNoController.text.isEmpty ? l10n.notSet : _studentRegNoController.text),
         _InfoItem(icon: Icons.calendar_today_outlined, label: l10n.semester, value: _semester != null ? '${l10n.semester} $_semester' : l10n.notSet),
         _InfoItem(icon: Icons.class_outlined, label: l10n.faculty, value: _faculty ?? l10n.notSet),
         _InfoItem(icon: Icons.grade_outlined, label: l10n.cgpa, value: _cgpaController.text.isEmpty ? l10n.notSet : _cgpaController.text),
@@ -1735,6 +1788,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildAcademicInfoEditForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(14),
@@ -1746,12 +1800,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Programme', style: AppTextStyles.label),
+          Text(l10n.programme, style: AppTextStyles.label),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
             value: _programme,
             isExpanded: true,
-            decoration: const InputDecoration(hintText: 'Select your programme'),
+            decoration: InputDecoration(hintText: l10n.selectYourProgrammeHint),
             items: _programmeOptions
                 .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13))))
                 .toList(),
@@ -1759,12 +1813,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ),
           const SizedBox(height: 14),
 
-          Text('Faculty', style: AppTextStyles.label),
+          Text(l10n.studentRegNo, style: AppTextStyles.label),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _studentRegNoController,
+            decoration: InputDecoration(hintText: l10n.studentRegNoHint),
+          ),
+          const SizedBox(height: 14),
+
+          Text(l10n.faculty, style: AppTextStyles.label),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
             value: _faculty,
             isExpanded: true,
-            decoration: const InputDecoration(hintText: 'Select your faculty'),
+            decoration: InputDecoration(hintText: l10n.selectYourFacultyHint),
             items: _facultyOptions
                 .map((f) => DropdownMenuItem(value: f, child: Text(f, style: const TextStyle(fontSize: 13))))
                 .toList(),
@@ -1772,24 +1834,24 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ),
           const SizedBox(height: 14),
 
-          Text('Semester', style: AppTextStyles.label),
+          Text(l10n.semester, style: AppTextStyles.label),
           const SizedBox(height: 6),
           DropdownButtonFormField<int>(
             value: _semester,
-            decoration: const InputDecoration(hintText: 'Select your semester'),
+            decoration: InputDecoration(hintText: l10n.selectYourSemesterHint),
             items: List.generate(4, (i) => i + 1)
-                .map((s) => DropdownMenuItem(value: s, child: Text('Semester $s')))
+                .map((s) => DropdownMenuItem(value: s, child: Text(l10n.semesterNumber(s))))
                 .toList(),
             onChanged: (val) => setState(() => _semester = val),
           ),
           const SizedBox(height: 14),
 
-          Text('CGPA', style: AppTextStyles.label),
+          Text(l10n.cgpa, style: AppTextStyles.label),
           const SizedBox(height: 6),
           TextField(
             controller: _cgpaController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(hintText: 'e.g. 3.62'),
+            decoration: InputDecoration(hintText: l10n.cgpaHint),
           ),
           const SizedBox(height: 14),
 
@@ -1901,9 +1963,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   Widget _buildSkillsView() {
     if (_skills.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Text('No skills added yet.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+        child: Text(l10n.noSkillsAddedYet, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
       );
     }
     return Padding(
@@ -1923,6 +1986,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildSkillsEditForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(14),
@@ -1935,7 +1999,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               Expanded(
                 child: TextField(
                   controller: _skillInputController,
-                  decoration: const InputDecoration(hintText: 'e.g. HTML, CSS, Java, Public Speaking'),
+                  decoration: InputDecoration(hintText: l10n.addSkillHint),
                   onSubmitted: _addSkill,
                 ),
               ),
@@ -1958,14 +2022,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: OutlinedButton(onPressed: _isSavingSkills ? null : _cancelEditingSkills, child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: _isSavingSkills ? null : _cancelEditingSkills, child: Text(l10n.cancel))),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
                   onPressed: _isSavingSkills ? null : _saveSkills,
                   child: _isSavingSkills
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Save'),
+                      : Text(l10n.save),
                 ),
               ),
             ],
@@ -1976,13 +2040,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildWorkExperienceSection() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_suggestedWorkExperience.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-            child: Text('Suggested from your resume', style: AppTextStyles.label),
+            child: Text(l10n.suggestedFromResume, style: AppTextStyles.label),
           ),
           ..._suggestedWorkExperience.map((entry) => Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -1991,10 +2056,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(entry.position ?? 'Unknown position',
+                    Text(entry.position ?? l10n.unknownPosition,
                         style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                     Text(
-                      '${entry.companyName ?? 'Unknown company'}${entry.startYear != null ? ' · ${entry.startYear}–${entry.isCurrent ? 'Present' : entry.endYear ?? '?'}' : ''}',
+                      '${entry.companyName ?? l10n.unknownCompany}${entry.startYear != null ? ' · ${entry.startYear}–${entry.isCurrent ? l10n.present : entry.endYear ?? '?'}' : ''}',
                       style: AppTextStyles.caption,
                     ),
                     if (entry.description != null) ...[
@@ -2008,7 +2073,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           child: OutlinedButton(
                             onPressed: () => setState(() => _suggestedWorkExperience.remove(entry)),
                             style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6)),
-                            child: const Text('Dismiss', style: TextStyle(fontSize: 12)),
+                            child: Text(l10n.dismiss, style: const TextStyle(fontSize: 12)),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -2016,7 +2081,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           child: ElevatedButton(
                             onPressed: () => _acceptSuggestedWorkExperience(entry),
                             style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6)),
-                            child: const Text('Add', style: TextStyle(fontSize: 12)),
+                            child: Text(l10n.add, style: const TextStyle(fontSize: 12)),
                           ),
                         ),
                       ],
@@ -2033,7 +2098,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         else if (_workExperience.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text('No work experience added yet.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+            child: Text(l10n.noWorkExperienceAddedYet, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
           )
         else
           ..._workExperience.map((entry) => Container(
@@ -2050,7 +2115,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           Text(entry['position'] as String,
                               style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                           Text(
-                            '${entry['company_name']}${entry['start_year'] != null ? ' · ${entry['start_year']}–${entry['is_current'] == true ? 'Present' : entry['end_year'] ?? '?'}' : ''}',
+                            '${entry['company_name']}${entry['start_year'] != null ? ' · ${entry['start_year']}–${entry['is_current'] == true ? l10n.present : entry['end_year'] ?? '?'}' : ''}',
                             style: AppTextStyles.caption,
                           ),
                           if ((entry['description'] as String?)?.isNotEmpty == true) ...[
@@ -2067,8 +2132,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         if (v == 'delete') _deleteWorkExperience(entry['id'] as String);
                       },
                       itemBuilder: (_) => [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.error))),
+                        PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+                        PopupMenuItem(value: 'delete', child: Text(l10n.delete, style: TextStyle(color: AppColors.error))),
                       ],
                     ),
                   ],
@@ -2079,7 +2144,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           child: OutlinedButton.icon(
             onPressed: () => _showWorkExperienceDialog(),
             icon: const Icon(Icons.add, size: 16),
-            label: const Text('Add work experience'),
+            label: Text(l10n.addWorkExperience),
           ),
         ),
       ],
@@ -2161,7 +2226,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                   Text(
                     '${_resumeSizeBytes != null ? _formatFileSize(_resumeSizeBytes!) : ''}'
-                        '${_resumeUploadedAt != null ? ' · Updated ${_formatDate(_resumeUploadedAt!)}' : ''}',
+                        '${_resumeUploadedAt != null ? ' ${l10n.updatedOnDate(_formatDate(_resumeUploadedAt!))}' : ''}',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ],

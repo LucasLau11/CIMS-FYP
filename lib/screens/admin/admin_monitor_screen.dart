@@ -5,6 +5,7 @@ import '../../services/supervisor_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
 import '../supervisor/supervisor_students_screen.dart' show StudentDetailScreen;
+import '../../l10n/app_localizations.dart';
 
 class AdminMonitorScreen extends StatefulWidget {
   const AdminMonitorScreen({super.key});
@@ -62,7 +63,8 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save review: $e'), backgroundColor: AppColors.error));
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotSaveReview(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
@@ -72,9 +74,10 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
   }
 
   Future<void> _view(Map<String, dynamic> item) async {
+    final l10n = AppLocalizations.of(context)!;
     final path = item['storage_path'] as String?;
     if (path == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No file attached to this submission.'), backgroundColor: AppColors.warning));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.supNoFileAttached), backgroundColor: AppColors.warning));
       return;
     }
     try {
@@ -85,18 +88,19 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
       ));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open file: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotOpenFile(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final reports = _reviewItems.where((i) => i['kind'] == 'report').toList();
     final documents = _reviewItems.where((i) => i['kind'] == 'document').toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const GradientAppBar(title: 'Monitor'),
+      appBar: GradientAppBar(title: l10n.adminMonitorTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : Column(
@@ -109,7 +113,7 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
                     unselectedLabelColor: AppColors.textMuted,
                     indicatorColor: AppColors.primary,
                     labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600),
-                    tabs: const [Tab(text: 'Student progress'), Tab(text: 'Reports'), Tab(text: 'Documents')],
+                    tabs: [Tab(text: l10n.adminTabStudentProgress), Tab(text: l10n.adminTabReports), Tab(text: l10n.adminTabDocuments)],
                   ),
                 ),
                 Expanded(
@@ -137,8 +141,9 @@ class _StudentProgressTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (students.isEmpty) {
-      return const EmptyState(icon: Icons.school_outlined, title: 'No students', description: 'No students have registered yet.');
+      return EmptyState(icon: Icons.school_outlined, title: l10n.adminNoStudentsTitle, description: l10n.adminNoStudentsRegisteredDescription);
     }
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -147,7 +152,7 @@ class _StudentProgressTab extends StatelessWidget {
         itemCount: students.length,
         itemBuilder: (_, i) {
           final s = students[i];
-          final name = (s['full_name'] as String?)?.isNotEmpty == true ? s['full_name'] as String : 'Unnamed student';
+          final name = (s['full_name'] as String?)?.isNotEmpty == true ? s['full_name'] as String : l10n.adminUnnamedStudent;
           final pendingCount = s['pending_review_count'] as int;
           final hasActive = s['has_active_internship'] as bool;
           final color = pendingCount > 0 ? AppColors.warning : AppColors.success;
@@ -167,7 +172,7 @@ class _StudentProgressTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      Text(hasActive ? '${s['programme'] ?? ''} · ${s['company_name']}' : (s['programme'] as String?) ?? 'Programme not set',
+                      Text(hasActive ? '${s['programme'] ?? ''} · ${s['company_name']}' : (s['programme'] as String?) ?? l10n.adminProgrammeNotSet,
                           style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
                     ],
                   ),
@@ -175,7 +180,7 @@ class _StudentProgressTab extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                  child: Text(pendingCount > 0 ? '$pendingCount pending' : 'Up to date', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+                  child: Text(pendingCount > 0 ? l10n.supPendingCount(pendingCount) : l10n.supUpToDate, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
                 ),
               ],
             ),
@@ -197,8 +202,9 @@ class _ReviewListTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (items.isEmpty) {
-      return const EmptyState(icon: Icons.fact_check_outlined, title: 'Nothing here', description: 'Submissions will appear here.');
+      return EmptyState(icon: Icons.fact_check_outlined, title: l10n.supNothingHere, description: l10n.adminSubmissionsAppearHere);
     }
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -228,11 +234,11 @@ class _ReviewListTab extends StatelessWidget {
                         children: [
                           Text(item['title'] as String,
                               style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
-                          Text('${item['student_name']} · Submitted ${timeAgo(DateTime.parse(item['submitted_at'] as String))}', style: AppTextStyles.caption),
+                          Text('${item['student_name']} · ${l10n.supSubmittedAgo(timeAgo(context, DateTime.parse(item['submitted_at'] as String)))}', style: AppTextStyles.caption),
                         ],
                       ),
                     ),
-                    isPending ? StatusBadge.pending() : (item['status'] == 'approved' ? StatusBadge.approved() : StatusBadge.rejected()),
+                    isPending ? StatusBadge.pending(context) : (item['status'] == 'approved' ? StatusBadge.approved(context) : StatusBadge.rejected(context)),
                   ],
                 ),
                 if (isPending) ...[
@@ -243,7 +249,7 @@ class _ReviewListTab extends StatelessWidget {
                         child: OutlinedButton(
                           onPressed: () => onView(item),
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8), textStyle: const TextStyle(fontSize: 11)),
-                          child: const Text('View'),
+                          child: Text(l10n.view),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -251,7 +257,7 @@ class _ReviewListTab extends StatelessWidget {
                         child: OutlinedButton(
                           onPressed: () => onReject(item),
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8), side: BorderSide(color: AppColors.error)),
-                          child: Text('Reject', style: TextStyle(fontSize: 11, color: AppColors.error)),
+                          child: Text(l10n.hrReject, style: TextStyle(fontSize: 11, color: AppColors.error)),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -259,7 +265,7 @@ class _ReviewListTab extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () => onApprove(item),
                           style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8)),
-                          child: const Text('Approve', style: TextStyle(fontSize: 11)),
+                          child: Text(l10n.supApprove, style: const TextStyle(fontSize: 11)),
                         ),
                       ),
                     ],
@@ -288,30 +294,31 @@ class _CommentDialogState extends State<_CommentDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      title: Text(widget.isReject ? 'Reject submission' : 'Approve submission', style: AppTextStyles.h3),
+      title: Text(widget.isReject ? l10n.supRejectSubmission : l10n.supApproveSubmission, style: AppTextStyles.h3),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.isReject ? 'Please provide feedback explaining why this is being rejected.' : 'Add an optional comment for the student.', style: AppTextStyles.bodySecondary),
+          Text(widget.isReject ? l10n.supRejectFeedbackPrompt : l10n.supApproveCommentPrompt, style: AppTextStyles.bodySecondary),
           const SizedBox(height: 12),
-          TextField(controller: _commentController, maxLines: 3, decoration: const InputDecoration(hintText: 'Type your comment...')),
+          TextField(controller: _commentController, maxLines: 3, decoration: InputDecoration(hintText: l10n.supTypeYourComment)),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
         ElevatedButton(
           onPressed: () {
             if (widget.isReject && _commentController.text.trim().isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please add feedback before rejecting.'), backgroundColor: AppColors.error));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.supPleaseAddFeedback), backgroundColor: AppColors.error));
               return;
             }
             Navigator.pop(context, _commentController.text);
           },
           style: ElevatedButton.styleFrom(backgroundColor: widget.isReject ? AppColors.error : AppColors.primary),
-          child: Text(widget.isReject ? 'Reject' : 'Approve'),
+          child: Text(widget.isReject ? l10n.hrReject : l10n.supApprove),
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
@@ -14,11 +15,18 @@ import 'student_profile_screen.dart';
 // uploaded by the student. Industrial Training Form (LI01) was replaced by
 // two separate documents. There's no optional-documents section anymore —
 // every required document is required.
-const List<Map<String, String>> _requiredDocTypes = [
-  {'category': 'offer_letter', 'title': 'Offer Letter'},
-  {'category': 'indemnity_letter', 'title': 'Indemnity Letter'},
-  {'category': 'company_acceptance_letter', 'title': 'Company Acceptance Letter'},
-];
+const List<String> _requiredDocCategories = ['offer_letter', 'indemnity_letter', 'company_acceptance_letter'];
+
+String _requiredDocTitle(AppLocalizations l10n, String category) {
+  switch (category) {
+    case 'offer_letter':
+      return l10n.docTypeOfferLetter;
+    case 'indemnity_letter':
+      return l10n.docTypeIndemnityLetter;
+    default:
+      return l10n.docTypeCompanyAcceptanceLetter;
+  }
+}
 
 class StudentReportsScreen extends StatefulWidget {
   const StudentReportsScreen({super.key});
@@ -85,10 +93,11 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(
-        title: 'Submissions',
+        title: l10n.submissions,
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Colors.white),
@@ -107,9 +116,9 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
               indicatorColor: AppColors.primary,
               indicatorWeight: 2,
               labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600),
-              tabs: const [
-                Tab(text: 'Reports'),
-                Tab(text: 'Documents'),
+              tabs: [
+                Tab(text: l10n.reports),
+                Tab(text: l10n.documents),
               ],
             ),
           ),
@@ -123,11 +132,11 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
                         onRefresh: _loadReports,
                         child: _reports.isEmpty
                             ? ListView(
-                                children: const [
+                                children: [
                                   EmptyState(
                                     icon: Icons.assignment_outlined,
-                                    title: 'No reports yet',
-                                    description: 'Tap Submit to upload your first monthly or final report.',
+                                    title: l10n.noReportsYet,
+                                    description: l10n.tapSubmitFirstReportNote,
                                   ),
                                 ],
                               )
@@ -156,7 +165,7 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
         onPressed: () => _showSubmitSheet(context),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.upload_file, color: Colors.white),
-        label: const Text('Submit', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, color: Colors.white)),
+        label: Text(l10n.submit, style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, color: Colors.white)),
       ),
     );
   }
@@ -187,21 +196,22 @@ class _ReportCard extends StatelessWidget {
     }
   }
 
-  StatusBadge get _badge {
+  StatusBadge _badge(BuildContext context) {
     switch (data['status']) {
       case 'approved':
-        return StatusBadge.approved();
+        return StatusBadge.approved(context);
       case 'rejected':
-        return StatusBadge.rejected();
+        return StatusBadge.rejected(context);
       default:
-        return StatusBadge.submitted();
+        return StatusBadge.submitted(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isFinal = data['type'] == 'final';
-    final title = '${isFinal ? 'Final Report' : 'Monthly Report'} — ${data['period_label']}';
+    final title = '${isFinal ? l10n.finalReportLabel : l10n.monthlyReportLabel} — ${data['period_label']}';
     final submittedAt = DateTime.parse(data['submitted_at'] as String);
     final storagePath = data['storage_path'] as String?;
     final feedback = data['feedback'] as String?;
@@ -233,11 +243,11 @@ class _ReportCard extends StatelessWidget {
                     Text(title,
                         style: TextStyle(
                             fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                    Text('Submitted ${timeAgo(submittedAt)}', style: AppTextStyles.caption),
+                    Text(l10n.supSubmittedAgo(timeAgo(context, submittedAt)), style: AppTextStyles.caption),
                   ],
                 ),
               ),
-              _badge,
+              _badge(context),
             ],
           ),
           if ((data['notes'] as String?)?.isNotEmpty == true) ...[
@@ -250,13 +260,13 @@ class _ReportCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(8)),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.check_circle_outline, size: 13, color: AppColors.primary),
-                  SizedBox(width: 6),
+                  const Icon(Icons.check_circle_outline, size: 13, color: AppColors.primary),
+                  const SizedBox(width: 6),
                   Expanded(
-                    child: Text('Approved by company supervisor · awaiting university review',
-                        style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.primary)),
+                    child: Text(l10n.approvedByCompanyAwaitingUniversity,
+                        style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.primary)),
                   ),
                 ],
               ),
@@ -279,7 +289,7 @@ class _ReportCard extends StatelessWidget {
                   const Icon(Icons.attach_file, size: 14, color: AppColors.primary),
                   const SizedBox(width: 4),
                   Flexible(
-                    child: Text(data['file_name'] as String? ?? 'Attachment',
+                    child: Text(data['file_name'] as String? ?? l10n.attachment,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -330,30 +340,31 @@ class _DocumentsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final others = documents.where((d) => d['category'] == 'other').toList();
     final resumeFilename = profile?['resume_filename'] as String?;
 
     return ListView(
       padding: const EdgeInsets.only(top: 8, bottom: 80),
       children: [
-        const SectionHeader(title: 'Required documents'),
+        SectionHeader(title: l10n.requiredDocuments),
         _ResumeChecklistTile(resumeFilename: resumeFilename),
-        ..._requiredDocTypes.map(
-          (t) => _DocumentTile(
-            category: t['category']!,
-            title: t['title']!,
-            document: _docFor(t['category']!),
+        ..._requiredDocCategories.map(
+          (category) => _DocumentTile(
+            category: category,
+            title: _requiredDocTitle(l10n, category),
+            document: _docFor(category),
             onChanged: onChanged,
           ),
         ),
-        const SectionHeader(title: 'Other documents'),
+        SectionHeader(title: l10n.otherDocuments),
         ...others.map((d) => _DocumentTile(category: 'other', title: d['title'] as String? ?? d['file_name'] as String, document: d, onChanged: onChanged)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: OutlinedButton.icon(
             onPressed: () => _uploadOther(context),
             icon: const Icon(Icons.add, size: 16),
-            label: const Text('Add other document'),
+            label: Text(l10n.addOtherDocument),
           ),
         ),
       ],
@@ -361,15 +372,16 @@ class _DocumentsTab extends StatelessWidget {
   }
 
   Future<void> _uploadOther(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final titleController = TextEditingController();
     final title = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Document title'),
-        content: TextField(controller: titleController, decoration: const InputDecoration(hintText: 'e.g. Transcript')),
+        title: Text(l10n.documentTitleDialogTitle),
+        content: TextField(controller: titleController, decoration: InputDecoration(hintText: l10n.documentTitleHint)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, titleController.text.trim()), child: const Text('Continue')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, titleController.text.trim()), child: Text(l10n.continueLabel)),
         ],
       ),
     );
@@ -386,6 +398,7 @@ class _ResumeChecklistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final hasResume = resumeFilename != null && resumeFilename!.isNotEmpty;
     return AccentCard(
       accentColor: hasResume ? AppColors.success : AppColors.error,
@@ -405,10 +418,10 @@ class _ResumeChecklistTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Resume / CV',
+                Text(l10n.resumeCvHeading,
                     style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 const SizedBox(height: 2),
-                Text(hasResume ? resumeFilename! : 'Not uploaded yet',
+                Text(hasResume ? resumeFilename! : l10n.notUploadedYet,
                     style: TextStyle(
                         fontFamily: 'Inter', fontSize: 12, color: hasResume ? AppColors.textSecondary : AppColors.error)),
               ],
@@ -420,7 +433,7 @@ class _ResumeChecklistTile extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
-              child: Text(hasResume ? 'Manage' : 'Upload',
+              child: Text(hasResume ? l10n.manage : l10n.upload,
                   style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
             ),
           ),
@@ -440,6 +453,7 @@ class _DocumentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isMissing = document == null;
 
     return AccentCard(
@@ -467,7 +481,7 @@ class _DocumentTile extends StatelessWidget {
                   Text('${document!['file_name']} · ${formatFileSize(parseNum(document!['file_size_bytes'])?.toInt() ?? 0)}',
                       style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)
                 else
-                  Text('Not uploaded yet', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+                  Text(l10n.notUploadedYet, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
               ],
             ),
           ),
@@ -478,8 +492,8 @@ class _DocumentTile extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
-                child: const Text('Upload',
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                child: Text(l10n.upload,
+                    style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
               ),
             )
           else
@@ -503,9 +517,9 @@ class _DocumentTile extends StatelessWidget {
                   onChanged();
                 }
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'open', child: Text('View')),
-                PopupMenuItem(value: 'remove', child: Text('Remove')),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'open', child: Text(l10n.view)),
+                PopupMenuItem(value: 'remove', child: Text(l10n.remove)),
               ],
             ),
         ],
@@ -526,8 +540,9 @@ Future<void> pickAndUploadDocument(
 
   if (picked.size > 10 * 1024 * 1024) {
     if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: const Text('File is too large. Maximum size is 10MB.'), backgroundColor: AppColors.error));
+        .showSnackBar(SnackBar(content: Text(l10n.errorFileTooLarge10mb), backgroundColor: AppColors.error));
     return;
   }
 
@@ -543,7 +558,8 @@ Future<void> pickAndUploadDocument(
     onChanged();
   } catch (e) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppColors.error));
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorUploadFailed(e.toString())), backgroundColor: AppColors.error));
   }
 }
 
@@ -557,7 +573,7 @@ class _SubmitBottomSheet extends StatefulWidget {
 }
 
 class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
-  String _selectedType = 'Monthly Report';
+  String _selectedType = 'monthly';
   final _periodController = TextEditingController();
   final _notesController = TextEditingController();
   PlatformFile? _pickedFile;
@@ -571,8 +587,9 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_periodController.text.trim().isEmpty) {
-      setState(() => _error = 'Please enter a period, e.g. "June 2026".');
+      setState(() => _error = l10n.errorEnterPeriod);
       return;
     }
     setState(() {
@@ -582,7 +599,7 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
     try {
       final file = _pickedFile != null ? await resolvePickedFile(_pickedFile!) : null;
       await StudentDataService.instance.submitReport(
-        type: _selectedType == 'Final Report' ? 'final' : 'monthly',
+        type: _selectedType,
         periodLabel: _periodController.text.trim(),
         notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         file: file,
@@ -596,13 +613,14 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _error = 'Could not submit: $e';
+        _error = l10n.errorCouldNotSubmit(e.toString());
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
       child: Column(
@@ -611,34 +629,37 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
         children: [
           Row(
             children: [
-              Text('New submission', style: AppTextStyles.h3),
+              Text(l10n.newSubmission, style: AppTextStyles.h3),
               const Spacer(),
               IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.pop(context)),
             ],
           ),
           const SizedBox(height: 16),
-          Text('Submission type', style: AppTextStyles.label),
+          Text(l10n.submissionType, style: AppTextStyles.label),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             decoration: const InputDecoration(),
             value: _selectedType,
-            items: ['Monthly Report', 'Final Report'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            items: [
+              DropdownMenuItem(value: 'monthly', child: Text(l10n.monthlyReportLabel)),
+              DropdownMenuItem(value: 'final', child: Text(l10n.finalReportLabel)),
+            ],
             onChanged: (v) => setState(() => _selectedType = v!),
           ),
           const SizedBox(height: 14),
-          Text('Period', style: AppTextStyles.label),
+          Text(l10n.period, style: AppTextStyles.label),
           const SizedBox(height: 8),
           TextField(
             controller: _periodController,
-            decoration: const InputDecoration(hintText: 'e.g. June 2026'),
+            decoration: InputDecoration(hintText: l10n.periodHint),
           ),
           const SizedBox(height: 14),
-          Text('Notes (optional)', style: AppTextStyles.label),
+          Text(l10n.notesOptional, style: AppTextStyles.label),
           const SizedBox(height: 8),
           TextField(
             controller: _notesController,
             maxLines: 3,
-            decoration: const InputDecoration(hintText: 'Add any notes for your supervisor...'),
+            decoration: InputDecoration(hintText: l10n.notesForSupervisorHint),
           ),
           const SizedBox(height: 14),
           GestureDetector(
@@ -656,9 +677,9 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
                   Icon(_pickedFile != null ? Icons.check_circle_outline : Icons.cloud_upload_outlined,
                       color: AppColors.primary, size: 28),
                   const SizedBox(height: 6),
-                  Text(_pickedFile?.name ?? 'Tap to select file',
+                  Text(_pickedFile?.name ?? l10n.tapToSelectFile,
                       style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary)),
-                  Text('PDF, DOCX up to 10MB',
+                  Text(l10n.pdfDocxUpTo10mb,
                       style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted)),
                 ],
               ),
@@ -675,7 +696,7 @@ class _SubmitBottomSheetState extends State<_SubmitBottomSheet> {
               onPressed: _isSubmitting ? null : _submit,
               child: _isSubmitting
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Submit'),
+                  : Text(l10n.submit),
             ),
           ),
         ],

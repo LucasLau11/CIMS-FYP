@@ -1,7 +1,17 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:signature/signature.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
-import '../../services/parent_data_service.dart';
+import '../../services/document_template_service.dart';
+import '../../services/pdf_template_service.dart';
+import '../document_preview_screen.dart';
 
+/// Fills in the active 'parent_acknowledgement' document template — a real
+/// PDF with fillable fields an admin placed via the template designer.
+/// Auto fields (student name, etc.) resolve from [child]/[application];
+/// text/date fields are typed by the parent; the signature is drawn with a
+/// finger. Submitting stamps everything onto the PDF and flattens it.
 class ParentAcknowledgementScreen extends StatefulWidget {
   final Map<String, dynamic> child;
   final Map<String, dynamic>? application;
@@ -13,16 +23,20 @@ class ParentAcknowledgementScreen extends StatefulWidget {
 }
 
 class _ParentAcknowledgementScreenState extends State<ParentAcknowledgementScreen> {
-  bool _agreedToTerms = false;
-  bool _confirmedAccuracy = false;
   bool _isLoading = true;
   bool _isSubmitting = false;
-  Map<String, dynamic>? _existing;
-  final _nameController = TextEditingController();
-  final _icController = TextEditingController();
-  String? _relationship;
+  String? _loadError;
 
-  bool get _canSubmit => _agreedToTerms && _confirmedAccuracy && _nameController.text.trim().isNotEmpty && _icController.text.trim().isNotEmpty && _relationship != null;
+  Map<String, dynamic>? _template;
+  List<TemplateField> _fields = [];
+  Uint8List? _preparedPdfBytes;
+  Uint8List? _pageImage;
+  double _pageAspectRatio = 1;
+  Map<String, dynamic>? _existingSubmission;
+
+  final Map<String, TextEditingController> _textControllers = {};
+  final Map<String, DateTime?> _dateValues = {};
+  final Map<String, Uint8List?> _signatureValues = {};
 
   @override
   void initState() {
@@ -30,272 +44,393 @@ class _ParentAcknowledgementScreenState extends State<ParentAcknowledgementScree
     _load();
   }
 
+  @override
+  void dispose() {
+    for (final c in _textControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  String get _studentId => widget.child['id'] as String;
+
   Future<void> _load() async {
     try {
-      final existing = await ParentDataService.instance.getExistingAcknowledgement(
-        childId: widget.child['id'] as String,
-        applicationId: widget.application?['id'] as String?,
-      );
+      final template = await DocumentTemplateService.instance.getActiveTemplate('parent_acknowledgement');
+      if (template == null) {
+        if (!mounted) return;
+        setState(() {
+          _loadError = AppLocalizations.of(context)!.parentFormNotConfiguredError;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final fields = (template['fields'] as List).map((f) => TemplateField.fromJson(f as Map<String, dynamic>)).toList();
+      final existing = await DocumentTemplateService.instance.getSubmission(templateId: template['id'] as String, studentId: _studentId);
+      if (existing != null) {
+        if (!mounted) return;
+        setState(() {
+          _template = template;
+          _existingSubmission = existing;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final preparedBytes = await DocumentTemplateService.instance.downloadTemplatePdf(template['storage_path'] as String);
+      final image = await PdfTemplateService.instance.renderPageImage(preparedBytes);
+      final pageWidth = (template['page_width'] as num).toDouble();
+      final pageHeight = (template['page_height'] as num).toDouble();
+
+      for (final f in fields) {
+        if (f.type == 'text') _textControllers[f.key] = TextEditingController();
+      }
+
       if (!mounted) return;
       setState(() {
-        _existing = existing;
+        _template = template;
+        _fields = fields;
+        _preparedPdfBytes = preparedBytes;
+        _pageImage = image;
+        _pageAspectRatio = pageWidth / pageHeight;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
+      setState(() {
+        _loadError = AppLocalizations.of(context)!.parentCouldNotLoadFormError(e.toString());
+        _isLoading = false;
+      });
     }
   }
 
+  String _resolveAutoValue(String key) {
+    switch (key) {
+      case 'student_name':
+        final name = widget.child['full_name'] as String?;
+        return name?.isNotEmpty == true ? name! : '';
+      case 'student_reg_no':
+        return widget.child['student_reg_no'] as String? ?? '';
+      case 'programme':
+        return widget.child['programme'] as String? ?? '';
+      case 'company_name':
+        return (widget.application?['internships'] as Map?)?['company_name'] as String? ?? '';
+      case 'today_date':
+        return _formatDate(DateTime.now());
+      default:
+        return '';
+    }
+  }
+
+  String _formatDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  bool get _canSubmit {
+    for (final f in _fields) {
+      switch (f.type) {
+        case 'text':
+          if ((_textControllers[f.key]?.text.trim().isEmpty ?? true)) return false;
+          break;
+        case 'date':
+          if (_dateValues[f.key] == null) return false;
+          break;
+        case 'signature':
+          if (_signatureValues[f.key] == null) return false;
+          break;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _pickDate(String key) async {
+    final picked = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2100));
+    if (picked != null) setState(() => _dateValues[key] = picked);
+  }
+
+  Future<void> _captureSignature(String key) async {
+    final controller = SignatureController(penColor: Colors.black, penStrokeWidth: 3, exportBackgroundColor: Colors.transparent);
+    final bytes = await showDialog<Uint8List>(
+      context: context,
+      builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
+        return AlertDialog(
+          title: Text(l10n.parentDrawSignatureTitle, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+          content: SizedBox(
+            width: 300,
+            height: 180,
+            child: Container(
+              decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)),
+              child: Signature(controller: controller, backgroundColor: Colors.white),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: controller.clear, child: Text(l10n.clear)),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
+            ElevatedButton(
+              onPressed: () async {
+                if (controller.isEmpty) return;
+                final png = await controller.toPngBytes();
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext, png);
+              },
+              child: Text(l10n.save),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    if (bytes != null) setState(() => _signatureValues[key] = bytes);
+  }
+
   Future<void> _submit() async {
+    if (!_canSubmit || _preparedPdfBytes == null || _template == null) return;
     setState(() => _isSubmitting = true);
     try {
-      await ParentDataService.instance.submitAcknowledgement(
-        childId: widget.child['id'] as String,
-        applicationId: widget.application?['id'] as String?,
-        parentFullName: _nameController.text,
-        parentIc: _icController.text,
-        relationship: _relationship!,
+      final values = <String, dynamic>{};
+      final textValues = <String, dynamic>{};
+      for (final f in _fields) {
+        switch (f.type) {
+          case 'auto':
+            final v = _resolveAutoValue(f.key);
+            values[f.key] = v;
+            textValues[f.key] = v;
+            break;
+          case 'text':
+            final v = _textControllers[f.key]!.text.trim();
+            values[f.key] = v;
+            textValues[f.key] = v;
+            break;
+          case 'date':
+            final v = _formatDate(_dateValues[f.key]!);
+            values[f.key] = v;
+            textValues[f.key] = v;
+            break;
+          case 'signature':
+            values[f.key] = _signatureValues[f.key];
+            break;
+        }
+      }
+
+      final generatedBytes = PdfTemplateService.instance.fillAndFlatten(
+        preparedPdfBytes: _preparedPdfBytes!,
+        fields: _fields,
+        values: values,
       );
+      await DocumentTemplateService.instance.submitDocument(
+        templateId: _template!['id'] as String,
+        studentId: _studentId,
+        textValues: textValues,
+        generatedPdfBytes: generatedBytes,
+      );
+      final saved = await DocumentTemplateService.instance.getSubmission(templateId: _template!['id'] as String, studentId: _studentId);
       if (!mounted) return;
-      final saved = await ParentDataService.instance.getExistingAcknowledgement(
-        childId: widget.child['id'] as String,
-        applicationId: widget.application?['id'] as String?,
-      );
       setState(() {
-        _existing = saved;
+        _existingSubmission = saved;
         _isSubmitting = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not submit form: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.parentCouldNotSubmitError(e.toString())), backgroundColor: AppColors.error));
+    }
+  }
+
+  Future<void> _viewSubmittedPdf() async {
+    final path = _existingSubmission?['generated_pdf_path'] as String?;
+    if (path == null) return;
+    try {
+      final url = await DocumentTemplateService.instance.getSubmissionSignedUrl(path);
+      if (!mounted) return;
+      Navigator.push(context, MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: url, fileName: 'Acknowledgement Form.pdf')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.parentCouldNotOpenFormError(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(backgroundColor: AppColors.background, body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
-    }
-    if (_existing != null) return _buildSuccessScreen();
-
-    final internship = widget.application?['internships'] as Map?;
-    final name = (widget.child['full_name'] as String?)?.isNotEmpty == true ? widget.child['full_name'] as String : 'Unnamed student';
-
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: const Text('Acknowledgement Form', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+        title: Text(l10n.parentAcknowledgementTitle, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : _loadError != null
+              ? _buildError(_loadError!)
+              : _existingSubmission != null
+                  ? _buildSuccessScreen()
+                  : _buildFillScreen(),
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.primaryLight.withOpacity(0.3))),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.description_outlined, color: AppColors.primary, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text('Parent/Guardian Acknowledgement Form', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text('TARUMT Industrial Training Programme',
-                      style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                  const SizedBox(height: 6),
-                  Text(
-                    'This form acknowledges that you are aware of and consent to your child\'s participation in the industrial training programme.',
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary, height: 1.5),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text('Student information', style: AppTextStyles.label),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-              child: Column(
-                children: [
-                  _ReadOnlyRow(label: 'Student name', value: name),
-                  const Divider(height: 1, indent: 44),
-                  _ReadOnlyRow(label: 'Programme', value: (widget.child['programme'] as String?) ?? 'Not set'),
-                  const Divider(height: 1, indent: 44),
-                  _ReadOnlyRow(label: 'Company', value: (internship?['company_name'] as String?) ?? 'No active internship'),
-                  if (internship?['title'] != null) ...[
-                    const Divider(height: 1, indent: 44),
-                    _ReadOnlyRow(label: 'Role', value: internship!['title'] as String),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text('Parent/Guardian information', style: AppTextStyles.label),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _nameController,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(labelText: 'Full name (as per IC)', hintText: 'e.g. Tan Ah Kow'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _icController,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(labelText: 'IC number', hintText: 'e.g. 700101-01-1234'),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: 'Relationship to student'),
-              value: _relationship,
-              items: ['Father', 'Mother', 'Guardian'].map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13)))).toList(),
-              onChanged: (v) => setState(() => _relationship = v),
-            ),
-            const SizedBox(height: 20),
-            Text('Declaration', style: AppTextStyles.label),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: AppColors.surfaceVariant, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
-              child: Text(
-                'I, as the parent/guardian of the above-named student, hereby acknowledge and consent to my child\'s participation in the TARUMT Industrial Training Programme. I understand that:\n\n'
-                '1. My child will be working at the company stated above for the duration specified.\n\n'
-                '2. The university and company will not be held liable for any personal loss or injury not arising from negligence.\n\n'
-                '3. My child is required to adhere to the company\'s rules, regulations, and code of conduct.\n\n'
-                '4. I may be contacted by the university if my child faces any difficulties during the internship.',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary, height: 1.6),
-              ),
-            ),
+            Icon(Icons.info_outline, size: 48, color: AppColors.textMuted),
             const SizedBox(height: 16),
-            _CheckItem(
-              value: _agreedToTerms,
-              label: 'I have read and understood the declaration above and agree to its terms.',
-              onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
-            ),
-            const SizedBox(height: 8),
-            _CheckItem(
-              value: _confirmedAccuracy,
-              label: 'I confirm that the information I have provided is accurate and complete.',
-              onChanged: (v) => setState(() => _confirmedAccuracy = v ?? false),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _canSubmit && !_isSubmitting ? _submit : null,
-                icon: _isSubmitting ? const SizedBox.shrink() : const Icon(Icons.draw_outlined, size: 18),
-                label: _isSubmitting
-                    ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Sign & Submit'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text('Your digital signature will be recorded with a timestamp.', style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted), textAlign: TextAlign.center),
-            ),
-            const SizedBox(height: 16),
+            Text(message, style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textSecondary), textAlign: TextAlign.center),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSuccessScreen() {
-    final signedAt = DateTime.tryParse(_existing?['signed_at'] as String? ?? '') ?? DateTime.now();
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: const Text('Acknowledgement Form', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
-                child: Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
-              ),
-              const SizedBox(height: 24),
-              Text('Form submitted successfully', style: AppTextStyles.h2, textAlign: TextAlign.center),
-              const SizedBox(height: 10),
-              Text('Your acknowledgement has been recorded.', style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
-              const SizedBox(height: 8),
-              Text('Signed on ${signedAt.day}/${signedAt.month}/${signedAt.year}',
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primary)),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Back to home')),
-              ),
-            ],
+  Widget _buildFillScreen() {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          color: AppColors.infoBg,
+          padding: const EdgeInsets.all(10),
+          child: Text(
+            l10n.parentTapToFillInstruction,
+            style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary),
+            textAlign: TextAlign.center,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ReadOnlyRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _ReadOnlyRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      child: Row(
-        children: [
-          SizedBox(width: 110, child: Text(label, style: AppTextStyles.caption)),
-          Expanded(child: Text(value, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textPrimary))),
-        ],
-      ),
-    );
-  }
-}
-
-class _CheckItem extends StatelessWidget {
-  final bool value;
-  final String label;
-  final ValueChanged<bool?> onChanged;
-
-  const _CheckItem({required this.value, required this.label, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Checkbox(value: value, onChanged: onChanged, activeColor: AppColors.primary, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
-        const SizedBox(width: 4),
         Expanded(
-          child: GestureDetector(
-            onTap: () => onChanged(!value),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 11),
-              child: Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textPrimary, height: 1.4)),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                AspectRatio(
+                  aspectRatio: _pageAspectRatio,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.biggest;
+                      return Stack(
+                        children: [
+                          Image.memory(_pageImage!, width: size.width, height: size.height, fit: BoxFit.fill),
+                          for (final f in _fields) _buildFieldOverlay(f, size),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _canSubmit && !_isSubmitting ? _submit : null,
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                    child: _isSubmitting
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text(l10n.parentSignAndSubmitButton),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(l10n.parentSignatureTimestampNote,
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted), textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFieldOverlay(TemplateField f, Size size) {
+    final rect = Rect.fromLTWH(f.x * size.width, f.y * size.height, f.width * size.width, f.height * size.height);
+    Widget content;
+    switch (f.type) {
+      case 'auto':
+        content = Container(
+          alignment: Alignment.centerLeft,
+          child: Text(_resolveAutoValue(f.key), style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.black), maxLines: 1, overflow: TextOverflow.ellipsis),
+        );
+        break;
+      case 'text':
+        content = TextField(
+          controller: _textControllers[f.key],
+          onChanged: (_) => setState(() {}),
+          style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.black),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
+            border: InputBorder.none,
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.6),
+            hintText: f.label,
+            hintStyle: TextStyle(fontFamily: 'Inter', fontSize: 9, color: AppColors.textMuted),
+          ),
+        );
+        break;
+      case 'date':
+        final selected = _dateValues[f.key];
+        content = GestureDetector(
+          onTap: () => _pickDate(f.key),
+          child: Container(
+            color: Colors.white.withValues(alpha: 0.6),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              selected != null ? _formatDate(selected) : f.label,
+              style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: selected != null ? Colors.black : AppColors.textMuted),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        );
+        break;
+      case 'signature':
+        final signature = _signatureValues[f.key];
+        content = GestureDetector(
+          onTap: () => _captureSignature(f.key),
+          child: Container(
+            decoration: BoxDecoration(border: Border.all(color: AppColors.primary, width: 1), borderRadius: BorderRadius.circular(4)),
+            alignment: Alignment.center,
+            child: signature != null
+                ? Image.memory(signature, fit: BoxFit.contain)
+                : Text(f.label, style: TextStyle(fontFamily: 'Inter', fontSize: 9, color: AppColors.primary), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        );
+        break;
+      default:
+        content = const SizedBox.shrink();
+    }
+    return Positioned(left: rect.left, top: rect.top, width: rect.width, height: rect.height, child: content);
+  }
+
+  Widget _buildSuccessScreen() {
+    final l10n = AppLocalizations.of(context)!;
+    final submittedAt = DateTime.tryParse(_existingSubmission?['submitted_at'] as String? ?? '') ?? DateTime.now();
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
+              child: Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
+            ),
+            const SizedBox(height: 24),
+            Text(l10n.parentFormSubmittedTitle, style: AppTextStyles.h2, textAlign: TextAlign.center),
+            const SizedBox(height: 10),
+            Text(l10n.parentFormSubmittedDescription, style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            Text(l10n.parentSignedOnDate('${submittedAt.day}/${submittedAt.month}/${submittedAt.year}'),
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primary)),
+            const SizedBox(height: 32),
+            SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: _viewSubmittedPdf, icon: const Icon(Icons.picture_as_pdf_outlined, size: 18), label: Text(l10n.parentViewPdfButton))),
+            const SizedBox(height: 12),
+            SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(l10n.parentBackToHomeButton))),
+          ],
+        ),
+      ),
     );
   }
 }

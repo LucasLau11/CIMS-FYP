@@ -4,6 +4,7 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../student/address_picker_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class AdminCompaniesScreen extends StatefulWidget {
   const AdminCompaniesScreen({super.key});
@@ -56,11 +57,12 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final results = _filtered;
     final pendingCount = _companies.where((c) => c['status'] == 'pending').length;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const GradientAppBar(title: 'Companies'),
+      appBar: GradientAppBar(title: l10n.adminCompaniesTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
@@ -72,20 +74,20 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(hintText: 'Search companies...', prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted)),
+                      decoration: InputDecoration(hintText: l10n.adminSearchCompaniesHint, prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted)),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: Row(
                       children: [
-                        Text('${results.length} registered companies', style: AppTextStyles.caption),
+                        Text(l10n.adminRegisteredCompaniesCount(results.length), style: AppTextStyles.caption),
                         const Spacer(),
                         if (pendingCount > 0)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(color: AppColors.warningBg, borderRadius: BorderRadius.circular(6)),
-                            child: Text('$pendingCount pending verification',
+                            child: Text(l10n.adminPendingVerificationCount(pendingCount),
                                 style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.warning)),
                           ),
                       ],
@@ -93,7 +95,7 @@ class _AdminCompaniesScreenState extends State<AdminCompaniesScreen> {
                   ),
                   Expanded(
                     child: results.isEmpty
-                        ? const EmptyState(icon: Icons.business_outlined, title: 'No companies', description: 'Try adjusting your search, or add one.')
+                        ? EmptyState(icon: Icons.business_outlined, title: l10n.adminNoCompaniesTitle, description: l10n.adminNoCompaniesDescription)
                         : ListView.builder(
                             padding: const EdgeInsets.only(bottom: 80),
                             itemCount: results.length,
@@ -135,6 +137,7 @@ class _CompanyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isPending = data['status'] == 'pending';
     final name = data['name'] as String;
     return AccentCard(
@@ -156,13 +159,13 @@ class _CompanyCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                Text('${data['industry'] ?? 'Industry not set'} · ${data['location'] ?? 'Location not set'}', style: AppTextStyles.caption),
+                Text('${data['industry'] ?? l10n.setupIndustryNotSet} · ${data['location'] ?? l10n.adminLocationNotSet}', style: AppTextStyles.caption),
               ],
             ),
           ),
           isPending
-              ? const StatusBadge(label: 'Pending', backgroundColor: Color(0xFFFEF3C7), textColor: Color(0xFFD97706))
-              : const StatusBadge(label: 'Verified', backgroundColor: Color(0xFFE2F6EF), textColor: Color(0xFF1A9E6E)),
+              ? StatusBadge(label: l10n.adminStatusPending, backgroundColor: const Color(0xFFFEF3C7), textColor: const Color(0xFFD97706))
+              : StatusBadge(label: l10n.adminStatusVerified, backgroundColor: const Color(0xFFE2F6EF), textColor: const Color(0xFF1A9E6E)),
         ],
       ),
     );
@@ -190,19 +193,21 @@ class _CompanyDetailScreenState extends State<_CompanyDetailScreen> {
       setState(() => widget.data['status'] = 'verified');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not verify: $e'), backgroundColor: AppColors.error));
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotVerify(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   Future<void> _remove() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Remove company?'),
-        content: Text('This removes ${widget.data['name']} from the registry. This cannot be undone.'),
+        title: Text(l10n.adminRemoveCompanyTitle),
+        content: Text(l10n.adminRemoveCompanyMessage(widget.data['name'] as String)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Remove', style: TextStyle(color: AppColors.error))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.remove, style: TextStyle(color: AppColors.error))),
         ],
       ),
     );
@@ -213,12 +218,14 @@ class _CompanyDetailScreenState extends State<_CompanyDetailScreen> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not remove: $e'), backgroundColor: AppColors.error));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotRemove(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final data = widget.data;
     final name = data['name'] as String;
     return PopScope(
@@ -229,7 +236,7 @@ class _CompanyDetailScreenState extends State<_CompanyDetailScreen> {
         appBar: AppBar(
           backgroundColor: AppColors.primary,
           leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context, _changed)),
-          title: const Text('Company details', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+          title: Text(l10n.adminCompanyDetailsTitle, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
           actions: [
             IconButton(
               icon: const Icon(Icons.edit_outlined, color: Colors.white),
@@ -264,26 +271,26 @@ class _CompanyDetailScreenState extends State<_CompanyDetailScreen> {
                   const SizedBox(height: 10),
                   Text(name, style: AppTextStyles.h2, textAlign: TextAlign.center),
                   const SizedBox(height: 4),
-                  Text((data['industry'] as String?) ?? 'Industry not set', style: AppTextStyles.bodySecondary),
+                  Text((data['industry'] as String?) ?? l10n.setupIndustryNotSet, style: AppTextStyles.bodySecondary),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            Text('Company information', style: AppTextStyles.label),
+            Text(l10n.adminCompanyInformation, style: AppTextStyles.label),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
               child: Column(
                 children: [
-                  _DetailRow(icon: Icons.location_on_outlined, label: 'Location', value: (data['location'] as String?) ?? 'Not set'),
+                  _DetailRow(icon: Icons.location_on_outlined, label: l10n.adminLocationLabel, value: (data['location'] as String?) ?? l10n.notSet),
                   const Divider(height: 1, indent: 44),
-                  _DetailRow(icon: Icons.person_outline, label: 'HR Contact', value: (data['hr_contact_name'] as String?) ?? 'Not set'),
+                  _DetailRow(icon: Icons.person_outline, label: l10n.adminHrContactLabel, value: (data['hr_contact_name'] as String?) ?? l10n.notSet),
                   const Divider(height: 1, indent: 44),
-                  _DetailRow(icon: Icons.email_outlined, label: 'HR Email', value: (data['hr_contact_email'] as String?) ?? 'Not set'),
+                  _DetailRow(icon: Icons.email_outlined, label: l10n.adminHrEmailLabel, value: (data['hr_contact_email'] as String?) ?? l10n.notSet),
                   const Divider(height: 1, indent: 44),
-                  _DetailRow(icon: Icons.phone_outlined, label: 'HR Phone', value: (data['hr_contact_phone'] as String?) ?? 'Not set'),
+                  _DetailRow(icon: Icons.phone_outlined, label: l10n.adminHrPhoneLabel, value: (data['hr_contact_phone'] as String?) ?? l10n.notSet),
                   const Divider(height: 1, indent: 44),
-                  _DetailRow(icon: Icons.verified_outlined, label: 'Status', value: data['status'] == 'verified' ? 'Verified' : 'Pending'),
+                  _DetailRow(icon: Icons.verified_outlined, label: l10n.adminStatusLabel, value: data['status'] == 'verified' ? l10n.adminStatusVerified : l10n.adminStatusPending),
                 ],
               ),
             ),
@@ -291,7 +298,7 @@ class _CompanyDetailScreenState extends State<_CompanyDetailScreen> {
             if (data['status'] == 'pending')
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(onPressed: _verify, icon: const Icon(Icons.check_circle_outline, size: 18), label: const Text('Verify company')),
+                child: ElevatedButton.icon(onPressed: _verify, icon: const Icon(Icons.check_circle_outline, size: 18), label: Text(l10n.adminVerifyCompany)),
               ),
             const SizedBox(height: 10),
             SizedBox(
@@ -299,7 +306,7 @@ class _CompanyDetailScreenState extends State<_CompanyDetailScreen> {
               child: OutlinedButton.icon(
                 onPressed: _remove,
                 icon: Icon(Icons.delete_outline, size: 18, color: AppColors.error),
-                label: Text('Remove company', style: TextStyle(color: AppColors.error)),
+                label: Text(l10n.adminRemoveCompanyButton, style: TextStyle(color: AppColors.error)),
                 style: OutlinedButton.styleFrom(side: BorderSide(color: AppColors.error)),
               ),
             ),
@@ -402,8 +409,9 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Company name is required.'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCompanyNameRequired), backgroundColor: AppColors.error));
       return;
     }
     setState(() => _isSaving = true);
@@ -436,18 +444,19 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotSave(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-        title: Text(isEdit ? 'Edit Company' : 'Add Company',
+        title: Text(isEdit ? l10n.adminEditCompanyTitle : l10n.adminAddCompany,
             style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: SingleChildScrollView(
@@ -455,16 +464,16 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Company information', style: AppTextStyles.label),
+            Text(l10n.adminCompanyInformation, style: AppTextStyles.label),
             const SizedBox(height: 8),
-            TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: 'Company name')),
+            TextFormField(controller: _nameController, decoration: InputDecoration(labelText: l10n.adminCompanyNameLabel)),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: 'Industry'),
+              decoration: InputDecoration(labelText: l10n.adminIndustryLabel),
               value: _useOtherIndustry ? _kOtherIndustryValue : _industry,
               items: [
                 ..._industryOptions.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13)))),
-                const DropdownMenuItem(value: _kOtherIndustryValue, child: Text('Other (type below)', style: TextStyle(fontSize: 13))),
+                DropdownMenuItem(value: _kOtherIndustryValue, child: Text(l10n.adminOtherIndustryOption, style: const TextStyle(fontSize: 13))),
               ],
               onChanged: (v) => setState(() {
                 if (v == _kOtherIndustryValue) {
@@ -478,7 +487,7 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
             ),
             if (_useOtherIndustry) ...[
               const SizedBox(height: 12),
-              TextFormField(controller: _industryOtherController, decoration: const InputDecoration(labelText: 'Industry name')),
+              TextFormField(controller: _industryOtherController, decoration: InputDecoration(labelText: l10n.adminIndustryNameLabel)),
             ],
             const SizedBox(height: 12),
             GestureDetector(
@@ -493,7 +502,7 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        _locationText ?? 'Select location',
+                        _locationText ?? l10n.adminSelectLocation,
                         style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: _locationText != null ? AppColors.textPrimary : AppColors.textMuted),
                       ),
                     ),
@@ -503,13 +512,13 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('HR contact', style: AppTextStyles.label),
+            Text(l10n.adminHrContactSection, style: AppTextStyles.label),
             const SizedBox(height: 8),
-            TextFormField(controller: _hrNameController, decoration: const InputDecoration(labelText: 'HR contact name')),
+            TextFormField(controller: _hrNameController, decoration: InputDecoration(labelText: l10n.adminHrContactNameLabel)),
             const SizedBox(height: 12),
-            TextFormField(controller: _hrEmailController, decoration: const InputDecoration(labelText: 'HR email')),
+            TextFormField(controller: _hrEmailController, decoration: InputDecoration(labelText: l10n.adminHrEmailFieldLabel)),
             const SizedBox(height: 12),
-            TextFormField(controller: _hrPhoneController, decoration: const InputDecoration(labelText: 'HR phone number')),
+            TextFormField(controller: _hrPhoneController, decoration: InputDecoration(labelText: l10n.adminHrPhoneNumberLabel)),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -517,7 +526,7 @@ class _AddEditCompanyScreenState extends State<_AddEditCompanyScreen> {
                 onPressed: _isSaving ? null : _save,
                 child: _isSaving
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text(isEdit ? 'Save changes' : 'Add company'),
+                    : Text(isEdit ? l10n.hrSaveChanges : l10n.adminAddCompany),
               ),
             ),
           ],

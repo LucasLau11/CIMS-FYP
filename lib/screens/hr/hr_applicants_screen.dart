@@ -183,7 +183,7 @@ class _ApplicantCard extends StatelessWidget {
             children: [
               Icon(Icons.calendar_today_outlined, size: 12, color: AppColors.textMuted),
               const SizedBox(width: 4),
-              Text(l10n.hrAppliedAgo(timeAgo(DateTime.parse(data['applied_at'] as String))), style: AppTextStyles.caption),
+              Text(l10n.hrAppliedAgo(timeAgo(context, DateTime.parse(data['applied_at'] as String))), style: AppTextStyles.caption),
             ],
           ),
         ],
@@ -337,7 +337,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text((data['internship_title'] as String?) ?? '', style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600)),
-                      Text(l10n.hrAppliedAgo(timeAgo(DateTime.parse(data['applied_at'] as String))), style: AppTextStyles.caption),
+                      Text(l10n.hrAppliedAgo(timeAgo(context, DateTime.parse(data['applied_at'] as String))), style: AppTextStyles.caption),
                     ],
                   ),
                 ),

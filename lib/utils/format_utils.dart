@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import '../widgets/common/shared_widgets.dart';
 
-/// Human-readable "time ago" string (e.g. "2 hours ago", "3 days ago").
-String timeAgo(DateTime dateTime) {
+/// Human-readable, locale-aware "time ago" string (e.g. "2 hours ago").
+String timeAgo(BuildContext context, DateTime dateTime) {
+  final l10n = AppLocalizations.of(context)!;
   final diff = DateTime.now().difference(dateTime);
-  if (diff.inSeconds < 60) return 'Just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} minute${diff.inMinutes == 1 ? '' : 's'} ago';
-  if (diff.inHours < 24) return '${diff.inHours} hour${diff.inHours == 1 ? '' : 's'} ago';
-  if (diff.inDays < 7) return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
-  if (diff.inDays < 30) {
-    final weeks = (diff.inDays / 7).floor();
-    return '$weeks week${weeks == 1 ? '' : 's'} ago';
-  }
+  if (diff.inSeconds < 60) return l10n.justNow;
+  if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
+  if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
+  if (diff.inDays < 30) return l10n.weeksAgo((diff.inDays / 7).floor());
   final months = (diff.inDays / 30).floor();
-  if (months < 12) return '$months month${months == 1 ? '' : 's'} ago';
-  final years = (diff.inDays / 365).floor();
-  return '$years year${years == 1 ? '' : 's'} ago';
+  if (months < 12) return l10n.monthsAgo(months);
+  return l10n.yearsAgo((diff.inDays / 365).floor());
 }
 
 /// Deterministic single-letter logo + color for a company/person name, so
@@ -73,8 +72,39 @@ IconData notificationIcon(String type) {
       return Icons.description_outlined;
     case 'message':
       return Icons.chat_bubble_outline;
+    case 'parent_link':
+      return Icons.family_restroom_outlined;
     default:
       return Icons.info_outline;
+  }
+}
+
+/// English label for an `applications.status` value, for the (currently
+/// unlocalized) parent screens. Student screens build their own badges
+/// per-card since they're already wired to AppLocalizations.
+String applicationStatusLabel(String status) {
+  switch (status) {
+    case 'active':
+      return 'Active';
+    case 'interview':
+      return 'Interview Scheduled';
+    case 'rejected':
+      return 'Not Selected';
+    default:
+      return 'Pending Review';
+  }
+}
+
+StatusBadge applicationStatusBadge(BuildContext context, String status) {
+  switch (status) {
+    case 'active':
+      return StatusBadge.active(context);
+    case 'rejected':
+      return StatusBadge.rejected(context);
+    case 'interview':
+      return const StatusBadge(label: 'Interview', backgroundColor: Color(0xFFFEF3C7), textColor: Color(0xFFD97706));
+    default:
+      return StatusBadge.pending(context);
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import 'admin/admin_dashboard_screen.dart';
 import 'admin/admin_students_screen.dart';
@@ -40,6 +41,7 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screens = [
       AdminDashboardScreen(key: ValueKey('dashboard-$_dashboardRefreshKey')),
       AdminStudentsScreen(key: ValueKey('students-$_studentsRefreshKey')),
@@ -65,31 +67,31 @@ class _AdminShellState extends State<AdminShell> {
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
+              icon: const Icon(Icons.dashboard_outlined),
+              activeIcon: const Icon(Icons.dashboard),
+              label: l10n.dashboard,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.school_outlined),
-              activeIcon: Icon(Icons.school),
-              label: 'Students',
+              icon: const Icon(Icons.school_outlined),
+              activeIcon: const Icon(Icons.school),
+              label: l10n.adminStudentsTitle,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.business_outlined),
-              activeIcon: Icon(Icons.business),
-              label: 'Companies',
+              icon: const Icon(Icons.business_outlined),
+              activeIcon: const Icon(Icons.business),
+              label: l10n.adminCompaniesTitle,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.supervisor_account_outlined),
-              activeIcon: Icon(Icons.supervisor_account),
-              label: 'Supervisors',
+              icon: const Icon(Icons.supervisor_account_outlined),
+              activeIcon: const Icon(Icons.supervisor_account),
+              label: l10n.adminSupervisorsTitle,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.menu_outlined),
-              activeIcon: Icon(Icons.menu),
-              label: 'More',
+              icon: const Icon(Icons.menu_outlined),
+              activeIcon: const Icon(Icons.menu),
+              label: l10n.adminMoreTitle,
             ),
           ],
         ),

@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../../l10n/app_localizations.dart';
 import 'student_interview_screen.dart';
 
 class StudentApplicationsScreen extends StatefulWidget {
@@ -48,17 +49,17 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
   }
 
   Future<void> _withdraw(Map<String, dynamic> application) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Withdraw application?'),
-        content: Text(
-            'You will be able to re-apply to ${(application['internships'] as Map)['title']} later if you change your mind.'),
+        title: Text(l10n.withdrawApplicationTitle),
+        content: Text(l10n.withdrawApplicationMessage((application['internships'] as Map)['title'] as String)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Withdraw', style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.withdraw, style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -71,11 +72,12 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not withdraw: $e'), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.errorCouldNotWithdraw(e.toString())), backgroundColor: AppColors.error));
     }
   }
 
   void _showDetails(Map<String, dynamic> application) {
+    final l10n = AppLocalizations.of(context)!;
     final internship = application['internships'] as Map;
     final skills = (application['skills'] as List?)?.cast<String>() ?? [];
     final coverLetter = application['cover_letter'] as String?;
@@ -95,10 +97,10 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
             Text(internship['title'] as String, style: AppTextStyles.h3),
             Text('${internship['company_name']} · ${internship['location']}', style: AppTextStyles.bodySecondary),
             const SizedBox(height: 16),
-            Text('COVER LETTER', style: AppTextStyles.label),
+            Text(l10n.coverLetterLabel, style: AppTextStyles.label),
             const SizedBox(height: 6),
             Text(
-              coverLetter?.isNotEmpty == true ? coverLetter! : 'No cover letter provided',
+              coverLetter?.isNotEmpty == true ? coverLetter! : l10n.noCoverLetterProvided,
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 13,
@@ -106,7 +108,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
               ),
             ),
             const SizedBox(height: 16),
-            Text('SKILLS', style: AppTextStyles.label),
+            Text(l10n.skillsLabel, style: AppTextStyles.label),
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,
@@ -122,7 +124,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                   .toList(),
             ),
             const SizedBox(height: 16),
-            Text('Applied ${timeAgo(DateTime.parse(application['applied_at'] as String))}',
+            Text(l10n.hrAppliedAgo(timeAgo(context, DateTime.parse(application['applied_at'] as String))),
                 style: AppTextStyles.caption),
           ],
         ),
@@ -140,9 +142,10 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const GradientAppBar(title: 'My applications'),
+      appBar: GradientAppBar(title: l10n.myApplications),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
@@ -155,19 +158,22 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     child: Row(
                       children: [
-                        _SummaryPill(label: 'Total', value: '${_applications.length}', color: AppColors.primary),
+                        _SummaryPill(label: l10n.total, value: '${_applications.length}', color: AppColors.primary),
                         const SizedBox(width: 8),
-                        _SummaryPill(label: 'Active', value: '${_countByStatus('active')}', color: AppColors.success),
-                        const SizedBox(width: 8),
-                        _SummaryPill(
-                            label: 'Interview', value: '${_countByStatus('interview')}', color: AppColors.warning),
+                        _SummaryPill(label: l10n.active, value: '${_countByStatus('active')}', color: AppColors.success),
                         const SizedBox(width: 8),
                         _SummaryPill(
-                            label: 'Pending', value: '${_countByStatus('pending')}', color: AppColors.primaryLight),
+                            label: l10n.interview, value: '${_countByStatus('interview')}', color: AppColors.warning),
+                        const SizedBox(width: 8),
+                        _SummaryPill(
+                            label: l10n.pending, value: '${_countByStatus('pending')}', color: AppColors.primaryLight),
                       ],
                     ),
                   ),
-                  // Tab bar
+                  // Tab bar. Note: the internal filter keys below ('All',
+                  // 'Pending', etc, used by _filtered()) are deliberately
+                  // NOT localized — they're identifiers, not display text.
+                  // Only the visible Tab labels use l10n.
                   Container(
                     color: AppColors.surface,
                     child: TabBar(
@@ -177,12 +183,12 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                       indicatorColor: AppColors.primary,
                       indicatorWeight: 2,
                       labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600),
-                      tabs: const [
-                        Tab(text: 'All'),
-                        Tab(text: 'Pending'),
-                        Tab(text: 'Interview'),
-                        Tab(text: 'Active'),
-                        Tab(text: 'Rejected'),
+                      tabs: [
+                        Tab(text: l10n.tabAll),
+                        Tab(text: l10n.pending),
+                        Tab(text: l10n.interview),
+                        Tab(text: l10n.active),
+                        Tab(text: l10n.rejected),
                       ],
                     ),
                   ),
@@ -192,10 +198,10 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                       children: ['All', 'Pending', 'Interview', 'Active', 'Rejected'].map((tab) {
                         final items = _filtered(tab);
                         if (items.isEmpty) {
-                          return const EmptyState(
+                          return EmptyState(
                             icon: Icons.work_outline,
-                            title: 'No applications here',
-                            description: 'Applications in this category will appear here.',
+                            title: l10n.noApplicationsHere,
+                            description: l10n.applicationsAppearHere,
                           );
                         }
                         return ListView.builder(
@@ -265,22 +271,23 @@ class _ApplicationCard extends StatelessWidget {
     }
   }
 
-  StatusBadge get _badge {
+  StatusBadge _badge(BuildContext context, AppLocalizations l10n) {
     switch (data['status']) {
       case 'active':
-        return StatusBadge.active();
+        return StatusBadge.active(context);
       case 'interview':
-        return const StatusBadge(
-            label: 'Interview', backgroundColor: Color(0xFFFEF3C7), textColor: Color(0xFFD97706));
+        return StatusBadge(
+            label: l10n.interview, backgroundColor: const Color(0xFFFEF3C7), textColor: const Color(0xFFD97706));
       case 'rejected':
-        return StatusBadge.rejected();
+        return StatusBadge.rejected(context);
       default:
-        return StatusBadge.pending();
+        return StatusBadge.pending(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final internship = data['internships'] as Map;
     final companyName = internship['company_name'] as String;
     final appliedAt = DateTime.parse(data['applied_at'] as String);
@@ -317,7 +324,7 @@ class _ApplicationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _badge,
+              _badge(context, l10n),
             ],
           ),
           const SizedBox(height: 10),
@@ -329,7 +336,7 @@ class _ApplicationCard extends StatelessWidget {
                 child: _MetaItem(icon: Icons.location_on_outlined, label: internship['location'] as String),
               ),
               const SizedBox(width: 14),
-              _MetaItem(icon: Icons.calendar_today_outlined, label: 'Applied ${timeAgo(appliedAt)}'),
+              _MetaItem(icon: Icons.calendar_today_outlined, label: l10n.hrAppliedAgo(timeAgo(context, appliedAt))),
             ],
           ),
           if (interviewAt != null) ...[
@@ -344,7 +351,7 @@ class _ApplicationCard extends StatelessWidget {
                     Icon(Icons.videocam_outlined, size: 15, color: AppColors.warning),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text('Interview scheduled: ${interviewAt.toString()}',
+                      child: Text(l10n.hrInterviewScheduledColon(interviewAt.toString()),
                           style: TextStyle(
                               fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warning)),
                     ),
@@ -362,7 +369,7 @@ class _ApplicationCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onWithdraw,
                     icon: Icon(Icons.cancel_outlined, size: 15, color: AppColors.error),
-                    label: Text('Withdraw', style: TextStyle(color: AppColors.error)),
+                    label: Text(l10n.withdraw, style: TextStyle(color: AppColors.error)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       textStyle: const TextStyle(fontSize: 12),

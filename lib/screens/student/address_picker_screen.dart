@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart' as latlng;
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import '../../theme/app_theme.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Result returned when the user confirms a location.
 class PickedAddress {
@@ -115,12 +116,13 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _searchResults = [];
         _isSearching = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Address search failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorAddressSearchFailed(e.toString())), backgroundColor: AppColors.error),
       );
     }
   }
@@ -142,6 +144,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
   // after picking a search result (or taps the map directly).
   // ---------------------------------------------------------------------
   Future<void> _resolveAddress(latlng.LatLng point) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isResolvingAddress = true);
     try {
       final placemarks = await placemarkFromCoordinates(point.latitude, point.longitude);
@@ -162,14 +165,14 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
         });
       } else {
         setState(() {
-          _resolvedAddress = 'Unknown location (${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)})';
+          _resolvedAddress = l10n.unknownLocationCoords(point.latitude.toStringAsFixed(5), point.longitude.toStringAsFixed(5));
           _isResolvingAddress = false;
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _resolvedAddress = 'Could not resolve address for this location.';
+        _resolvedAddress = l10n.errorCouldNotResolveAddress;
         _isResolvingAddress = false;
       });
     }
@@ -194,10 +197,11 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select your address',
-            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+        title: Text(l10n.selectYourAddress,
+            style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -251,7 +255,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                     controller: _searchController,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Search for your address...',
+                      hintText: l10n.searchForYourAddressHint,
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
@@ -324,7 +328,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Search above, or tap the map to fine-tune the pin',
+                  Text(l10n.mapSearchOrTapHint,
                       style: TextStyle(
                           fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
                   const SizedBox(height: 8),
@@ -334,8 +338,8 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _isResolvingAddress
-                            ? const Text('Resolving address...',
-                            style: TextStyle(fontFamily: 'Inter', fontSize: 13))
+                            ? Text(l10n.resolvingAddress,
+                            style: const TextStyle(fontFamily: 'Inter', fontSize: 13))
                             : Text(
                           _resolvedAddress ?? '',
                           style: const TextStyle(
@@ -351,7 +355,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _isResolvingAddress ? null : _confirm,
-                      child: const Text('Confirm this address'),
+                      child: Text(l10n.confirmThisAddress),
                     ),
                   ),
                 ],

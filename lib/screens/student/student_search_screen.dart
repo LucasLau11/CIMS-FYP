@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
@@ -49,8 +50,9 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
       });
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _error = 'Could not load internships: $e';
+        _error = l10n.errorLoadInternships(e.toString());
         _isLoading = false;
       });
     }
@@ -87,11 +89,12 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final results = _filtered;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(
-        title: 'Search internships',
+        title: l10n.searchInternships,
         actions: [
           IconButton(
             icon: const Icon(Icons.tune, color: Colors.white),
@@ -104,9 +107,9 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
           : _error != null
               ? EmptyState(
                   icon: Icons.error_outline,
-                  title: 'Something went wrong',
+                  title: l10n.titleSomethingWentWrong,
                   description: _error!,
-                  buttonLabel: 'Retry',
+                  buttonLabel: l10n.retry,
                   onButton: _load,
                 )
               : RefreshIndicator(
@@ -119,7 +122,7 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            hintText: 'Search by role, company, or skill...',
+                            hintText: l10n.searchByRoleCompanySkillHint,
                             prefixIcon: Icon(Icons.search, color: AppColors.textMuted, size: 20),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
@@ -168,7 +171,7 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                         child: Row(
                           children: [
-                            Text('${results.length} opportunities found', style: AppTextStyles.caption),
+                            Text(l10n.opportunitiesFoundCount(results.length), style: AppTextStyles.caption),
                           ],
                         ),
                       ),
@@ -176,10 +179,10 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
                       // Listing
                       Expanded(
                         child: results.isEmpty
-                            ? const EmptyState(
+                            ? EmptyState(
                                 icon: Icons.search_off,
-                                title: 'No matches',
-                                description: 'Try adjusting your search or filters.',
+                                title: l10n.noMatches,
+                                description: l10n.tryAdjustingSearchFilters,
                               )
                             : ListView.builder(
                                 padding: const EdgeInsets.only(bottom: 16),
@@ -242,6 +245,7 @@ class _InternshipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final companyName = data['company_name'] as String;
     final postedAt = DateTime.parse(data['posted_at'] as String);
     final skills = (data['required_skills'] as List).cast<String>();
@@ -290,13 +294,13 @@ class _InternshipCard extends StatelessWidget {
               ),
               if (applied)
                 StatusBadge(
-                  label: 'Applied',
+                  label: l10n.stepApplied,
                   backgroundColor: AppColors.successBg,
                   textColor: AppColors.success,
                 ),
               if ((data['companies'] as Map<String, dynamic>?)?['status'] != 'verified')
                 StatusBadge(
-                  label: 'Pending verification',
+                  label: l10n.pendingVerification,
                   backgroundColor: AppColors.warningBg,
                   textColor: AppColors.warning,
                 ),
@@ -334,7 +338,7 @@ class _InternshipCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Text(timeAgo(postedAt), style: AppTextStyles.caption),
+              Text(timeAgo(context, postedAt), style: AppTextStyles.caption),
               const Spacer(),
               if (!applied)
                 ElevatedButton(
@@ -344,7 +348,7 @@ class _InternshipCard extends StatelessWidget {
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text('View details', style: TextStyle(fontSize: 13)),
+                  child: Text(l10n.viewDetails, style: const TextStyle(fontSize: 13)),
                 ),
             ],
           ),
@@ -433,6 +437,7 @@ class _FilterSheetState extends State<_FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -441,7 +446,7 @@ class _FilterSheetState extends State<_FilterSheet> {
         children: [
           Row(
             children: [
-              Text('Filters', style: AppTextStyles.h3),
+              Text(l10n.filters, style: AppTextStyles.h3),
               const Spacer(),
               TextButton(
                 onPressed: () => setState(() {
@@ -451,21 +456,27 @@ class _FilterSheetState extends State<_FilterSheet> {
                   _minController.clear();
                   _maxController.text = '5000';
                 }),
-                child: Text('Reset', style: TextStyle(color: AppColors.textSecondary)),
+                child: Text(l10n.reset, style: TextStyle(color: AppColors.textSecondary)),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Text('Location', style: AppTextStyles.label),
+          Text(l10n.hrLocation, style: AppTextStyles.label),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             decoration: const InputDecoration(),
+            isExpanded: true,
             value: _location,
-            items: widget.locations.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            items: widget.locations
+                .map((e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e, overflow: TextOverflow.ellipsis, maxLines: 1),
+                    ))
+                .toList(),
             onChanged: (v) => setState(() => _location = v!),
           ),
           const SizedBox(height: 16),
-          Text('Allowance range', style: AppTextStyles.label),
+          Text(l10n.allowanceRange, style: AppTextStyles.label),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -473,8 +484,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                 child: TextFormField(
                   controller: _minController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Min allowance (RM)',
+                  decoration: InputDecoration(
+                    labelText: l10n.minAllowanceLabel,
                   ),
                   onChanged: (_) => _updateRange(),
                 ),
@@ -484,8 +495,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                 child: TextFormField(
                   controller: _maxController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Max allowance (RM)',
+                  decoration: InputDecoration(
+                    labelText: l10n.maxAllowanceLabel,
                   ),
                   onChanged: (_) => _updateRange(),
                 ),
@@ -493,7 +504,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          Text('Duration', style: AppTextStyles.label),
+          Text(l10n.hrDuration, style: AppTextStyles.label),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -515,7 +526,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 widget.onApply(_location, _duration, _range);
                 Navigator.pop(context);
               },
-              child: const Text('Apply filters'),
+              child: Text(l10n.applyFilters),
             ),
           ),
           const SizedBox(height: 8),

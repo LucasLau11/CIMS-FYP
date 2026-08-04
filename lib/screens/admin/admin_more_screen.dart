@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 import '../login_screen.dart';
 import '../student/student_messages_screen.dart' show StudentMessagesScreen;
 import '../student/student_notifications_screen.dart' show StudentNotificationsScreen;
+import 'admin_document_templates_screen.dart';
 import 'admin_monitor_screen.dart';
 import 'admin_profile_screen.dart';
 
@@ -21,11 +21,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
   String _email = '';
   String _selectedThemeCode = 'system';
   String _selectedLanguage = 'English';
-  File? _localPreviewImage;
-  String? _avatarUrl;
-  bool _isUploadingAvatar = false;
   bool _isChangingPassword = false;
-  static const List<String> _allowedImageExtensions = ['.jpg', '.jpeg', '.png'];
   final Map<String, bool> _notificationPrefs = {
     'application_updates': true,
     'report_deadlines': true,
@@ -55,130 +51,14 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
         _email = profile?['email'] as String? ?? '';
         _selectedThemeCode = profile?['theme_mode'] as String? ?? 'system';
         _selectedLanguage = profile?['language'] as String? ?? 'English';
-        _avatarUrl = profile?['avatar_url'] as String?;
       });
     } catch (_) {
       // Non-fatal — falls back to the known admin email.
     }
   }
 
-  Future<void> _pickProfileImage(ImageSource source) async {
-    try {
-      final picked = await ImagePicker().pickImage(source: source, imageQuality: 80, maxWidth: 800);
-      if (picked == null) return;
-
-      final lowerPath = picked.path.toLowerCase();
-      if (!_allowedImageExtensions.any((ext) => lowerPath.endsWith(ext))) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Unsupported file format. Please upload a JPG, JPEG, or PNG image.'), backgroundColor: AppColors.error),
-        );
-        return;
-      }
-
-      final file = File(picked.path);
-      final exists = await file.exists();
-      final size = exists ? await file.length() : 0;
-      if (!exists || size == 0) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(exists ? 'The selected photo is empty (0 bytes). Try a different photo.' : 'The selected photo could not be found on disk.'), backgroundColor: AppColors.error),
-        );
-        return;
-      }
-
-      setState(() {
-        _localPreviewImage = file;
-        _isUploadingAvatar = true;
-      });
-
-      try {
-        final uploadedUrl = await AuthService.instance.uploadAvatar(file);
-        if (!mounted) return;
-        setState(() {
-          _avatarUrl = uploadedUrl;
-          _localPreviewImage = null;
-          _isUploadingAvatar = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo updated'), backgroundColor: AppColors.primary),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _localPreviewImage = null;
-          _isUploadingAvatar = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppColors.error));
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not access ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e')));
-    }
-  }
-
-  Future<void> _removePhoto() async {
-    setState(() => _isUploadingAvatar = true);
-    try {
-      await AuthService.instance.removeAvatar();
-      if (!mounted) return;
-      setState(() {
-        _avatarUrl = null;
-        _localPreviewImage = null;
-        _isUploadingAvatar = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isUploadingAvatar = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not remove photo: $e'), backgroundColor: AppColors.error));
-    }
-  }
-
-  void _showPhotoOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Align(alignment: Alignment.centerLeft, child: Text('Update photo', style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700))),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
-              title: const Text('Take photo'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _pickProfileImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
-              title: const Text('Choose from gallery'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _pickProfileImage(ImageSource.gallery);
-              },
-            ),
-            if (_avatarUrl != null || _localPreviewImage != null)
-              ListTile(
-                leading: Icon(Icons.delete_outline, color: AppColors.error),
-                title: Text('Remove photo', style: TextStyle(color: AppColors.error)),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _removePhoto();
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showChangePasswordDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final currentController = TextEditingController();
     final newController = TextEditingController();
     final confirmController = TextEditingController();
@@ -193,7 +73,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Change password', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+              title: Text(l10n.changePassword, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -203,7 +83,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                       controller: currentController,
                       obscureText: obscureCurrent,
                       decoration: InputDecoration(
-                        labelText: 'Current password',
+                        labelText: l10n.currentPassword,
                         suffixIcon: IconButton(
                           icon: Icon(obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
                           onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
@@ -215,7 +95,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                       controller: newController,
                       obscureText: obscureNew,
                       decoration: InputDecoration(
-                        labelText: 'New password',
+                        labelText: l10n.newPassword,
                         suffixIcon: IconButton(
                           icon: Icon(obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
                           onPressed: () => setDialogState(() => obscureNew = !obscureNew),
@@ -227,7 +107,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                       controller: confirmController,
                       obscureText: obscureConfirm,
                       decoration: InputDecoration(
-                        labelText: 'Confirm new password',
+                        labelText: l10n.confirmNewPassword,
                         suffixIcon: IconButton(
                           icon: Icon(obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
                           onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
@@ -242,13 +122,13 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: _isChangingPassword ? null : () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+                TextButton(onPressed: _isChangingPassword ? null : () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
                 ElevatedButton(
                   onPressed: _isChangingPassword
                       ? null
                       : () async {
                           if (currentController.text.isEmpty) {
-                            setDialogState(() => errorText = 'Enter your current password.');
+                            setDialogState(() => errorText = l10n.adminEnterCurrentPassword);
                             return;
                           }
                           final strengthError = AuthService.instance.validatePassword(newController.text);
@@ -257,7 +137,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                             return;
                           }
                           if (newController.text != confirmController.text) {
-                            setDialogState(() => errorText = 'New passwords do not match.');
+                            setDialogState(() => errorText = l10n.adminNewPasswordsDoNotMatch);
                             return;
                           }
                           setDialogState(() {
@@ -270,7 +150,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                             Navigator.pop(dialogContext);
                             setState(() => _isChangingPassword = false);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Password changed'), backgroundColor: AppColors.primary),
+                              SnackBar(content: Text(l10n.adminPasswordChanged), backgroundColor: AppColors.primary),
                             );
                           } catch (e) {
                             setDialogState(() {
@@ -281,7 +161,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                         },
                   child: _isChangingPassword
                       ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Change'),
+                      : Text(l10n.change),
                 ),
               ],
             );
@@ -292,12 +172,13 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
   }
 
   void _showLanguagePicker() {
+    final l10n = AppLocalizations.of(context)!;
     const languages = ['English', 'Bahasa Malaysia', '中文'];
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Select language', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+          title: Text(l10n.profileSelectLanguage, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: languages.map((lang) {
@@ -314,30 +195,34 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                     await AuthService.instance.updateLanguage(val!);
                   } catch (e) {
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save language: $e'), backgroundColor: AppColors.error));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotSaveLanguage(e.toString())), backgroundColor: AppColors.error));
                   }
                 },
               );
             }).toList(),
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.cancel))],
         );
       },
     );
   }
 
-  String get _themeLabel => switch (_selectedThemeCode) {
-        'light' => 'Light',
-        'dark' => 'Dark',
-        _ => 'System',
-      };
+  String get _themeLabel {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (_selectedThemeCode) {
+      'light' => l10n.themeLight,
+      'dark' => l10n.themeDark,
+      _ => l10n.themeSystem,
+    };
+  }
 
   void _showNotificationPreferences() {
-    const labels = {
-      'application_updates': 'Application & applicant updates',
-      'report_deadlines': 'Report & document reviews',
-      'messages': 'Messages',
-      'supervisor_feedback': 'Evaluation reminders',
+    final l10n = AppLocalizations.of(context)!;
+    final labels = {
+      'application_updates': l10n.profileApplicationApplicantUpdates,
+      'report_deadlines': l10n.profileReportDocumentReviews,
+      'messages': l10n.profileMessages,
+      'supervisor_feedback': l10n.profileEvaluationReminders,
     };
     showModalBottomSheet(
       context: context,
@@ -353,9 +238,9 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Notification preferences', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text(l10n.notificationPreferences, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
-                    Text('Choose what you want to be notified about', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+                    Text(l10n.profileChooseWhatToBeNotified, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
                     const SizedBox(height: 12),
                     ..._notificationPrefs.keys.map((key) {
                       return SwitchListTile(
@@ -379,16 +264,16 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                             if (!sheetContext.mounted) return;
                             Navigator.pop(sheetContext);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Notification preferences updated'), backgroundColor: AppColors.primary),
+                              SnackBar(content: Text(l10n.profileNotificationPrefsUpdated), backgroundColor: AppColors.primary),
                             );
                           } catch (e) {
                             if (!sheetContext.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error),
+                              SnackBar(content: Text(l10n.adminCouldNotSave(e.toString())), backgroundColor: AppColors.error),
                             );
                           }
                         },
-                        child: const Text('Save'),
+                        child: Text(l10n.save),
                       ),
                     ),
                   ],
@@ -402,12 +287,13 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
   }
 
   void _showThemePicker() {
-    const options = {'light': 'Light', 'dark': 'Dark', 'system': 'System'};
+    final l10n = AppLocalizations.of(context)!;
+    final options = {'light': l10n.themeLight, 'dark': l10n.themeDark, 'system': l10n.themeSystem};
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Select theme', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+          title: Text(l10n.selectTheme, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: options.entries.map((entry) {
@@ -425,7 +311,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not save theme: $e'), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(l10n.errorCouldNotSaveTheme(e.toString())), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -433,7 +319,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
             }).toList(),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
           ],
         );
       },
@@ -441,14 +327,15 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
   }
 
   Future<void> _logOut() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Log out?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
-        content: const Text('You will need to log in again to access the admin console.', style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
+        title: Text(l10n.logOutConfirmTitle, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+        content: Text(l10n.adminLogOutConfirmMessage, style: const TextStyle(fontFamily: 'Inter', fontSize: 13)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text('Log out', style: TextStyle(color: AppColors.error))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(l10n.logOut, style: TextStyle(color: AppColors.error))),
         ],
       ),
     );
@@ -461,9 +348,10 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const GradientAppBar(title: 'More'),
+      appBar: GradientAppBar(title: l10n.adminMoreTitle),
       body: ListView(
         padding: const EdgeInsets.only(top: 8, bottom: 24),
         children: [
@@ -487,7 +375,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('System Administrator', style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                        Text(l10n.adminSystemAdministrator, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
                         Text(_email, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white70)),
                       ],
                     ),
@@ -497,67 +385,67 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
               ),
             ),
           ),
-          const SectionHeader(title: 'Oversight'),
+          SectionHeader(title: l10n.adminSectionOversight),
           _MenuTile(
             icon: Icons.monitor_heart_outlined,
-            label: 'Monitor',
-            subtitle: 'Student progress, reports & documents',
+            label: l10n.adminMonitorTitle,
+            subtitle: l10n.adminMonitorSubtitle,
             color: AppColors.primary,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMonitorScreen())),
           ),
-          const SectionHeader(title: 'Communication'),
+          _MenuTile(
+            icon: Icons.description_outlined,
+            label: l10n.adminDocumentTemplatesTitle,
+            subtitle: l10n.adminDocumentTemplatesSubtitle,
+            color: AppColors.primary,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDocumentTemplatesScreen())),
+          ),
+          SectionHeader(title: l10n.adminSectionCommunication),
           _MenuTile(
             icon: Icons.send_outlined,
-            label: 'Messages',
-            subtitle: 'Message students, supervisors, or companies',
+            label: l10n.profileMessages,
+            subtitle: l10n.adminMessagesSubtitle,
             color: AppColors.primary,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentMessagesScreen())),
           ),
           _MenuTile(
             icon: Icons.notifications_outlined,
-            label: 'Notifications',
-            subtitle: 'View system alerts and updates',
+            label: l10n.adminNotifications,
+            subtitle: l10n.adminNotificationsSubtitle,
             color: AppColors.warning,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentNotificationsScreen())),
           ),
-          const SectionHeader(title: 'Preferences'),
-          _MenuTile(
-            icon: Icons.camera_alt_outlined,
-            label: 'Profile photo',
-            subtitle: 'Update or remove your profile photo',
-            color: AppColors.primary,
-            onTap: _isUploadingAvatar ? () {} : _showPhotoOptions,
-          ),
+          SectionHeader(title: l10n.adminSectionPreferences),
           _MenuTile(
             icon: Icons.lock_outline,
-            label: 'Change password',
+            label: l10n.changePassword,
             subtitle: null,
             color: AppColors.primary,
             onTap: _showChangePasswordDialog,
           ),
           _MenuTile(
             icon: Icons.notifications_active_outlined,
-            label: 'Notification preferences',
-            subtitle: 'Choose what you get notified about',
+            label: l10n.notificationPreferences,
+            subtitle: l10n.adminNotifPrefsSubtitle,
             color: AppColors.primary,
             onTap: _showNotificationPreferences,
           ),
           _MenuTile(
             icon: Icons.language_outlined,
-            label: 'Language',
+            label: l10n.language,
             subtitle: _selectedLanguage,
             color: AppColors.primary,
             onTap: _showLanguagePicker,
           ),
           _MenuTile(
             icon: Icons.dark_mode_outlined,
-            label: 'Theme',
+            label: l10n.theme,
             subtitle: _themeLabel,
             color: AppColors.primary,
             onTap: _showThemePicker,
           ),
-          const SectionHeader(title: 'System'),
-          _MenuTile(icon: Icons.logout, label: 'Log out', subtitle: null, color: AppColors.error, isDestructive: true, onTap: _logOut),
+          SectionHeader(title: l10n.adminSectionSystem),
+          _MenuTile(icon: Icons.logout, label: l10n.logOut, subtitle: null, color: AppColors.error, isDestructive: true, onTap: _logOut),
         ],
       ),
     );

@@ -208,7 +208,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(6)),
-                                  child: Text(timeAgo(DateTime.parse(a['interview_at'] as String)),
+                                  child: Text(timeAgo(context, DateTime.parse(a['interview_at'] as String)),
                                       style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary)),
                                 ),
                               ],

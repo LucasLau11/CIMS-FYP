@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
@@ -47,20 +48,31 @@ class _StudentNotificationsScreenState extends State<StudentNotificationsScreen>
     _load();
   }
 
+  Future<void> _respondToParentLink(Map<String, dynamic> notification, bool approve) async {
+    await StudentDataService.instance.respondToParentLinkRequest(
+      requestId: notification['related_id'] as String,
+      approve: approve,
+    );
+    await StudentDataService.instance.markNotificationRead(notification['id'] as String);
+    if (!mounted) return;
+    _load();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final unread = _notifications.where((n) => n['read'] == false).toList();
     final read = _notifications.where((n) => n['read'] == true).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(
-        title: 'Notifications',
+        title: l10n.notifications,
         actions: [
           if (unread.isNotEmpty)
             TextButton(
               onPressed: _markAllRead,
-              child: const Text('Mark all read', style: TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'Inter')),
+              child: Text(l10n.markAllRead, style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'Inter')),
             ),
         ],
       ),
@@ -70,11 +82,11 @@ class _StudentNotificationsScreenState extends State<StudentNotificationsScreen>
               onRefresh: _load,
               child: _notifications.isEmpty
                   ? ListView(
-                      children: const [
+                      children: [
                         EmptyState(
                           icon: Icons.notifications_none,
-                          title: 'No notifications yet',
-                          description: 'Updates about your applications, reports, and messages will show up here.',
+                          title: l10n.noNotificationsYet,
+                          description: l10n.notificationsEmptyDescription,
                         ),
                       ],
                     )
@@ -82,11 +94,15 @@ class _StudentNotificationsScreenState extends State<StudentNotificationsScreen>
                       padding: const EdgeInsets.only(bottom: 24),
                       children: [
                         if (unread.isNotEmpty) ...[
-                          const SectionHeader(title: 'New'),
-                          ...unread.map((n) => _NotificationCard(data: n, onTap: () => _markRead(n))),
+                          SectionHeader(title: l10n.newLabel),
+                          ...unread.map((n) => _NotificationCard(
+                                data: n,
+                                onTap: () => _markRead(n),
+                                onRespond: n['type'] == 'parent_link' ? (approve) => _respondToParentLink(n, approve) : null,
+                              )),
                         ],
                         if (read.isNotEmpty) ...[
-                          const SectionHeader(title: 'Earlier'),
+                          SectionHeader(title: l10n.earlier),
                           ...read.map((n) => _NotificationCard(data: n, onTap: () {})),
                         ],
                       ],
@@ -96,20 +112,49 @@ class _StudentNotificationsScreenState extends State<StudentNotificationsScreen>
   }
 }
 
-class _NotificationCard extends StatelessWidget {
+class _NotificationCard extends StatefulWidget {
   final Map<String, dynamic> data;
   final VoidCallback onTap;
+  final Future<void> Function(bool approve)? onRespond;
 
-  const _NotificationCard({required this.data, required this.onTap});
+  const _NotificationCard({required this.data, required this.onTap, this.onRespond});
+
+  @override
+  State<_NotificationCard> createState() => _NotificationCardState();
+}
+
+class _NotificationCardState extends State<_NotificationCard> {
+  bool _isResponding = false;
+
+  Future<void> _respond(bool approve) async {
+    setState(() => _isResponding = true);
+    try {
+      await widget.onRespond!(approve);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isResponding = false);
+      final l10n = AppLocalizations.of(context)!;
+      final message = e.toString().contains('parent_child_links_one_approved_per_student')
+          ? l10n.errorParentAlreadyLinked
+          : l10n.errorCouldNotRespondToRequest(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: AppColors.error));
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _isResponding = false);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final data = widget.data;
     final isUnread = data['read'] == false;
     final type = data['type'] as String;
     final createdAt = DateTime.parse(data['created_at'] as String);
+    final showLinkActions = widget.onRespond != null && isUnread;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.all(14),
@@ -155,7 +200,36 @@ class _NotificationCard extends StatelessWidget {
                         style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
                   ],
                   const SizedBox(height: 6),
-                  Text(timeAgo(createdAt), style: AppTextStyles.caption),
+                  Text(timeAgo(context, createdAt), style: AppTextStyles.caption),
+                  if (showLinkActions) ...[
+                    const SizedBox(height: 10),
+                    _isResponding
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                          )
+                        : Row(
+                            children: [
+                              OutlinedButton(
+                                onPressed: () => _respond(false),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  minimumSize: Size.zero,
+                                  foregroundColor: AppColors.error,
+                                  side: BorderSide(color: AppColors.error),
+                                ),
+                                child: Text(l10n.notificationReject, style: const TextStyle(fontSize: 12)),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: () => _respond(true),
+                                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), minimumSize: Size.zero),
+                                child: Text(l10n.notificationApprove, style: const TextStyle(fontSize: 12)),
+                              ),
+                            ],
+                          ),
+                  ],
                 ],
               ),
             ),
