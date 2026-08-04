@@ -2,12 +2,37 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
 import 'supervisor_data_service.dart';
 
-/// Real data access for the Company Supervisor screens. Reports/documents
-/// review and evaluations reuse [SupervisorDataService] directly (same
-/// tables, and RLS now grants company_supervisor the same visibility it
-/// grants academic_supervisor — see `reports_select_supervisor` etc.) —
-/// only "which students are mine" is different, so that's scoped here to
-/// this supervisor's own company via `applications`/`internships`.
+/// Real data access for the Company Supervisor screens.
+///
+/// Normalized-schema notes (Task 18):
+/// - Company affiliation is now `company_supervisors.company_id`
+///   (`profile_id` PK), not a flat `profiles.company_id` column — same
+///   pattern as `HrDataService._companyId` but keyed off `company_supervisors`
+///   instead of `company_hr`.
+/// - "My interns" is `applications` (status `active`) joined to
+///   `job_postings` (was `internships`) filtered to this supervisor's
+///   company; student display fields (`full_name`/`programme`/`faculty`)
+///   come from `students` joined to `profiles`, not a flat `profiles` row.
+/// - `reports` no longer has a `status` column — pending-ness for the
+///   intern list is read from `v_report_with_reviews.company_status`
+///   (null or 'pending' = not yet reviewed by this company supervisor),
+///   matching the semantics [getReviewItems] already uses.
+/// - Report review submission delegates to
+///   [SupervisorDataService.reviewReportAsCompanySupervisor], which writes
+///   `company_report_reviews` (this role's first-stage verdict) — never
+///   `academic_report_reviews`.
+/// - Document review still delegates to [SupervisorDataService.reviewDocument]
+///   for backward compatibility with the reviews screen's UI, but per that
+///   method's own doc comment, `document_reviews`/`documents_update_supervisor`
+///   RLS deliberately does not recognize `company_supervisor` — a
+///   company_supervisor calling this now gets a clean thrown `Exception`
+///   from the compensating-revert logic added in Task 15, not a silent
+///   no-op. See this task's report for a live-tested confirmation. This is
+///   an intentional, documented product boundary (see migration
+///   00004_documents_and_reviews.sql's header comment) — not something to
+///   route around in this file.
+/// - Every table's primary key is now `<table_singular>_id` instead of
+///   `id`; returned maps re-key onto `id` where screens still read it.
 class CompanySupervisorDataService {
   CompanySupervisorDataService._();
   static final CompanySupervisorDataService instance = CompanySupervisorDataService._();
@@ -21,8 +46,8 @@ class CompanySupervisorDataService {
   }
 
   Future<String?> get _companyId async {
-    final row = await _client.from('profiles').select('company_id').eq('id', _userId).single();
-    return row['company_id'] as String?;
+    final row = await _client.from('company_supervisors').select('company_id').eq('profile_id', _userId).maybeSingle();
+    return row?['company_id'] as String?;
   }
 
   // ---------------------------------------------------------------------
@@ -35,32 +60,48 @@ class CompanySupervisorDataService {
 
     final rows = await _client
         .from('applications')
-        .select('student_id, applied_at, internships!inner(id, title, company_id)')
-        .eq('internships.company_id', companyId)
+        .select('student_id, applied_at, job_postings!inner(job_posting_id, title, company_id)')
+        .eq('job_postings.company_id', companyId)
         .eq('status', 'active');
     final apps = List<Map<String, dynamic>>.from(rows);
     if (apps.isEmpty) return [];
 
     final studentIds = apps.map((a) => a['student_id'] as String).toSet().toList();
-    final profiles = await _client.from('profiles').select('id, full_name, programme, faculty').inFilter('id', studentIds);
-    final profileMap = {for (final p in List<Map<String, dynamic>>.from(profiles)) p['id'] as String: p};
+    final students = await _client
+        .from('students')
+        .select('profile_id, programme, faculty, profiles(full_name)')
+        .inFilter('profile_id', studentIds);
+    final studentMap = {for (final s in List<Map<String, dynamic>>.from(students)) s['profile_id'] as String: s};
 
-    final reports = await _client.from('reports').select('student_id, status').inFilter('student_id', studentIds);
+    // `reports` has no `status` column in the normalized schema — pending-ness
+    // for this company supervisor is whether their own (company_report_reviews)
+    // verdict is still null/'pending', same as getReviewItems() below.
+    final reports = await _client
+        .from('v_report_with_reviews')
+        .select('student_id, company_status')
+        .inFilter('student_id', studentIds);
     final reportList = List<Map<String, dynamic>>.from(reports);
     final documents = await _client.from('documents').select('student_id, status').inFilter('student_id', studentIds);
     final documentList = List<Map<String, dynamic>>.from(documents);
 
     return apps.map((a) {
       final id = a['student_id'] as String;
-      final profile = profileMap[id];
-      final pendingCount = reportList.where((r) => r['student_id'] == id && r['status'] == 'submitted').length +
+      final student = studentMap[id];
+      final profile = student?['profiles'] as Map<String, dynamic>?;
+      final fullName = profile?['full_name'] as String?;
+      final pendingCount = reportList.where((r) {
+            if (r['student_id'] != id) return false;
+            final companyStatus = r['company_status'] as String?;
+            return companyStatus == null || companyStatus == 'pending';
+          }).length +
           documentList.where((d) => d['student_id'] == id && d['status'] == 'submitted').length;
+      final jobPosting = a['job_postings'] as Map?;
       return {
         'id': id,
-        'full_name': (profile?['full_name'] as String?)?.isNotEmpty == true ? profile!['full_name'] as String : 'Unnamed student',
-        'programme': profile?['programme'],
-        'faculty': profile?['faculty'],
-        'role_title': (a['internships'] as Map?)?['title'],
+        'full_name': fullName?.isNotEmpty == true ? fullName! : 'Unnamed student',
+        'programme': student?['programme'],
+        'faculty': student?['faculty'],
+        'role_title': jobPosting?['title'],
         'applied_at': a['applied_at'],
         'pending_review_count': pendingCount,
       };
@@ -76,7 +117,10 @@ class CompanySupervisorDataService {
   /// own (first-stage) review — company_review_status/company_feedback —
   /// remapped onto the same keys the shared review UI already reads, not
   /// the academic supervisor's final status. Documents pass through as-is
-  /// (no two-stage flow for those).
+  /// if returned at all — but `documents_select_involved` RLS does not grant
+  /// company_supervisor read access to `documents`/`document_reviews` in the
+  /// first place, so `SupervisorDataService.getAllReviewItems()`'s document
+  /// half is silently empty for this role in practice; see class doc.
   Future<List<Map<String, dynamic>>> getReviewItems() async {
     final interns = await getInterns();
     final internIds = interns.map((i) => i['id'] as String).toSet();
