@@ -286,7 +286,10 @@ class SupervisorDataService {
     // worse than the old single-UPDATE behavior. Read the prior status first
     // so a failed second write can be compensated for by reverting the
     // first, and always surface a clear exception rather than letting the
-    // caller believe the review fully succeeded.
+    // caller believe the review fully succeeded. The revert itself is a
+    // compare-and-swap (`.eq('status', status)`), not a blind update-by-id,
+    // so it can never clobber a status change made by a second reviewer in
+    // the meantime — see the comment at the revert call site.
     String? previousStatus;
     try {
       final before = await _client.from('documents').select('status').eq('document_id', documentId).single();
@@ -305,15 +308,45 @@ class SupervisorDataService {
         'reviewed_at': now,
       }, onConflict: 'document_id');
     } catch (e) {
+      var reverted = false;
+      var clobberRisk = false;
       if (previousStatus != null) {
         try {
-          await _client.from('documents').update({'status': previousStatus}).eq('document_id', documentId);
+          // Compare-and-swap: only revert if documents.status is still
+          // exactly what THIS call just set it to (`status`). Without this
+          // condition, a blind revert-by-id could clobber a legitimate
+          // write from a second reviewer who reviewed the same document
+          // (under a different RLS-permitted role, e.g. admin) in the
+          // narrow window between our two writes above — their committed
+          // status change would be silently overwritten with no
+          // notification. `.select()` returns the rows the update actually
+          // matched; empty means someone else already moved the status, so
+          // we deliberately don't fight them and skip the revert.
+          final revertResult = await _client
+              .from('documents')
+              .update({'status': previousStatus})
+              .eq('document_id', documentId)
+              .eq('status', status)
+              .select();
+          if (revertResult.isEmpty) {
+            // Someone else changed the status before our revert could run —
+            // their write stands. Fall through to the exception below so
+            // the caller still knows our own review didn't fully save.
+            clobberRisk = true;
+          } else {
+            reverted = true;
+          }
         } catch (_) {
           // Best-effort revert; if this also fails there's nothing more we
           // can safely do client-side.
         }
       }
-      throw Exception('Could not save the review feedback (${e.toString()}); the document status change was reverted.');
+      final statusNote = reverted
+          ? 'the document status change was reverted.'
+          : clobberRisk
+              ? 'the document status was left as-is because another reviewer already changed it since — please re-check the current status.'
+              : 'the document status change could not be reverted.';
+      throw Exception('Could not save the review feedback (${e.toString()}); $statusNote');
     }
   }
 
