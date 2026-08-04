@@ -174,17 +174,12 @@ language sql stable security definer set search_path = public as $$
   );
 $$;
 
-create or replace function same_company_as(p_target_profile_id uuid) returns boolean
+create or replace function is_my_company(p_company_id uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
-    select 1 from (
-      select company_id from company_hr where profile_id = auth.uid()
-      union select company_id from company_supervisors where profile_id = auth.uid()
-    ) mine
-    join (
-      select company_id from company_hr where profile_id = p_target_profile_id
-      union select company_id from company_supervisors where profile_id = p_target_profile_id
-    ) theirs using (company_id)
+    select 1 from company_hr where profile_id = (select auth.uid()) and company_id = p_company_id
+    union
+    select 1 from company_supervisors where profile_id = (select auth.uid()) and company_id = p_company_id
   );
 $$;
 
@@ -198,56 +193,72 @@ alter table company_supervisors enable row level security;
 alter table administrators enable row level security;
 
 create policy profiles_select_authenticated on profiles for select to authenticated using (true);
-create policy profiles_update_own on profiles for update to authenticated
-  using (profile_id = auth.uid()) with check (profile_id = auth.uid());
-create policy profiles_update_admin on profiles for update to authenticated
-  using (current_user_role() = 'admin');
+create policy profiles_update_own_or_admin on profiles for update to authenticated
+  using (profile_id = (select auth.uid()) or (select current_user_role()) = 'admin')
+  with check (profile_id = (select auth.uid()) or (select current_user_role()) = 'admin');
 create policy profiles_insert_own on profiles for insert to authenticated
-  with check (profile_id = auth.uid());
+  with check (profile_id = (select auth.uid()));
 
 create policy companies_select_authenticated on companies for select to authenticated using (true);
 create policy companies_update_own_staff on companies for update to authenticated
-  using (same_company_as(auth.uid()) or current_user_role() = 'admin');
+  using (is_my_company(company_id) or (select current_user_role()) = 'admin')
+  with check (is_my_company(company_id) or (select current_user_role()) = 'admin');
 create policy companies_insert_self_service on companies for insert to authenticated
-  with check (current_user_role() in ('company_hr','company_supervisor','admin'));
+  with check ((select current_user_role()) in ('company_hr','company_supervisor','admin'));
 
 -- Subtype tables: readable same as base profile row; writable by the profile owner or admin.
 create policy students_select_authenticated on students for select to authenticated using (true);
 create policy students_update_own_or_staff on students for update to authenticated
-  using (profile_id = auth.uid() or current_user_role() = 'admin'
+  using (profile_id = (select auth.uid()) or (select current_user_role()) = 'admin'
          or is_academic_supervisor_of(profile_id));
 create policy students_insert_own on students for insert to authenticated
-  with check (profile_id = auth.uid());
+  with check (profile_id = (select auth.uid()));
 
 create policy academic_supervisors_select_authenticated on academic_supervisors for select to authenticated using (true);
 create policy academic_supervisors_insert_own on academic_supervisors for insert to authenticated
-  with check (profile_id = auth.uid());
+  with check (profile_id = (select auth.uid()));
 
 create policy parents_select_authenticated on parents for select to authenticated using (true);
 create policy parents_insert_own on parents for insert to authenticated
-  with check (profile_id = auth.uid());
+  with check (profile_id = (select auth.uid()));
 
 create policy company_hr_select_authenticated on company_hr for select to authenticated using (true);
 create policy company_hr_update_own on company_hr for update to authenticated
-  using (profile_id = auth.uid() or current_user_role() = 'admin');
+  using (profile_id = (select auth.uid()) or (select current_user_role()) = 'admin');
 create policy company_hr_insert_own on company_hr for insert to authenticated
-  with check (profile_id = auth.uid());
+  with check (profile_id = (select auth.uid()));
 
 create policy company_supervisors_select_authenticated on company_supervisors for select to authenticated using (true);
 create policy company_supervisors_update_own on company_supervisors for update to authenticated
-  using (profile_id = auth.uid() or current_user_role() = 'admin');
+  using (profile_id = (select auth.uid()) or (select current_user_role()) = 'admin');
 create policy company_supervisors_insert_own on company_supervisors for insert to authenticated
-  with check (profile_id = auth.uid());
+  with check (profile_id = (select auth.uid()));
 
 create policy administrators_select_authenticated on administrators for select to authenticated using (true);
 create policy administrators_insert_admin_only on administrators for insert to authenticated
-  with check (current_user_role() = 'admin');
+  with check ((select current_user_role()) = 'admin');
 ```
+
+> **Post-review correction (applied live, plan text updated to match):** the
+> original draft here used a `same_company_as(target_profile_id)` helper
+> that compared the caller against themselves when called as
+> `same_company_as(auth.uid())` — it never referenced the row being
+> evaluated, so it collapsed to "does the caller belong to any company at
+> all," letting any company_hr/company_supervisor update *every* company's
+> row. Replaced with `is_my_company(company_id)`, called against the actual
+> row's `company_id` column everywhere it's used (here, and in Tasks 3–4
+> below). Also wrapped bare `auth.uid()`/`current_user_role()` calls in
+> `(select ...)` throughout (Postgres `auth_rls_initplan` — evaluates once
+> per query instead of once per row) and merged `profiles`' two UPDATE
+> policies into one (`multiple_permissive_policies`). Apply the same
+> `(select ...)` wrapping pattern to every RLS policy in Tasks 5–9 as they're
+> written, not just 2–4.
 
 - [ ] Write the migration file with the SQL above.
 - [ ] Apply via `apply_migration` (or `npx supabase db push`).
-- [ ] Verify: `list_tables` shows all 8 tables with `rls_enabled: true`; `get_advisors` (security) returns no "RLS disabled" findings for these tables.
-- [ ] Verify: as a test student (once Task 25 seed data exists), `execute_sql` impersonation confirms a student can update their own `students` row but not another student's.
+- [ ] Verify: `list_tables` shows all 8 tables with `rls_enabled: true`; `get_advisors` (security **and performance**) returns no new findings for these tables (the 5 helper functions being `authenticated`-executable is an accepted, unavoidable residual — see Task 2's ledger).
+- [ ] Verify: as a test student (once Task 22 seed data exists), `execute_sql` impersonation confirms a student can update their own `students` row but not another student's, and that a company_hr/company_supervisor can update their own company's row but not another company's.
+- [ ] Index every FK column added in this task's DDL if `get_advisors(performance)` flags it unindexed.
 - [ ] Commit.
 
 ---
@@ -310,44 +321,50 @@ alter table interviews enable row level security;
 
 create policy categories_select_authenticated on categories for select to authenticated using (true);
 create policy categories_write_admin on categories for all to authenticated
-  using (current_user_role() = 'admin') with check (current_user_role() = 'admin');
+  using ((select current_user_role()) = 'admin') with check ((select current_user_role()) = 'admin');
 
 create policy job_postings_select_authenticated on job_postings for select to authenticated using (true);
 create policy job_postings_write_own_company on job_postings for all to authenticated
-  using (same_company_as(auth.uid()) or current_user_role() = 'admin')
-  with check (same_company_as(auth.uid()) or current_user_role() = 'admin');
+  using (is_my_company(company_id) or (select current_user_role()) = 'admin')
+  with check (is_my_company(company_id) or (select current_user_role()) = 'admin');
 
 create policy applications_select_involved on applications for select to authenticated
   using (
-    student_id = auth.uid()
-    or current_user_role() = 'admin'
-    or exists (select 1 from job_postings jp where jp.job_posting_id = applications.job_posting_id and same_company_as(auth.uid()))
+    student_id = (select auth.uid())
+    or (select current_user_role()) = 'admin'
+    or exists (select 1 from job_postings jp where jp.job_posting_id = applications.job_posting_id and is_my_company(jp.company_id))
     or is_academic_supervisor_of(student_id)
     or is_approved_parent_of(student_id)
   );
 create policy applications_insert_own on applications for insert to authenticated
-  with check (student_id = auth.uid());
+  with check (student_id = (select auth.uid()));
 create policy applications_update_involved on applications for update to authenticated
   using (
-    student_id = auth.uid()
-    or current_user_role() = 'admin'
-    or exists (select 1 from job_postings jp where jp.job_posting_id = applications.job_posting_id and same_company_as(auth.uid()))
+    student_id = (select auth.uid())
+    or (select current_user_role()) = 'admin'
+    or exists (select 1 from job_postings jp where jp.job_posting_id = applications.job_posting_id and is_my_company(jp.company_id))
   );
 
 create policy interviews_select_involved on interviews for select to authenticated
   using (exists (
     select 1 from applications a where a.application_id = interviews.application_id
-    and (a.student_id = auth.uid() or current_user_role() = 'admin'
-         or exists (select 1 from job_postings jp where jp.job_posting_id = a.job_posting_id and same_company_as(auth.uid())))
+    and (a.student_id = (select auth.uid()) or (select current_user_role()) = 'admin'
+         or exists (select 1 from job_postings jp where jp.job_posting_id = a.job_posting_id and is_my_company(jp.company_id)))
   ));
 create policy interviews_write_company on interviews for all to authenticated
   using (exists (
     select 1 from applications a join job_postings jp on jp.job_posting_id = a.job_posting_id
-    where a.application_id = interviews.application_id and (same_company_as(auth.uid()) or current_user_role() = 'admin')
+    where a.application_id = interviews.application_id and (is_my_company(jp.company_id) or (select current_user_role()) = 'admin')
   ));
+
+create index if not exists idx_job_postings_company_id on job_postings(company_id);
+create index if not exists idx_job_postings_category_id on job_postings(category_id);
+create index if not exists idx_applications_student_id on applications(student_id);
+create index if not exists idx_applications_job_posting_id on applications(job_posting_id);
+create index if not exists idx_interviews_application_id on interviews(application_id);
 ```
 
-- [ ] Write, apply, verify (`list_tables`, `get_advisors`, RLS impersonation for student/HR/company_supervisor).
+- [ ] Write, apply, verify (`list_tables`, `get_advisors` security **and performance**, RLS impersonation for student/HR/company_supervisor).
 - [ ] Commit.
 
 ---
@@ -393,34 +410,41 @@ alter table academic_report_reviews enable row level security;
 alter table company_report_reviews enable row level security;
 
 create policy reports_select_involved on reports for select to authenticated
-  using (student_id = auth.uid() or current_user_role() = 'admin'
+  using (student_id = (select auth.uid()) or (select current_user_role()) = 'admin'
          or is_academic_supervisor_of(student_id) or is_approved_parent_of(student_id)
          or exists (select 1 from applications a join job_postings jp on jp.job_posting_id = a.job_posting_id
-                     where a.student_id = reports.student_id and same_company_as(auth.uid())));
-create policy reports_insert_own on reports for insert to authenticated with check (student_id = auth.uid());
+                     where a.student_id = reports.student_id and is_my_company(jp.company_id)));
+create policy reports_insert_own on reports for insert to authenticated with check (student_id = (select auth.uid()));
 
 create policy academic_report_reviews_select_involved on academic_report_reviews for select to authenticated
   using (exists (select 1 from reports r where r.report_id = academic_report_reviews.report_id
-                 and (r.student_id = auth.uid() or current_user_role() = 'admin' or is_academic_supervisor_of(r.student_id))));
+                 and (r.student_id = (select auth.uid()) or (select current_user_role()) = 'admin' or is_academic_supervisor_of(r.student_id))));
 create policy academic_report_reviews_write_supervisor on academic_report_reviews for all to authenticated
-  using (current_user_role() = 'admin'
+  using ((select current_user_role()) = 'admin'
          or exists (select 1 from reports r where r.report_id = academic_report_reviews.report_id and is_academic_supervisor_of(r.student_id)));
 
 create policy company_report_reviews_select_involved on company_report_reviews for select to authenticated
   using (exists (select 1 from reports r where r.report_id = company_report_reviews.report_id
-                 and (r.student_id = auth.uid()
+                 and (r.student_id = (select auth.uid())
                       or exists (select 1 from applications a join job_postings jp on jp.job_posting_id = a.job_posting_id
-                                  where a.student_id = r.student_id and same_company_as(auth.uid())))));
+                                  where a.student_id = r.student_id and is_my_company(jp.company_id)))));
 create policy company_report_reviews_write_company_supervisor on company_report_reviews for all to authenticated
   using (exists (select 1 from reports r join applications a on a.student_id = r.student_id
                  join job_postings jp on jp.job_posting_id = a.job_posting_id
-                 where r.report_id = company_report_reviews.report_id and same_company_as(auth.uid())
-                 and current_user_role() = 'company_supervisor'));
+                 where r.report_id = company_report_reviews.report_id and is_my_company(jp.company_id)
+                 and (select current_user_role()) = 'company_supervisor'));
+
+create index if not exists idx_reports_student_id on reports(student_id);
+create index if not exists idx_academic_report_reviews_reviewer_id on academic_report_reviews(reviewer_id);
+create index if not exists idx_company_report_reviews_reviewer_id on company_report_reviews(reviewer_id);
 ```
 
 > Note: per the earlier RLS finding, admin does **not** get `company_report_reviews` write access — that boundary is intentional (confirmed by the user) and preserved here.
+>
+> **Post-review correction (see Task 2's note):** replaced `same_company_as(auth.uid())` with `is_my_company(jp.company_id)`, correlated against the joined `job_postings` row rather than the caller compared to themselves. Wrapped bare `auth.uid()`/`current_user_role()` calls in `(select ...)`.
 
 - [ ] Write, apply, verify (impersonate student/academic_supervisor/company_supervisor/admin — confirm admin is blocked from writing `company_report_reviews`, matching current live-schema behavior).
+- [ ] Verify `get_advisors` security **and performance** are both clean before marking this task done — the plan's own bar (see Task 2's ledger for why this matters).
 - [ ] Commit.
 
 ---
