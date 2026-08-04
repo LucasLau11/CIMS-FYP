@@ -63,24 +63,21 @@ async function handleMessageInsert(record: Record<string, unknown>) {
 
   // These two lookups don't depend on each other — running them in
   // parallel shaves one round-trip off the delivery path.
-  const [conversationResult, senderResult] = await Promise.all([
-    supabase.from('conversations').select('participant_a, participant_b, muted_a, muted_b').eq('id', conversationId).single(),
-    supabase.from('profile_directory').select('full_name').eq('id', senderId).single(),
+  const [membersResult, senderResult] = await Promise.all([
+    supabase.from('profile_conversations').select('profile_id, muted').eq('conversation_id', conversationId),
+    supabase.from('profile_directory').select('full_name').eq('profile_id', senderId).single(),
   ]);
 
-  const { data: conversation, error: convError } = conversationResult;
-  if (convError || !conversation) {
-    console.error(`Could not load conversation ${conversationId}: ${convError?.message}`);
+  const { data: members, error: membersError } = membersResult;
+  if (membersError || !members) {
+    console.error(`Could not load conversation members for ${conversationId}: ${membersError?.message}`);
     return;
   }
 
-  const recipientId =
-    conversation.participant_a === senderId ? conversation.participant_b : conversation.participant_a;
-  if (!recipientId) return;
-
-  const recipientHasMuted =
-    conversation.participant_a === recipientId ? conversation.muted_a : conversation.muted_b;
-  if (recipientHasMuted) return;
+  const recipient = members.find((m) => m.profile_id !== senderId);
+  if (!recipient) return;
+  if (recipient.muted) return;
+  const recipientId = recipient.profile_id as string;
 
   const { data: sender, error: senderError } = senderResult;
   if (senderError) {
