@@ -21,13 +21,22 @@ class DocumentTemplateService {
 
   Future<List<Map<String, dynamic>>> listTemplates() async {
     final rows = await _client.from('document_templates').select().order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    final list = List<Map<String, dynamic>>.from(rows);
+    // document_templates' PK is template_id, not id -- alias it back so
+    // screens can keep reading row['id'].
+    for (final r in list) {
+      r['id'] = r['template_id'];
+    }
+    return list;
   }
 
   Future<Map<String, dynamic>?> getActiveTemplate(String purpose) async {
     final rows = await _client.from('document_templates').select().eq('purpose', purpose).eq('is_active', true).limit(1);
     final list = List<Map<String, dynamic>>.from(rows);
-    return list.isEmpty ? null : list.first;
+    if (list.isEmpty) return null;
+    final row = list.first;
+    row['id'] = row['template_id'];
+    return row;
   }
 
   /// Uploads a blank PDF as a new, inactive, fieldless template. Call
@@ -47,14 +56,14 @@ class DocumentTemplateService {
         })
         .select()
         .single();
-    final templateId = inserted['id'] as String;
+    final templateId = inserted['template_id'] as String;
     final storagePath = 'templates/$templateId.pdf';
     await _client.storage.from('document_templates').uploadBinary(
           storagePath,
           pdfBytes,
           fileOptions: const FileOptions(contentType: 'application/pdf'),
         );
-    await _client.from('document_templates').update({'storage_path': storagePath}).eq('id', templateId);
+    await _client.from('document_templates').update({'storage_path': storagePath}).eq('template_id', templateId);
     return templateId;
   }
 
@@ -66,7 +75,7 @@ class DocumentTemplateService {
   /// PDF, saves it back over the original, then activates this template
   /// (deactivating any previously-active template for the same purpose).
   Future<void> saveTemplateFields({required String templateId, required List<TemplateField> fields}) async {
-    final row = await _client.from('document_templates').select().eq('id', templateId).single();
+    final row = await _client.from('document_templates').select().eq('template_id', templateId).single();
     final storagePath = row['storage_path'] as String;
     final originalBytes = await downloadTemplatePdf(storagePath);
     final preparedBytes = PdfTemplateService.instance.embedFields(originalBytes, fields);
@@ -81,7 +90,7 @@ class DocumentTemplateService {
     await _client.from('document_templates').update({
       'fields': fields.map((f) => f.toJson()).toList(),
       'is_active': true,
-    }).eq('id', templateId);
+    }).eq('template_id', templateId);
   }
 
   Future<Map<String, dynamic>?> getSubmission({required String templateId, required String studentId}) async {
