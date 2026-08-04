@@ -279,13 +279,42 @@ class SupervisorDataService {
   /// out of this file's scope to fix.
   Future<void> reviewDocument({required String documentId, required String status, String? feedback}) async {
     final now = DateTime.now().toIso8601String();
+
+    // These two writes aren't atomic (no single-statement path covers both
+    // tables), so if the second one fails after the first succeeded, we'd be
+    // left with a changed documents.status and no matching review row —
+    // worse than the old single-UPDATE behavior. Read the prior status first
+    // so a failed second write can be compensated for by reverting the
+    // first, and always surface a clear exception rather than letting the
+    // caller believe the review fully succeeded.
+    String? previousStatus;
+    try {
+      final before = await _client.from('documents').select('status').eq('document_id', documentId).single();
+      previousStatus = before['status'] as String?;
+    } catch (_) {
+      // Couldn't read the prior status (e.g. row already gone) — proceed
+      // without a revert target rather than blocking the review on a read.
+    }
+
     await _client.from('documents').update({'status': status}).eq('document_id', documentId);
-    await _client.from('document_reviews').upsert({
-      'document_id': documentId,
-      'feedback': feedback,
-      'reviewer_id': _userId,
-      'reviewed_at': now,
-    }, onConflict: 'document_id');
+    try {
+      await _client.from('document_reviews').upsert({
+        'document_id': documentId,
+        'feedback': feedback,
+        'reviewer_id': _userId,
+        'reviewed_at': now,
+      }, onConflict: 'document_id');
+    } catch (e) {
+      if (previousStatus != null) {
+        try {
+          await _client.from('documents').update({'status': previousStatus}).eq('document_id', documentId);
+        } catch (_) {
+          // Best-effort revert; if this also fails there's nothing more we
+          // can safely do client-side.
+        }
+      }
+      throw Exception('Could not save the review feedback (${e.toString()}); the document status change was reverted.');
+    }
   }
 
   Future<String> getReviewFileSignedUrl(String storagePath) async {
