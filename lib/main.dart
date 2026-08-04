@@ -28,8 +28,8 @@ void main() async {
   // this makes that failure visible instead.
   try {
     await Supabase.initialize(
-      url: 'https://aoyumcvaxrhkicapsxdi.supabase.co',
-      anonKey: 'sb_publishable_mCsTo_Ja_zzlX6Z5WsQbZg_EjJLMYfQ',
+      url: 'https://lgosyvuwtkzrjvsbxyed.supabase.co',
+      anonKey: 'sb_publishable_TP11aOfbEEX48NSNipqkUA_r2adm96C',
     ).timeout(const Duration(seconds: 10));
   } catch (e) {
     // Log clearly to the console so this shows up in Logcat/Run output
