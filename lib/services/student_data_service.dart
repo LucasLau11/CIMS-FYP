@@ -5,6 +5,24 @@ import 'auth_service.dart';
 /// Real data access for the student screens — internships, applications,
 /// reports, documents, messaging, and notifications. Mirrors the singleton
 /// + "throw Exception with a user-facing message" style of [AuthService].
+///
+/// Normalized-schema notes (Task 14):
+/// - `internships` is now `job_postings`, joined to `companies` (for
+///   `company_name`/`company_industry`, which used to be denormalized flat
+///   columns) and `categories` (for the plain `category` string).
+/// - Interview fields come from the `interviews` table, embedded alongside
+///   `applications` and flattened onto the returned map as `interview_at`/
+///   `interview_mode`/`interview_location` (same key names screens expect).
+/// - Report/document review status comes from `v_report_with_reviews` /
+///   `v_document_with_review` and is flattened back onto `status`/`feedback`/
+///   `company_review_status` so screen code is unchanged.
+/// - Conversation membership is `profile_conversations`, not
+///   `participant_a`/`participant_b` columns on `conversations` (which no
+///   longer exist). Archive/mute/block are now the caller's own
+///   `profile_conversations` row, not `_a`/`_b`-suffixed columns.
+/// - Every table's primary key is now `<table_singular>_id` instead of `id`.
+///   Screens still read `['id']` off returned maps in a few places, so an
+///   `id` alias is added back onto each row before returning it.
 class StudentDataService {
   StudentDataService._();
   static final StudentDataService instance = StudentDataService._();
@@ -22,6 +40,31 @@ class StudentDataService {
     return parts.length > 1 ? parts.last.toLowerCase() : 'dat';
   }
 
+  /// Adds an `id` key mirroring [idColumn] onto every row — screens still
+  /// read `['id']` in several places and this keeps that stable without
+  /// forcing every call site below to rebuild each map by hand.
+  List<Map<String, dynamic>> _withIdAlias(List rows, [String idColumn = 'profile_id']) {
+    final list = List<Map<String, dynamic>>.from(rows);
+    for (final r in list) {
+      r['id'] = r[idColumn];
+    }
+    return list;
+  }
+
+  /// Flattens a `job_postings` row's `companies`/`categories` embeds back
+  /// onto the flat `company_name`/`company_industry`/`category` keys the
+  /// old denormalized `internships` table used to expose directly, plus an
+  /// `id` alias for `job_posting_id`. Mutates and returns [row].
+  Map<String, dynamic> _flattenInternship(Map<String, dynamic> row) {
+    row['id'] = row['job_posting_id'];
+    final company = row['companies'] as Map<String, dynamic>?;
+    row['company_name'] = company?['name'];
+    row['company_industry'] = company?['industry'];
+    final category = row['categories'] as Map<String, dynamic>?;
+    row['category'] = category?['category_name'];
+    return row;
+  }
+
   // ---------------------------------------------------------------------
   // Internships / Applications
   // ---------------------------------------------------------------------
@@ -30,31 +73,48 @@ class StudentDataService {
   /// duration/allowance/search) happens client-side in the Search screen.
   Future<List<Map<String, dynamic>>> getOpenInternships() async {
     final rows = await _client
-        .from('internships')
-        .select('*, companies(status)')
+        .from('job_postings')
+        .select('*, companies(name, industry, status), categories(category_name)')
         .eq('status', 'open')
         .order('posted_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    return List<Map<String, dynamic>>.from(rows).map(_flattenInternship).toList();
   }
 
-  /// internship_id set the current student has already applied to.
+  /// job_posting_id set the current student has already applied to.
   Future<Set<String>> getAppliedInternshipIds() async {
     final rows = await _client
         .from('applications')
-        .select('internship_id')
+        .select('job_posting_id')
         .eq('student_id', _userId);
     return List<Map<String, dynamic>>.from(rows)
-        .map((r) => r['internship_id'] as String)
+        .map((r) => r['job_posting_id'] as String)
         .toSet();
   }
 
   Future<List<Map<String, dynamic>>> getMyApplications() async {
     final rows = await _client
         .from('applications')
-        .select('*, internships(*)')
+        .select(
+            '*, internships:job_postings(*, companies(name, industry, status), categories(category_name)), interviews(scheduled_at, mode, location)')
         .eq('student_id', _userId)
         .order('applied_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    final list = List<Map<String, dynamic>>.from(rows);
+    for (final r in list) {
+      r['id'] = r['application_id'];
+      final internship = r['internships'] as Map<String, dynamic>?;
+      if (internship != null) _flattenInternship(internship);
+
+      // interviews.application_id -> applications.application_id is a
+      // one-to-many embed (PostgREST returns a list even though there's at
+      // most one interview per application in practice) — flatten the first
+      // one onto the application row under the old flat-schema key names.
+      final interviews = List<Map<String, dynamic>>.from(r['interviews'] as List? ?? const []);
+      final interview = interviews.isEmpty ? null : interviews.first;
+      r['interview_at'] = interview?['scheduled_at'];
+      r['interview_mode'] = interview?['mode'];
+      r['interview_location'] = interview?['location'];
+    }
+    return list;
   }
 
   Future<void> applyToInternship({
@@ -65,7 +125,7 @@ class StudentDataService {
     try {
       await _client.from('applications').insert({
         'student_id': _userId,
-        'internship_id': internshipId,
+        'job_posting_id': internshipId,
         'cover_letter': coverLetter,
         'skills': skills,
       });
@@ -81,7 +141,7 @@ class StudentDataService {
   }
 
   Future<void> withdrawApplication(String applicationId) async {
-    await _client.from('applications').delete().eq('id', applicationId);
+    await _client.from('applications').delete().eq('application_id', applicationId);
   }
 
   /// Company details for the "view company before applying" step. Looks up
@@ -89,7 +149,7 @@ class StudentDataService {
   /// inline company_name/industry already on the internship row instead).
   Future<Map<String, dynamic>?> getCompanyDetails(String? companyId) async {
     if (companyId == null) return null;
-    return await _client.from('companies').select().eq('id', companyId).maybeSingle();
+    return await _client.from('companies').select().eq('company_id', companyId).maybeSingle();
   }
 
   // ---------------------------------------------------------------------
@@ -97,17 +157,24 @@ class StudentDataService {
   // ---------------------------------------------------------------------
 
   Future<List<Map<String, dynamic>>> getCompanyPostings(String companyId) async {
-    final rows = await _client.from('internships').select().eq('company_id', companyId).order('posted_at', ascending: false);
+    final rows = await _client.from('job_postings').select().eq('company_id', companyId).order('posted_at', ascending: false);
     return List<Map<String, dynamic>>.from(rows);
   }
 
   /// Count only, not names — avoids exposing other students' identities to
   /// anyone browsing a company's profile.
+  ///
+  /// NOTE: under the normalized schema's `applications_select_involved` RLS
+  /// policy, an ordinary browsing student can only see their OWN
+  /// application rows (not admin/supervisor/company-staff/parent), so this
+  /// count now silently undercounts for anyone who isn't already
+  /// involved — see Task 14 report for detail and a suggested fix (a
+  /// dedicated count-only RPC).
   Future<int> getCompanyInternCount(String companyId) async {
     final rows = await _client
         .from('applications')
-        .select('student_id, internships!inner(company_id)')
-        .eq('internships.company_id', companyId)
+        .select('student_id, job_postings!inner(company_id)')
+        .eq('job_postings.company_id', companyId)
         .eq('status', 'active');
     return List<Map<String, dynamic>>.from(rows).map((r) => r['student_id']).toSet().length;
   }
@@ -123,7 +190,12 @@ class StudentDataService {
   /// Whether the current student has ever applied to this company (the
   /// review-eligibility gate — matches company_reviews_insert_own's RLS).
   Future<bool> canReviewCompany(String companyId) async {
-    final rows = await _client.from('applications').select('id, internships!inner(company_id)').eq('internships.company_id', companyId).eq('student_id', _userId).limit(1);
+    final rows = await _client
+        .from('applications')
+        .select('application_id, job_postings!inner(company_id)')
+        .eq('job_postings.company_id', companyId)
+        .eq('student_id', _userId)
+        .limit(1);
     return List.from(rows).isNotEmpty;
   }
 
@@ -151,7 +223,7 @@ class StudentDataService {
         .select()
         .eq('student_id', _userId)
         .order('start_year', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    return _withIdAlias(rows, 'work_experience_id');
   }
 
   Future<void> addWorkExperience({
@@ -189,11 +261,11 @@ class StudentDataService {
       'start_year': startYear,
       'end_year': isCurrent ? null : endYear,
       'is_current': isCurrent,
-    }).eq('id', id);
+    }).eq('work_experience_id', id);
   }
 
   Future<void> deleteWorkExperience(String id) async {
-    await _client.from('work_experiences').delete().eq('id', id);
+    await _client.from('work_experiences').delete().eq('work_experience_id', id);
   }
 
   // ---------------------------------------------------------------------
@@ -202,11 +274,21 @@ class StudentDataService {
 
   Future<List<Map<String, dynamic>>> getMyReports() async {
     final rows = await _client
-        .from('reports')
+        .from('v_report_with_reviews')
         .select()
         .eq('student_id', _userId)
         .order('submitted_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    final list = List<Map<String, dynamic>>.from(rows);
+    for (final r in list) {
+      r['id'] = r['report_id'];
+      // academic_status is null until a supervisor has ever touched the
+      // review row for this report — default to 'submitted' to match the
+      // old flat schema's default and keep the badge/accent logic unchanged.
+      r['status'] = r['academic_status'] ?? 'submitted';
+      r['feedback'] = r['academic_feedback'];
+      r['company_review_status'] = r['company_status'];
+    }
+    return list;
   }
 
   Future<void> submitReport({
@@ -227,23 +309,24 @@ class StudentDataService {
         })
         .select()
         .single();
+    final reportId = inserted['report_id'] as String;
 
     if (file != null && fileName != null && fileSizeBytes != null) {
       final ext = _extensionOf(fileName);
-      final storagePath = '$_userId/reports/${inserted['id']}.$ext';
+      final storagePath = '$_userId/reports/$reportId.$ext';
       await _client.storage.from('student_files').upload(storagePath, file);
       await _client.from('reports').update({
         'storage_path': storagePath,
         'file_name': fileName,
         'file_size_bytes': fileSizeBytes,
-      }).eq('id', inserted['id']);
+      }).eq('report_id', reportId);
     }
 
     await createSelfNotification(
       title: 'Report submitted',
       body: '$periodLabel has been submitted.',
       type: 'report',
-      relatedId: inserted['id'] as String,
+      relatedId: reportId,
     );
   }
 
@@ -257,11 +340,11 @@ class StudentDataService {
 
   Future<List<Map<String, dynamic>>> getMyDocuments() async {
     final rows = await _client
-        .from('documents')
+        .from('v_document_with_review')
         .select()
         .eq('student_id', _userId)
         .order('uploaded_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    return _withIdAlias(rows, 'document_id');
   }
 
   /// Uploads a document for [category]. Categories other than 'other' are
@@ -277,12 +360,12 @@ class StudentDataService {
     if (category != 'other') {
       final existing = await _client
           .from('documents')
-          .select('id, storage_path')
+          .select('document_id, storage_path')
           .eq('student_id', _userId)
           .eq('category', category)
           .maybeSingle();
       if (existing != null) {
-        await removeDocument(existing['id'] as String, existing['storage_path'] as String);
+        await removeDocument(existing['document_id'] as String, existing['storage_path'] as String);
       }
     }
 
@@ -298,17 +381,18 @@ class StudentDataService {
         })
         .select()
         .single();
+    final documentId = inserted['document_id'] as String;
 
     final ext = _extensionOf(fileName);
-    final storagePath = '$_userId/documents/${inserted['id']}.$ext';
+    final storagePath = '$_userId/documents/$documentId.$ext';
     await _client.storage.from('student_files').upload(storagePath, file);
-    await _client.from('documents').update({'storage_path': storagePath}).eq('id', inserted['id']);
+    await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId);
 
     await createSelfNotification(
       title: 'Document uploaded',
       body: '$fileName has been uploaded.',
       type: 'document',
-      relatedId: inserted['id'] as String,
+      relatedId: documentId,
     );
   }
 
@@ -320,7 +404,7 @@ class StudentDataService {
         // Non-fatal — proceed to clear the DB row regardless.
       }
     }
-    await _client.from('documents').delete().eq('id', documentId);
+    await _client.from('documents').delete().eq('document_id', documentId);
   }
 
   Future<String> getDocumentSignedUrl(String storagePath) async {
@@ -339,37 +423,34 @@ class StudentDataService {
   /// this method returns — this scoping is for a correct/uncluttered UI
   /// list, not the actual security boundary).
   Future<List<Map<String, dynamic>>> getDirectory() async {
-    final profile = await _client.from('profiles').select('role, company_id').eq('id', _userId).single();
+    final profile = await _client.from('profiles').select('role').eq('profile_id', _userId).single();
     final role = profile['role'] as String;
 
     switch (role) {
       case 'admin':
-        final rows = await _client.from('profile_directory').select().neq('id', _userId).order('full_name', ascending: true);
-        return List<Map<String, dynamic>>.from(rows);
+        final rows = await _client.from('profile_directory').select().neq('profile_id', _userId).order('full_name', ascending: true);
+        return _withIdAlias(rows);
       case 'academic_supervisor':
-        final rows = await _client
-            .from('profiles')
-            .select('id, full_name, avatar_url, role')
-            .eq('role', 'student')
-            .eq('academic_supervisor_id', _userId)
-            .order('full_name', ascending: true);
-        return List<Map<String, dynamic>>.from(rows);
+        final links = await _client.from('students').select('profile_id').eq('academic_supervisor_id', _userId);
+        final studentIds = List<Map<String, dynamic>>.from(links).map((l) => l['profile_id'] as String).toList();
+        if (studentIds.isEmpty) return [];
+        final rows = await _client.from('profile_directory').select().inFilter('profile_id', studentIds).order('full_name', ascending: true);
+        return _withIdAlias(rows);
       case 'company_hr':
-        final companyId = profile['company_id'] as String?;
+        final hr = await _client.from('company_hr').select('company_id').eq('profile_id', _userId).maybeSingle();
+        final companyId = hr?['company_id'] as String?;
         if (companyId == null) return [];
-        final rows = await _client
-            .from('profiles')
-            .select('id, full_name, avatar_url, role')
-            .eq('role', 'company_supervisor')
-            .eq('company_id', companyId)
-            .order('full_name', ascending: true);
-        return List<Map<String, dynamic>>.from(rows);
+        final links = await _client.from('company_supervisors').select('profile_id').eq('company_id', companyId);
+        final supervisorIds = List<Map<String, dynamic>>.from(links).map((l) => l['profile_id'] as String).toList();
+        if (supervisorIds.isEmpty) return [];
+        final rows = await _client.from('profile_directory').select().inFilter('profile_id', supervisorIds).order('full_name', ascending: true);
+        return _withIdAlias(rows);
       case 'parent':
         final links = await _client.from('parent_child_links').select('student_id').eq('parent_id', _userId).eq('status', 'approved');
         final childIds = List<Map<String, dynamic>>.from(links).map((l) => l['student_id'] as String).toList();
         if (childIds.isEmpty) return [];
-        final rows = await _client.from('profile_directory').select().inFilter('id', childIds).order('full_name', ascending: true);
-        return List<Map<String, dynamic>>.from(rows);
+        final rows = await _client.from('profile_directory').select().inFilter('profile_id', childIds).order('full_name', ascending: true);
+        return _withIdAlias(rows);
       default:
         return [];
     }
@@ -377,41 +458,62 @@ class StudentDataService {
 
   Future<List<Map<String, dynamic>>> getConversations({bool archived = false}) async {
     final me = _userId;
+
+    // profile_conversations is the caller's own membership row — RLS
+    // (`is_conversation_member`) already restricts every other query below
+    // to conversations the caller belongs to, but starting from this table
+    // also gives us the archived/muted/blocked flags server-side instead of
+    // the old client-side `participant_a == me ? archived_a : archived_b`.
+    final myLinks = await _client
+        .from('profile_conversations')
+        .select('conversation_id, archived, muted, blocked_by')
+        .eq('profile_id', me)
+        .eq('archived', archived);
+    final myLinkList = List<Map<String, dynamic>>.from(myLinks);
+    if (myLinkList.isEmpty) return [];
+    final convoIds = myLinkList.map((l) => l['conversation_id'] as String).toList();
+
     final convos = await _client
         .from('conversations')
         .select()
-        .or('participant_a.eq.$me,participant_b.eq.$me')
+        .inFilter('conversation_id', convoIds)
         .order('last_message_at', ascending: false);
-    final convoList = List<Map<String, dynamic>>.from(convos).where((c) {
-      final isArchived = c['participant_a'] == me ? c['archived_a'] as bool : c['archived_b'] as bool;
-      return isArchived == archived;
-    }).toList();
+    final convoList = List<Map<String, dynamic>>.from(convos);
     if (convoList.isEmpty) return [];
 
-    final otherIds = convoList
-        .map((c) => c['participant_a'] == me ? c['participant_b'] : c['participant_a'])
-        .toSet()
-        .toList();
-    final profiles = await _client.from('profile_directory').select().inFilter('id', otherIds);
-    final profileById = {for (final p in List<Map<String, dynamic>>.from(profiles)) p['id'] as String: p};
+    final allMembers = await _client
+        .from('profile_conversations')
+        .select('conversation_id, profile_id')
+        .inFilter('conversation_id', convoIds);
+    final allMemberList = List<Map<String, dynamic>>.from(allMembers);
+    final otherIdByConvo = <String, String?>{};
+    for (final c in convoList) {
+      final cid = c['conversation_id'] as String;
+      final others = allMemberList.where((m) => m['conversation_id'] == cid && m['profile_id'] != me);
+      otherIdByConvo[cid] = others.isEmpty ? null : others.first['profile_id'] as String;
+    }
+    final otherIds = otherIdByConvo.values.whereType<String>().toSet().toList();
+    final profiles = otherIds.isEmpty ? <Map<String, dynamic>>[] : _withIdAlias(await _client.from('profile_directory').select().inFilter('profile_id', otherIds));
+    final profileById = {for (final p in profiles) p['profile_id'] as String: p};
 
-    final convoIds = convoList.map((c) => c['id'] as String).toList();
+    final convoIdsForMessages = convoList.map((c) => c['conversation_id'] as String).toList();
     final messages = await _client
         .from('messages')
         .select()
-        .inFilter('conversation_id', convoIds)
+        .inFilter('conversation_id', convoIdsForMessages)
         .order('created_at', ascending: true);
-    final messageList = List<Map<String, dynamic>>.from(messages);
+    final messageList = _withIdAlias(messages, 'message_id');
 
     return convoList.map((c) {
-      final otherId = c['participant_a'] == me ? c['participant_b'] : c['participant_a'];
-      final theseMessages = messageList.where((m) => m['conversation_id'] == c['id']);
+      final cid = c['conversation_id'] as String;
+      final otherId = otherIdByConvo[cid];
+      final theseMessages = messageList.where((m) => m['conversation_id'] == cid);
       final lastMessage = theseMessages.isEmpty ? null : theseMessages.last;
-      final unreadCount =
-          theseMessages.where((m) => m['sender_id'] != me && m['read_at'] == null).length;
+      final unreadCount = theseMessages.where((m) => m['sender_id'] != me && m['read_at'] == null).length;
       return {
         ...c,
-        'other_profile': profileById[otherId],
+        'id': cid,
+        'other_profile': otherId != null ? profileById[otherId] : null,
         'last_message': lastMessage,
         'unread_count': unreadCount,
       };
@@ -420,58 +522,73 @@ class StudentDataService {
 
   Future<Map<String, dynamic>> getOrCreateConversation(String otherUserId) async {
     final me = _userId;
-    final a = me.compareTo(otherUserId) < 0 ? me : otherUserId;
-    final b = me.compareTo(otherUserId) < 0 ? otherUserId : me;
 
-    final existing = await _client
-        .from('conversations')
-        .select()
-        .eq('participant_a', a)
-        .eq('participant_b', b)
-        .maybeSingle();
-    if (existing != null) {
-      // Starting a fresh conversation with someone you'd previously
-      // archived should surface it again.
-      final myArchiveColumn = a == me ? 'archived_a' : 'archived_b';
-      if (existing[myArchiveColumn] == true) {
-        await setConversationArchived(existing['id'] as String, false);
-        existing[myArchiveColumn] = false;
+    final mine = await _client.from('profile_conversations').select('conversation_id').eq('profile_id', me);
+    final myConvoIds = List<Map<String, dynamic>>.from(mine).map((r) => r['conversation_id'] as String).toList();
+
+    if (myConvoIds.isNotEmpty) {
+      final shared = await _client
+          .from('profile_conversations')
+          .select('conversation_id, archived')
+          .eq('profile_id', otherUserId)
+          .inFilter('conversation_id', myConvoIds)
+          .maybeSingle();
+      if (shared != null) {
+        final conversationId = shared['conversation_id'] as String;
+        // Starting a fresh conversation with someone you'd previously
+        // archived should surface it again.
+        if (shared['archived'] == true) {
+          await setConversationArchived(conversationId, false);
+        }
+        final conversation = await _client.from('conversations').select().eq('conversation_id', conversationId).single();
+        conversation['id'] = conversationId;
+        return conversation;
       }
-      return existing;
     }
 
-    return await _client
-        .from('conversations')
-        .insert({'participant_a': a, 'participant_b': b})
-        .select()
-        .single();
+    final conversation = await _client.from('conversations').insert({}).select().single();
+    final conversationId = conversation['conversation_id'] as String;
+    await _client.from('profile_conversations').insert({'conversation_id': conversationId, 'profile_id': me});
+    try {
+      await _client.from('profile_conversations').insert({'conversation_id': conversationId, 'profile_id': otherUserId});
+    } on PostgrestException catch (e) {
+      // See Task 14 report — profile_conversations_insert_self only allows
+      // a caller to add their OWN membership row, so adding the other
+      // participant here fails under RLS. Left as a real, surfaced error
+      // (not swallowed) rather than silently leaving a one-sided
+      // conversation the other person can never see.
+      throw Exception('Could not start this conversation: the other account could not be added (${e.message}).');
+    }
+    conversation['id'] = conversationId;
+    return conversation;
   }
 
   /// Resolves a conversation id (as delivered in a push notification's data
   /// payload) into the shape ChatScreen needs — throws if the conversation
-  /// doesn't exist or the signed-in user isn't one of its two participants.
+  /// doesn't exist or the signed-in user isn't one of its members (RLS
+  /// already restricts the initial select to conversations the caller
+  /// belongs to, so `.single()` throwing covers "not a participant" too).
   Future<Map<String, dynamic>> getConversationById(String conversationId) async {
     final me = _userId;
-    final conversation = await _client.from('conversations').select().eq('id', conversationId).single();
-    final participantA = conversation['participant_a'] as String;
-    final participantB = conversation['participant_b'] as String;
-    if (participantA != me && participantB != me) {
+    final conversation = await _client.from('conversations').select().eq('conversation_id', conversationId).single();
+    conversation['id'] = conversationId;
+
+    final members = await _client.from('profile_conversations').select('profile_id').eq('conversation_id', conversationId);
+    final otherIds = List<Map<String, dynamic>>.from(members).map((m) => m['profile_id'] as String).where((id) => id != me);
+    if (otherIds.isEmpty) {
       throw Exception('Not a participant in this conversation.');
     }
-    final otherId = participantA == me ? participantB : participantA;
-    final otherProfile = await _client.from('profile_directory').select().eq('id', otherId).single();
+    final otherProfile = await _client.from('profile_directory').select().eq('profile_id', otherIds.first).single();
+    otherProfile['id'] = otherProfile['profile_id'];
     return {...conversation, 'other_profile': otherProfile};
   }
 
   Future<void> setConversationArchived(String conversationId, bool archived) async {
-    final me = _userId;
-    final convo = await _client
-        .from('conversations')
-        .select('participant_a')
-        .eq('id', conversationId)
-        .single();
-    final myArchiveColumn = convo['participant_a'] == me ? 'archived_a' : 'archived_b';
-    await _client.from('conversations').update({myArchiveColumn: archived}).eq('id', conversationId);
+    await _client.from('profile_conversations').upsert({
+      'conversation_id': conversationId,
+      'profile_id': _userId,
+      'archived': archived,
+    }, onConflict: 'conversation_id,profile_id');
   }
 
   Future<Map<String, dynamic>?> getChatContactInfo(String otherUserId) async {
@@ -491,25 +608,31 @@ class StudentDataService {
         .eq('conversation_id', conversationId)
         .not('attachment_path', 'is', null)
         .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    return _withIdAlias(rows, 'message_id');
   }
 
   Future<void> setConversationMuted(String conversationId, bool muted) async {
-    final me = _userId;
-    final convo = await _client.from('conversations').select('participant_a').eq('id', conversationId).single();
-    final myMuteColumn = convo['participant_a'] == me ? 'muted_a' : 'muted_b';
-    await _client.from('conversations').update({myMuteColumn: muted}).eq('id', conversationId);
+    await _client.from('profile_conversations').upsert({
+      'conversation_id': conversationId,
+      'profile_id': _userId,
+      'muted': muted,
+    }, onConflict: 'conversation_id,profile_id');
   }
 
   Future<void> setConversationBlocked(String conversationId, bool blocked) async {
-    final me = _userId;
-    final convo = await _client.from('conversations').select('participant_a').eq('id', conversationId).single();
-    final myBlockColumn = convo['participant_a'] == me ? 'blocked_by_a' : 'blocked_by_b';
-    await _client.from('conversations').update({myBlockColumn: blocked}).eq('id', conversationId);
+    await _client.from('profile_conversations').upsert({
+      'conversation_id': conversationId,
+      'profile_id': _userId,
+      'blocked_by': blocked,
+    }, onConflict: 'conversation_id,profile_id');
   }
 
+  /// NOTE: `conversations` has no DELETE (or UPDATE) RLS policy in the
+  /// normalized schema — see Task 14 report. This call succeeds (no
+  /// exception) but silently deletes 0 rows, so "delete conversation"
+  /// currently does nothing observable to the database.
   Future<void> deleteConversation(String conversationId) async {
-    await _client.from('conversations').delete().eq('id', conversationId);
+    await _client.from('conversations').delete().eq('conversation_id', conversationId);
   }
 
   Future<List<Map<String, dynamic>>> getMessages(String conversationId) async {
@@ -518,15 +641,16 @@ class StudentDataService {
         .select()
         .eq('conversation_id', conversationId)
         .order('created_at', ascending: true);
-    return List<Map<String, dynamic>>.from(rows);
+    return _withIdAlias(rows, 'message_id');
   }
 
   Stream<List<Map<String, dynamic>>> messagesStream(String conversationId) {
     return _client
         .from('messages')
-        .stream(primaryKey: ['id'])
+        .stream(primaryKey: ['message_id'])
         .eq('conversation_id', conversationId)
-        .order('created_at', ascending: true);
+        .order('created_at', ascending: true)
+        .map((rows) => rows.map((r) => {...r, 'id': r['message_id']}).toList());
   }
 
   Future<void> sendMessage({
@@ -538,7 +662,7 @@ class StudentDataService {
     String? clientMessageId,
   }) async {
     await _client.from('messages').insert({
-      if (clientMessageId != null) 'id': clientMessageId,
+      if (clientMessageId != null) 'message_id': clientMessageId,
       'conversation_id': conversationId,
       'sender_id': _userId,
       'body': (body == null || body.trim().isEmpty) ? null : body.trim(),
@@ -559,6 +683,10 @@ class StudentDataService {
     await _client.rpc('delete_message_for_me', params: {'p_message_id': messageId});
   }
 
+  /// NOTE: `messages` has no DELETE RLS policy in the normalized schema —
+  /// see Task 14 report. This call succeeds (no exception) but silently
+  /// deletes 0 rows, so "delete for everyone" currently only removes the
+  /// storage attachment (if any), not the message row itself.
   Future<void> deleteMessage(String messageId, {String? attachmentPath}) async {
     if (attachmentPath != null) {
       try {
@@ -567,7 +695,7 @@ class StudentDataService {
         // Non-fatal — proceed to remove the message row regardless.
       }
     }
-    await _client.from('messages').delete().eq('id', messageId);
+    await _client.from('messages').delete().eq('message_id', messageId);
   }
 
   /// Uploads a chat attachment and returns its storage path. The message
@@ -607,20 +735,20 @@ class StudentDataService {
         .select()
         .eq('user_id', _userId)
         .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+    return _withIdAlias(rows, 'notification_id');
   }
 
   Future<int> getUnreadNotificationCount() async {
     final rows = await _client
         .from('notifications')
-        .select('id')
+        .select('notification_id')
         .eq('user_id', _userId)
         .eq('read', false);
     return List.from(rows).length;
   }
 
   Future<void> markNotificationRead(String id) async {
-    await _client.from('notifications').update({'read': true}).eq('id', id);
+    await _client.from('notifications').update({'read': true}).eq('notification_id', id);
   }
 
   Future<void> markAllNotificationsRead() async {
@@ -647,13 +775,13 @@ class StudentDataService {
   }
 
   /// Approves or rejects a pending parent-link request addressed to this
-  /// student. [requestId] is the `parent_child_links.id`, which is also the
-  /// notification's `related_id`.
+  /// student. [requestId] is the `parent_child_links.pc_link_id`, which is
+  /// also the notification's `related_id`.
   Future<void> respondToParentLinkRequest({required String requestId, required bool approve}) async {
     await _client
         .from('parent_child_links')
         .update({'status': approve ? 'approved' : 'rejected', 'responded_at': DateTime.now().toIso8601String()})
-        .eq('id', requestId)
+        .eq('pc_link_id', requestId)
         .eq('status', 'pending');
   }
 
@@ -664,15 +792,15 @@ class StudentDataService {
   Future<int> getUnreadMessageCount() async {
     final me = _userId;
     final convos = await _client
-        .from('conversations')
-        .select('id')
-        .or('participant_a.eq.$me,participant_b.eq.$me');
-    final convoIds = List<Map<String, dynamic>>.from(convos).map((c) => c['id'] as String).toList();
+        .from('profile_conversations')
+        .select('conversation_id')
+        .eq('profile_id', me);
+    final convoIds = List<Map<String, dynamic>>.from(convos).map((c) => c['conversation_id'] as String).toList();
     if (convoIds.isEmpty) return 0;
 
     final unread = await _client
         .from('messages')
-        .select('id')
+        .select('message_id')
         .inFilter('conversation_id', convoIds)
         .neq('sender_id', me)
         .isFilter('read_at', null);
@@ -680,9 +808,9 @@ class StudentDataService {
   }
 
   Future<Map<String, int>> getDashboardCounts() async {
-    final applications = await _client.from('applications').select('id, status').eq('student_id', _userId);
+    final applications = await _client.from('applications').select('status').eq('student_id', _userId);
     final applicationList = List<Map<String, dynamic>>.from(applications);
-    final reports = await _client.from('reports').select('id').eq('student_id', _userId);
+    final reports = await _client.from('reports').select('report_id').eq('student_id', _userId);
     final unreadNotifications = await getUnreadNotificationCount();
     final unreadMessages = await getUnreadMessageCount();
 
