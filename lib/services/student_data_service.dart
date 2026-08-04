@@ -140,6 +140,10 @@ class StudentDataService {
     }
   }
 
+  /// NOTE: `applications` has no DELETE RLS policy in the normalized
+  /// schema — see Task 14 report. This call succeeds (no exception) but
+  /// silently deletes 0 rows, so "withdraw application" currently does
+  /// nothing observable to the database.
   Future<void> withdrawApplication(String applicationId) async {
     await _client.from('applications').delete().eq('application_id', applicationId);
   }
@@ -315,6 +319,12 @@ class StudentDataService {
       final ext = _extensionOf(fileName);
       final storagePath = '$_userId/reports/$reportId.$ext';
       await _client.storage.from('student_files').upload(storagePath, file);
+      // NOTE: `reports` has no UPDATE RLS policy in the normalized schema —
+      // see Task 14 report. This call succeeds (no exception) but silently
+      // updates 0 rows, so the uploaded file above is orphaned in storage:
+      // the report row's storage_path/file_name/file_size_bytes never
+      // actually get linked to it, and the report will render as if no
+      // attachment was uploaded.
       await _client.from('reports').update({
         'storage_path': storagePath,
         'file_name': fileName,
@@ -404,6 +414,10 @@ class StudentDataService {
         // Non-fatal — proceed to clear the DB row regardless.
       }
     }
+    // NOTE: `documents` has no DELETE RLS policy in the normalized schema —
+    // see Task 14 report. This call succeeds (no exception) but silently
+    // deletes 0 rows, so the document row survives even though its storage
+    // object (above) was removed.
     await _client.from('documents').delete().eq('document_id', documentId);
   }
 
@@ -504,16 +518,24 @@ class StudentDataService {
         .order('created_at', ascending: true);
     final messageList = _withIdAlias(messages, 'message_id');
 
-    return convoList.map((c) {
+    // Conversations with no resolvable other participant are "ghost" rows —
+    // see getOrCreateConversation()'s catch block for how these get created
+    // (profile_conversations/conversations have no DELETE policy, so they
+    // can never be cleaned up once created). Screens force-cast
+    // `other_profile` to a non-nullable Map, so these must never be
+    // returned rather than returned with `other_profile: null`.
+    return convoList
+        .where((c) => otherIdByConvo[c['conversation_id'] as String] != null)
+        .map((c) {
       final cid = c['conversation_id'] as String;
-      final otherId = otherIdByConvo[cid];
+      final otherId = otherIdByConvo[cid]!;
       final theseMessages = messageList.where((m) => m['conversation_id'] == cid);
       final lastMessage = theseMessages.isEmpty ? null : theseMessages.last;
       final unreadCount = theseMessages.where((m) => m['sender_id'] != me && m['read_at'] == null).length;
       return {
         ...c,
         'id': cid,
-        'other_profile': otherId != null ? profileById[otherId] : null,
+        'other_profile': profileById[otherId],
         'last_message': lastMessage,
         'unread_count': unreadCount,
       };
@@ -554,9 +576,14 @@ class StudentDataService {
     } on PostgrestException catch (e) {
       // See Task 14 report — profile_conversations_insert_self only allows
       // a caller to add their OWN membership row, so adding the other
-      // participant here fails under RLS. Left as a real, surfaced error
-      // (not swallowed) rather than silently leaving a one-sided
-      // conversation the other person can never see.
+      // participant here fails under RLS. The `conversations` row and our
+      // own `profile_conversations` row above were already committed before
+      // this insert ran, and neither table has a DELETE policy, so a
+      // one-sided "ghost" conversation IS left behind regardless — this
+      // catch only makes the caller aware of that via a surfaced exception,
+      // it does not prevent or undo it. getConversations() filters these
+      // ghost rows out of its results so they can't reach the messages
+      // screen.
       throw Exception('Could not start this conversation: the other account could not be added (${e.message}).');
     }
     conversation['id'] = conversationId;
