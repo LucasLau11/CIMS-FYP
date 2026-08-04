@@ -21,11 +21,15 @@ async function sendOneSignalPush(
   body: string,
   data: Record<string, unknown>,
 ) {
+  // OneSignal's Nov 2024 key rotation replaced the legacy REST API Key
+  // (Basic auth) with App API Keys prefixed `os_v2_app_` (Key auth) --
+  // detect which one we were handed so this keeps working either way.
+  const authScheme = ONESIGNAL_REST_API_KEY.startsWith('os_v2_app_') ? 'Key' : 'Basic';
   const response = await fetch('https://onesignal.com/api/v1/notifications', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Basic ${ONESIGNAL_REST_API_KEY}`,
+      Authorization: `${authScheme} ${ONESIGNAL_REST_API_KEY}`,
     },
     body: JSON.stringify({
       app_id: ONESIGNAL_APP_ID,
