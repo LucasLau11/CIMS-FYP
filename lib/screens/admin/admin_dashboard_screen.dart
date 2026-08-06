@@ -33,22 +33,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
+
+    // Identity fields (name/avatar) are applied in their own try/catch,
+    // separate from the dashboard-stats calls below — a failure fetching
+    // counts/recent students must never discard identity data that was
+    // already fetched successfully (e.g. a freshly-uploaded avatar silently
+    // failing to appear because getRecentStudents() hiccupped).
     try {
       final profile = await AuthService.instance.getCurrentProfile();
-      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
+      if (!mounted) return;
+      setState(() {
+        _name = profile?['full_name'] as String?;
+        _avatarUrl = profile?['avatar_url'] as String?;
+      });
+    } catch (_) {
+      // Non-fatal — keep whatever identity data was already displayed.
+    }
+
+    try {
       final counts = await AdminDataService.instance.getDashboardCounts();
       final recentStudents = await AdminDataService.instance.getRecentStudents();
       if (!mounted) return;
       setState(() {
-        _name = profile?['full_name'] as String?;
-        _avatarUrl = resolvedAvatarUrl;
         _counts = counts;
         _recentStudents = recentStudents;
-        _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      // Non-fatal — keep whatever stats were already displayed.
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

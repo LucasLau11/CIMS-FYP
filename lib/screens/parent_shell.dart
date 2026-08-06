@@ -37,29 +37,43 @@ class _ParentShellState extends State<ParentShell> {
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
+
+    // Identity fields (name/avatar/unread count) are applied in their own
+    // try/catch, separate from the children/applications fetch below — a
+    // failure fetching a child's application must never discard identity
+    // data that was already fetched successfully (e.g. a freshly-uploaded
+    // avatar silently failing to appear because getChildLatestApplication()
+    // hiccupped).
+    try {
+      final profile = await AuthService.instance.getCurrentProfile();
+      final unread = await StudentDataService.instance.getUnreadNotificationCount();
+      if (!mounted) return;
+      setState(() {
+        _name = profile?['full_name'] as String?;
+        _avatarUrl = profile?['avatar_url'] as String?;
+        _unreadNotifications = unread;
+      });
+    } catch (_) {
+      // Non-fatal — keep whatever identity data was already displayed.
+    }
+
     try {
       final children = await ParentDataService.instance.getChildren();
       final apps = <String, Map<String, dynamic>?>{};
       for (final child in children) {
         apps[child['id'] as String] = await ParentDataService.instance.getChildLatestApplication(child['id'] as String);
       }
-      final profile = await AuthService.instance.getCurrentProfile();
-      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
-      final unread = await StudentDataService.instance.getUnreadNotificationCount();
       if (!mounted) return;
       setState(() {
         _children = children;
         _activeApplications
           ..clear()
           ..addAll(apps);
-        _name = profile?['full_name'] as String?;
-        _avatarUrl = resolvedAvatarUrl;
-        _unreadNotifications = unread;
-        _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      // Non-fatal — keep whatever children data was already displayed.
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

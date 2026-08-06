@@ -36,10 +36,26 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
+
+    // Identity fields (name/avatar/company) are applied in their own
+    // try/catch, separate from the dashboard-stats calls below — a failure
+    // fetching counts/applicants must never discard identity data that was
+    // already fetched successfully (e.g. a freshly-uploaded avatar silently
+    // failing to appear because getApplicants() hiccupped).
     try {
       final profile = await AuthService.instance.getCurrentProfile();
-      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       final company = await CompanyService.instance.getMyCompany();
+      if (!mounted) return;
+      setState(() {
+        _name = (profile?['full_name'] as String?)?.isNotEmpty == true ? profile!['full_name'] as String : '';
+        _avatarUrl = profile?['avatar_url'] as String?;
+        _companyName = company?['name'] as String?;
+      });
+    } catch (_) {
+      // Non-fatal — keep whatever identity data was already displayed.
+    }
+
+    try {
       final counts = await HrDataService.instance.getDashboardCounts();
       final unread = await StudentDataService.instance.getUnreadNotificationCount();
       final applicants = await HrDataService.instance.getApplicants();
@@ -47,17 +63,14 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
         ..sort((a, b) => (a['interview_at'] as String).compareTo(b['interview_at'] as String));
       if (!mounted) return;
       setState(() {
-        _name = (profile?['full_name'] as String?)?.isNotEmpty == true ? profile!['full_name'] as String : '';
-        _avatarUrl = resolvedAvatarUrl;
-        _companyName = company?['name'] as String?;
         _counts = counts;
         _unreadNotifications = unread;
         _upcomingInterviews = interviews.take(3).toList();
-        _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      // Non-fatal — keep whatever stats were already displayed.
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

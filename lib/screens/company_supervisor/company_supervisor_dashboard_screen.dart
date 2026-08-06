@@ -37,28 +37,41 @@ class _CompanySupervisorDashboardScreenState extends State<CompanySupervisorDash
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
+
+    // Identity fields (name/avatar/company) are applied in their own
+    // try/catch, separate from the dashboard-stats calls below — a failure
+    // fetching counts/reviews/interns must never discard identity data that
+    // was already fetched successfully (e.g. a freshly-uploaded avatar
+    // silently failing to appear because getInterns() hiccupped).
     try {
       final profile = await AuthService.instance.getCurrentProfile();
-      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
       final company = await CompanyService.instance.getMyCompany();
+      if (!mounted) return;
+      setState(() {
+        _name = (profile?['full_name'] as String?)?.isNotEmpty == true ? profile!['full_name'] as String : '';
+        _avatarUrl = profile?['avatar_url'] as String?;
+        _companyName = company?['name'] as String?;
+      });
+    } catch (_) {
+      // Non-fatal — keep whatever identity data was already displayed.
+    }
+
+    try {
       final counts = await CompanySupervisorDataService.instance.getDashboardCounts();
       final unread = await StudentDataService.instance.getUnreadNotificationCount();
       final reviewItems = await CompanySupervisorDataService.instance.getReviewItems();
       final interns = await CompanySupervisorDataService.instance.getInterns();
       if (!mounted) return;
       setState(() {
-        _name = (profile?['full_name'] as String?)?.isNotEmpty == true ? profile!['full_name'] as String : '';
-        _avatarUrl = resolvedAvatarUrl;
-        _companyName = company?['name'] as String?;
         _counts = counts;
         _unreadNotifications = unread;
         _pendingReviews = reviewItems.where((i) => i['status'] == 'submitted').take(3).toList();
         _interns = interns;
-        _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      // Non-fatal — keep whatever stats were already displayed.
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
