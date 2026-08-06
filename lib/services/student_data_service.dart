@@ -289,6 +289,14 @@ class StudentDataService {
   // Reports
   // ---------------------------------------------------------------------
 
+  /// Whether this student has been accepted into an internship
+  /// (`applications.status = 'active'`) — the gate for submitting
+  /// monthly/final reports.
+  Future<bool> hasActiveInternship() async {
+    final rows = await _client.from('applications').select('application_id').eq('student_id', _userId).eq('status', 'active').limit(1);
+    return List.from(rows).isNotEmpty;
+  }
+
   Future<List<Map<String, dynamic>>> getMyReports() async {
     final rows = await _client
         .from('v_report_with_reviews')
@@ -316,6 +324,13 @@ class StudentDataService {
     String? fileName,
     int? fileSizeBytes,
   }) async {
+    // Defense in depth: the reports screen already hides/disables the
+    // submit action for students without an active internship, but there's
+    // no RLS check for this (reports_insert_own only checks student_id), so
+    // re-check here too rather than relying on the UI gate alone.
+    if (!await hasActiveInternship()) {
+      throw Exception('You can only submit reports once you have been accepted into an internship.');
+    }
     final inserted = await _client
         .from('reports')
         .insert({

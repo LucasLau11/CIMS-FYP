@@ -2926,6 +2926,12 @@ abstract class AppLocalizations {
   /// **'Tap Submit to upload your first monthly or final report.'**
   String get tapSubmitFirstReportNote;
 
+  /// No description provided for @reportsRequireActiveInternshipNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can submit monthly and final reports once you\'ve been accepted into an internship.'**
+  String get reportsRequireActiveInternshipNote;
+
   /// No description provided for @submit.
   ///
   /// In en, this message translates to:

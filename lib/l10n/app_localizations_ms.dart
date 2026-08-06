@@ -1600,6 +1600,10 @@ class AppLocalizationsMs extends AppLocalizations {
       'Ketik Hantar untuk memuat naik laporan bulanan atau akhir pertama anda.';
 
   @override
+  String get reportsRequireActiveInternshipNote =>
+      'Anda boleh menghantar laporan bulanan dan akhir sebaik sahaja anda diterima ke dalam latihan industri.';
+
+  @override
   String get submit => 'Hantar';
 
   @override

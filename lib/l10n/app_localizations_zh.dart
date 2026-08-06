@@ -1543,6 +1543,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tapSubmitFirstReportNote => '点击提交以上传您的第一份月度或最终报告。';
 
   @override
+  String get reportsRequireActiveInternshipNote => '被实习录取后，您才能提交月度和最终报告。';
+
+  @override
   String get submit => '提交';
 
   @override

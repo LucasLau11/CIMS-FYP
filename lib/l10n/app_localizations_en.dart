@@ -1599,6 +1599,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap Submit to upload your first monthly or final report.';
 
   @override
+  String get reportsRequireActiveInternshipNote =>
+      'You can submit monthly and final reports once you\'ve been accepted into an internship.';
+
+  @override
   String get submit => 'Submit';
 
   @override

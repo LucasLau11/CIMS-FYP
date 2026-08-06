@@ -539,6 +539,7 @@
   "documents": "Dokumen",
   "noReportsYet": "Belum ada laporan",
   "tapSubmitFirstReportNote": "Ketik Hantar untuk memuat naik laporan bulanan atau akhir pertama anda.",
+  "reportsRequireActiveInternshipNote": "Anda boleh menghantar laporan bulanan dan akhir sebaik sahaja anda diterima ke dalam latihan industri.",
   "submit": "Hantar",
   "finalReportLabel": "Laporan Akhir",
   "monthlyReportLabel": "Laporan Bulanan",

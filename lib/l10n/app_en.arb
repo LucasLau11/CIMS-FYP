@@ -539,6 +539,7 @@
   "documents": "Documents",
   "noReportsYet": "No reports yet",
   "tapSubmitFirstReportNote": "Tap Submit to upload your first monthly or final report.",
+  "reportsRequireActiveInternshipNote": "You can submit monthly and final reports once you've been accepted into an internship.",
   "submit": "Submit",
   "finalReportLabel": "Final Report",
   "monthlyReportLabel": "Monthly Report",

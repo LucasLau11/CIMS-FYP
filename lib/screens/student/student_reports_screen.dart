@@ -40,6 +40,7 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
 
   bool _isLoadingReports = true;
   List<Map<String, dynamic>> _reports = [];
+  bool _hasActiveInternship = false;
 
   bool _isLoadingDocuments = true;
   List<Map<String, dynamic>> _documents = [];
@@ -63,9 +64,11 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
     setState(() => _isLoadingReports = true);
     try {
       final reports = await StudentDataService.instance.getMyReports();
+      final hasActiveInternship = await StudentDataService.instance.hasActiveInternship();
       if (!mounted) return;
       setState(() {
         _reports = reports;
+        _hasActiveInternship = hasActiveInternship;
         _isLoadingReports = false;
       });
     } catch (_) {
@@ -99,10 +102,11 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
       appBar: GradientAppBar(
         title: l10n.submissions,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.white),
-            onPressed: () => _showSubmitSheet(context),
-          ),
+          if (_hasActiveInternship)
+            IconButton(
+              icon: const Icon(Icons.add, color: Colors.white),
+              onPressed: () => _showSubmitSheet(context),
+            ),
         ],
       ),
       body: Column(
@@ -136,7 +140,7 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
                                   EmptyState(
                                     icon: Icons.assignment_outlined,
                                     title: l10n.noReportsYet,
-                                    description: l10n.tapSubmitFirstReportNote,
+                                    description: _hasActiveInternship ? l10n.tapSubmitFirstReportNote : l10n.reportsRequireActiveInternshipNote,
                                   ),
                                 ],
                               )
@@ -161,12 +165,14 @@ class _StudentReportsScreenState extends State<StudentReportsScreen> with Single
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showSubmitSheet(context),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.upload_file, color: Colors.white),
-        label: Text(l10n.submit, style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, color: Colors.white)),
-      ),
+      floatingActionButton: _hasActiveInternship
+          ? FloatingActionButton.extended(
+              onPressed: () => _showSubmitSheet(context),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.upload_file, color: Colors.white),
+              label: Text(l10n.submit, style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, color: Colors.white)),
+            )
+          : null,
     );
   }
 

@@ -539,6 +539,7 @@
   "documents": "文件",
   "noReportsYet": "暂无报告",
   "tapSubmitFirstReportNote": "点击提交以上传您的第一份月度或最终报告。",
+  "reportsRequireActiveInternshipNote": "被实习录取后，您才能提交月度和最终报告。",
   "submit": "提交",
   "finalReportLabel": "最终报告",
   "monthlyReportLabel": "月度报告",
