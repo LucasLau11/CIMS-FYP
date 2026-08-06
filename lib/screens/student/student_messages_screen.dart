@@ -536,6 +536,27 @@ class ChatScreenState extends State<ChatScreen> {
     }
 
     setState(() => _isAttaching = true);
+
+    // Same optimistic-pending pattern as _send() — without a local entry,
+    // this message only ever appears once Supabase Realtime echoes it back,
+    // and realtime has known gaps/delays (see the DELETE comment above), so
+    // an attachment could sit invisible until the chat is reopened and
+    // _load() re-fetches from scratch.
+    final localId = _generateLocalMessageId();
+    setState(() {
+      _pendingMessages.add({
+        'id': localId,
+        'conversation_id': widget.conversationId,
+        'sender_id': _myId,
+        'body': null,
+        'created_at': DateTime.now().toIso8601String(),
+        'read_at': null,
+        'attachment_path': null,
+        'attachment_file_name': picked.name,
+      });
+    });
+    _scrollToBottom();
+
     try {
       final file = await resolvePickedFile(picked);
       final path = await StudentDataService.instance.uploadChatAttachment(
@@ -548,9 +569,11 @@ class ChatScreenState extends State<ChatScreen> {
         attachmentPath: path,
         attachmentFileName: picked.name,
         attachmentSizeBytes: picked.size,
+        clientMessageId: localId,
       );
     } catch (e) {
       if (!mounted) return;
+      setState(() => _pendingMessages.removeWhere((p) => p['id'] == localId));
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotSendAttachment(e.toString())), backgroundColor: AppColors.error));
     } finally {
