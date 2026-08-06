@@ -104,12 +104,14 @@ class StudentDataService {
       final internship = r['internships'] as Map<String, dynamic>?;
       if (internship != null) _flattenInternship(internship);
 
-      // interviews.application_id -> applications.application_id is a
-      // one-to-many embed (PostgREST returns a list even though there's at
-      // most one interview per application in practice) — flatten the first
-      // one onto the application row under the old flat-schema key names.
-      final interviews = List<Map<String, dynamic>>.from(r['interviews'] as List? ?? const []);
-      final interview = interviews.isEmpty ? null : interviews.first;
+      // `interviews.application_id` has a UNIQUE constraint, so PostgREST
+      // treats applications->interviews as a to-one embed and returns a
+      // single object (or null) here, not a list — casting it `as List?`
+      // throws for every application that actually has an interview
+      // scheduled, which silently emptied this whole screen via the
+      // caller's try/catch. Flatten it directly onto the old flat-schema
+      // key names.
+      final interview = r['interviews'] as Map<String, dynamic>?;
       r['interview_at'] = interview?['scheduled_at'];
       r['interview_mode'] = interview?['mode'];
       r['interview_location'] = interview?['location'];

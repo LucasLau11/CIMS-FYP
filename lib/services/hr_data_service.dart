@@ -186,11 +186,18 @@ class HrDataService {
       final jobPosting = result.remove('job_postings') as Map<String, dynamic>?;
       result['internship_title'] = jobPosting?['title'];
 
-      final interviewList = List<Map<String, dynamic>>.from(result.remove('interviews') as List? ?? []);
-      if (interviewList.isNotEmpty) {
-        result['interview_at'] = interviewList.first['scheduled_at'];
-        result['interview_mode'] = interviewList.first['mode'];
-        result['interview_location'] = interviewList.first['location'];
+      // `interviews.application_id` has a UNIQUE constraint, so PostgREST
+      // treats applications->interviews as a to-one embed and returns a
+      // single object (or null) here, not a list — casting it `as List?`
+      // threw for every applicant who actually had an interview scheduled,
+      // silently emptying this whole screen (and the dashboard's upcoming-
+      // interviews section, which reuses this method) via the caller's
+      // try/catch.
+      final interview = result.remove('interviews') as Map<String, dynamic>?;
+      if (interview != null) {
+        result['interview_at'] = interview['scheduled_at'];
+        result['interview_mode'] = interview['mode'];
+        result['interview_location'] = interview['location'];
       }
       return result;
     }).toList();
