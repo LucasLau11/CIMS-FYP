@@ -67,9 +67,13 @@ class CompanySupervisorDataService {
     if (apps.isEmpty) return [];
 
     final studentIds = apps.map((a) => a['student_id'] as String).toSet().toList();
+    // `profiles!students_profile_id_fkey` disambiguates the embed: `students`
+    // has two FKs into `profiles` (profile_id and academic_supervisor_id), so
+    // an unqualified `profiles(...)` embed is rejected by PostgREST with
+    // "more than one relationship was found" and this whole query throws.
     final students = await _client
         .from('students')
-        .select('profile_id, programme, faculty, profiles(full_name)')
+        .select('profile_id, programme, faculty, profiles!students_profile_id_fkey(full_name)')
         .inFilter('profile_id', studentIds);
     final studentMap = {for (final s in List<Map<String, dynamic>>.from(students)) s['profile_id'] as String: s};
 

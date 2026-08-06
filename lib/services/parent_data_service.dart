@@ -64,12 +64,39 @@ class ParentDataService {
 
   /// Sends a link request to the given student; they must approve it before
   /// this parent can see any of their data.
+  ///
+  /// Also notifies the student (`notifications.type = 'parent_link'`,
+  /// `related_id` = the new `pc_link_id`) so it shows up in their
+  /// notifications with an approve/reject action
+  /// (`student_notifications_screen.dart`'s `_respondToParentLink`) — without
+  /// this insert the request row exists but the student has no way to
+  /// discover it. RLS (`can_notify`'s `'parent_link'` branch) already allows
+  /// this cross-user insert once the `parent_child_links` row exists, so no
+  /// migration is needed here.
   Future<void> requestParentLink({required String studentId, required String relationship}) async {
-    await _client.from('parent_child_links').insert({
-      'parent_id': _userId,
-      'student_id': studentId,
-      'relationship': relationship,
-    });
+    final link = await _client
+        .from('parent_child_links')
+        .insert({
+          'parent_id': _userId,
+          'student_id': studentId,
+          'relationship': relationship,
+        })
+        .select('pc_link_id')
+        .single();
+
+    try {
+      final parentName = await AuthService.instance.getCurrentProfile().then((p) => p?['full_name'] as String?);
+      await _client.from('notifications').insert({
+        'user_id': studentId,
+        'title': 'Parent link request',
+        'body': '${(parentName?.isNotEmpty == true) ? parentName : 'A parent'} wants to link as your $relationship.',
+        'type': 'parent_link',
+        'related_id': link['pc_link_id'],
+      });
+    } catch (_) {
+      // Non-fatal — the link request itself already succeeded; the parent's
+      // "My requests" list still shows it even if the notification failed.
+    }
   }
 
   /// All of this parent's link requests (pending/approved/rejected), newest

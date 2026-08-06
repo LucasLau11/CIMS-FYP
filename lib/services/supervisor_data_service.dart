@@ -57,7 +57,12 @@ class SupervisorDataService {
 
   Future<List<Map<String, dynamic>>> getStudents() async {
     final role = await _currentRole();
-    final query = _client.from('students').select('profile_id, programme, semester, faculty, profiles(full_name)');
+    // `profiles!students_profile_id_fkey` disambiguates the embed: `students`
+    // has two FKs into `profiles` (profile_id and academic_supervisor_id), so
+    // an unqualified `profiles(...)` embed is rejected by PostgREST with
+    // "more than one relationship was found" and this whole query throws.
+    final query =
+        _client.from('students').select('profile_id, programme, semester, faculty, profiles!students_profile_id_fkey(full_name)');
     final students = role == 'admin' ? await query : await query.eq('academic_supervisor_id', _userId);
     final studentList = List<Map<String, dynamic>>.from(students);
     if (studentList.isEmpty) return [];
