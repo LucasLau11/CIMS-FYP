@@ -1,6 +1,17 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
+
+/// Same hand-rolled v4 UUID generator as
+/// `student_messages_screen.dart`'s `_generateLocalMessageId()` — no `uuid`
+/// package dependency needed for a locally-random id.
+String _generateUuidV4() {
+  final random = Random();
+  const chars = '0123456789abcdef';
+  String hex(int n) => List.generate(n, (_) => chars[random.nextInt(16)]).join();
+  return '${hex(8)}-${hex(4)}-4${hex(3)}-${chars[8 + random.nextInt(4)]}${hex(3)}-${hex(12)}';
+}
 
 /// Real data access for the student screens — internships, applications,
 /// reports, documents, messaging, and notifications. Mirrors the singleton
@@ -570,8 +581,18 @@ class StudentDataService {
       }
     }
 
-    final conversation = await _client.from('conversations').insert({}).select().single();
-    final conversationId = conversation['conversation_id'] as String;
+    // The id is generated client-side and the insert below deliberately
+    // does NOT chain `.select()`. Requesting the row back (`return=
+    // representation`) makes Postgres re-check `conversations_select_member`
+    // (`is_conversation_member`) against the RETURNING row — but at this
+    // exact point no `profile_conversations` row exists yet (that's the
+    // next statement), so membership is false for everyone and the insert
+    // fails with "new row violates row-level security policy for table
+    // conversations", 100% reproducibly, for every brand-new conversation.
+    // Confirmed live via a real REST call before this fix. Supplying our
+    // own id sidesteps needing the row back at all.
+    final conversationId = _generateUuidV4();
+    await _client.from('conversations').insert({'conversation_id': conversationId});
     await _client.from('profile_conversations').insert({'conversation_id': conversationId, 'profile_id': me});
     try {
       await _client.from('profile_conversations').insert({'conversation_id': conversationId, 'profile_id': otherUserId});
@@ -588,6 +609,10 @@ class StudentDataService {
       // screen.
       throw Exception('Could not start this conversation: the other account could not be added (${e.message}).');
     }
+    // Safe to select now — both profile_conversations rows exist, so
+    // `is_conversation_member` (and therefore `conversations_select_member`)
+    // is satisfied.
+    final conversation = await _client.from('conversations').select().eq('conversation_id', conversationId).single();
     conversation['id'] = conversationId;
     return conversation;
   }
