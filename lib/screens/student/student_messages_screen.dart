@@ -35,7 +35,7 @@ class StudentMessagesScreen extends StatefulWidget {
 }
 
 class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
-  static const _rolesAllowedToStartNewConversations = {'admin', 'academic_supervisor', 'company_hr', 'parent'};
+  static const _rolesAllowedToStartNewConversations = {'admin', 'academic_supervisor', 'company_hr', 'parent', 'student'};
 
   bool _isLoading = true;
   List<Map<String, dynamic>> _conversations = [];

@@ -443,12 +443,9 @@ class StudentDataService {
   // ---------------------------------------------------------------------
 
   /// Other real accounts available to start a conversation with — scoped
-  /// by the caller's own role. Only admin/academic_supervisor/company_hr
-  /// get a non-empty list; every other role gets [] (matches the
-  /// conversations_insert_participant RLS policy, which blocks those
-  /// roles from creating a new conversation at all regardless of what
-  /// this method returns — this scoping is for a correct/uncluttered UI
-  /// list, not the actual security boundary).
+  /// by the caller's own role, matching each role's `_rolesAllowedTo
+  /// StartNewConversations` set in its messages screen (which independently
+  /// gates whether the "new message" icon shows at all).
   Future<List<Map<String, dynamic>>> getDirectory() async {
     final profile = await _client.from('profiles').select('role').eq('profile_id', _userId).single();
     final role = profile['role'] as String;
@@ -471,6 +468,17 @@ class StudentDataService {
         final supervisorIds = List<Map<String, dynamic>>.from(links).map((l) => l['profile_id'] as String).toList();
         if (supervisorIds.isEmpty) return [];
         final rows = await _client.from('profile_directory').select().inFilter('profile_id', supervisorIds).order('full_name', ascending: true);
+        return _withIdAlias(rows);
+      case 'student':
+        // Assigned academic supervisor + approved parent(s) — the two
+        // relationships a student can message on their own initiative.
+        final studentRow = await _client.from('students').select('academic_supervisor_id').eq('profile_id', _userId).maybeSingle();
+        final supervisorId = studentRow?['academic_supervisor_id'] as String?;
+        final parentLinks = await _client.from('parent_child_links').select('parent_id').eq('student_id', _userId).eq('status', 'approved');
+        final parentIds = List<Map<String, dynamic>>.from(parentLinks).map((l) => l['parent_id'] as String).toList();
+        final contactIds = [if (supervisorId != null) supervisorId, ...parentIds];
+        if (contactIds.isEmpty) return [];
+        final rows = await _client.from('profile_directory').select().inFilter('profile_id', contactIds).order('full_name', ascending: true);
         return _withIdAlias(rows);
       case 'parent':
         final links = await _client.from('parent_child_links').select('student_id').eq('parent_id', _userId).eq('status', 'approved');
