@@ -72,10 +72,16 @@ class PdfTemplateService {
     try {
       final page = await document.getPage(1);
       try {
+        // pdfx renders onto a transparent background by default (blank page
+        // areas are alpha=0, not opaque white) — without an explicit fill,
+        // the transparent page shows whatever is behind the Image widget
+        // (e.g. the designer screen's black Scaffold), making the whole
+        // page read as black except where the PDF actually drew ink.
         final image = await page.render(
           width: page.width * scale,
           height: page.height * scale,
           format: pdfx.PdfPageImageFormat.png,
+          backgroundColor: '#FFFFFF',
         );
         return image!.bytes;
       } finally {
