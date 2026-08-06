@@ -37,9 +37,25 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
+
+    // Profile fields (name/avatar/faculty) are applied in their own
+    // try/catch, separate from the dashboard-stats calls below — a failure
+    // fetching counts/reviews/students must never discard profile data that
+    // was already fetched successfully (e.g. a freshly-uploaded avatar
+    // silently failing to appear because getStudents() hiccupped).
     try {
       final profile = await AuthService.instance.getCurrentProfile();
-      final resolvedAvatarUrl = profile?['avatar_url'] as String?;
+      if (!mounted) return;
+      setState(() {
+        _name = profile?['full_name'] as String?;
+        _avatarUrl = profile?['avatar_url'] as String?;
+        _faculty = profile?['faculty'] as String?;
+      });
+    } catch (_) {
+      // Non-fatal — keep whatever profile data was already displayed.
+    }
+
+    try {
       final counts = await SupervisorDataService.instance.getDashboardCounts();
       final unreadNotifications = await StudentDataService.instance.getUnreadNotificationCount();
       final unreadMessages = await StudentDataService.instance.getUnreadMessageCount();
@@ -47,19 +63,16 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
       final students = await SupervisorDataService.instance.getStudents();
       if (!mounted) return;
       setState(() {
-        _name = profile?['full_name'] as String?;
-        _avatarUrl = resolvedAvatarUrl;
-        _faculty = profile?['faculty'] as String?;
         _counts = counts;
         _unreadNotifications = unreadNotifications;
         _unreadMessages = unreadMessages;
         _pendingItems = allReviews.where((r) => r['status'] == 'submitted').take(3).toList();
         _students = students.take(8).toList();
-        _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      // Non-fatal — keep whatever stats were already displayed.
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
