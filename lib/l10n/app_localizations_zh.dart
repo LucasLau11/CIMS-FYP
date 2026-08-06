@@ -127,6 +127,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorSelectRole => '请选择您的角色以继续。';
 
   @override
+  String get signUpCheckEmailMessage => '账户已创建！请检查您的电子邮件以确认账户，然后再登录。';
+
+  @override
   String get dashboard => '主页';
 
   @override

@@ -42,6 +42,7 @@
   "errorFillAllFields": "Please fill in all fields.",
   "errorPasswordsDoNotMatch": "Passwords do not match.",
   "errorSelectRole": "Please select your role to continue.",
+  "signUpCheckEmailMessage": "Account created! Please check your email to confirm your account before logging in.",
 
   "dashboard": "Dashboard",
   "overview": "Overview",

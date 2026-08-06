@@ -80,11 +80,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      final role = await AuthService.instance.signUp(
+      final result = await AuthService.instance.signUp(
         email: email,
         password: password,
         manualRole: _selectedManualRole,
       );
+
+      // With Supabase Auth's "Confirm email" setting on, sign-up doesn't
+      // produce an active session — there is nothing yet to make an
+      // authenticated call with, and nowhere logged-in to navigate into.
+      // Send the user back to log in once they've clicked the email link.
+      if (result.needsEmailConfirmation) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.signUpCheckEmailMessage)),
+        );
+        return;
+      }
 
       if (_needsName && _nameController.text.trim().isNotEmpty) {
         try {
@@ -95,7 +111,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
 
       if (!mounted) return;
-      _routeToShell(role);
+      _routeToShell(result.role);
     } catch (e) {
       if (!mounted) return;
       setState(() {

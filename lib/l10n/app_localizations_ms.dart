@@ -131,6 +131,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get errorSelectRole => 'Sila pilih peranan anda untuk teruskan.';
 
   @override
+  String get signUpCheckEmailMessage =>
+      'Akaun berjaya dicipta! Sila semak e-mel anda untuk mengesahkan akaun sebelum log masuk.';
+
+  @override
   String get dashboard => 'Papan Pemuka';
 
   @override

@@ -17,6 +17,16 @@ enum UserRole {
   admin,
 }
 
+/// Result of [AuthService.signUp] — the caller must check
+/// [needsEmailConfirmation] before assuming there's an active session to
+/// navigate into.
+class SignUpResult {
+  const SignUpResult({required this.role, required this.needsEmailConfirmation});
+
+  final UserRole role;
+  final bool needsEmailConfirmation;
+}
+
 extension UserRoleX on UserRole {
   String get dbValue {
     switch (this) {
@@ -545,18 +555,22 @@ class AuthService {
       roleFromEmailDomain(email) == null && isPersonalEmailDomain(email);
 
   // ---------------------------------------------------------------------
-  // Sign up: creates the Supabase auth account, then calls the
-  // `create_profile_with_subtype` RPC to create the `profiles` row and its
+  // Sign up: creates the Supabase auth account. The `profiles` row and its
   // matching subtype row (students/academic_supervisors/parents/
-  // company_hr/company_supervisors) as one atomic transaction — a failure
-  // partway through never leaves an orphaned base-only profile. There is no
-  // longer a database trigger doing this automatically; the new normalized
-  // schema's `profiles_insert_own` / `*_insert_own` RLS policies require an
-  // authenticated client-side insert, which is exactly what the RPC does
-  // (using auth.uid(), never a client-supplied id). Admin accounts can
-  // never come out of this path — the RPC itself rejects p_role = 'admin'.
+  // company_hr/company_supervisors) are created automatically by a
+  // database trigger on `auth.users` insert (`handle_new_auth_user`,
+  // reading the `app_role` passed via `data` below) — NOT by a client-side
+  // RPC call. This matters because when Supabase Auth's "Confirm email"
+  // setting is enabled, signUp() returns a user with no active session
+  // until the confirmation link is clicked, so any authenticated
+  // client-side call made immediately after signUp() (like the RPC this
+  // used to call) would fail with a permission error. A DB trigger fires
+  // as part of GoTrue's own privileged insert regardless of session state,
+  // so this works the same way whether email confirmation is on or off.
+  // Admin accounts can never come out of this path — the trigger silently
+  // skips profile creation for `app_role: 'admin'`.
   // ---------------------------------------------------------------------
-  Future<UserRole> signUp({
+  Future<SignUpResult> signUp({
     required String email,
     required String password,
     UserRole? manualRole,
@@ -588,21 +602,16 @@ class AuthService {
       rethrow;
     }
 
-    final user = response.user;
-    if (user == null) {
+    if (response.user == null) {
       throw Exception('Sign-up failed — no user returned.');
     }
 
-    try {
-      await _client.rpc('create_profile_with_subtype', params: {
-        'p_role': role.dbValue,
-        'p_email': trimmedEmail,
-      });
-    } on PostgrestException catch (e) {
-      throw Exception('Sign-up failed while creating your profile: ${e.message}');
-    }
-
-    return role;
+    // No session means Supabase Auth requires email confirmation before
+    // this account can actually log in — the caller must not treat this
+    // like an immediate, logged-in sign-up (e.g. must not navigate into an
+    // authenticated shell), since there is no session to do anything with
+    // yet.
+    return SignUpResult(role: role, needsEmailConfirmation: response.session == null);
   }
 
   // ---------------------------------------------------------------------

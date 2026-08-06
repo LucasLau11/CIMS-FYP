@@ -42,6 +42,7 @@
   "errorFillAllFields": "请填写所有字段。",
   "errorPasswordsDoNotMatch": "两次输入的密码不一致。",
   "errorSelectRole": "请选择您的角色以继续。",
+  "signUpCheckEmailMessage": "账户已创建！请检查您的电子邮件以确认账户，然后再登录。",
 
   "dashboard": "主页",
   "overview": "概览",

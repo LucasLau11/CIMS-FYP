@@ -132,6 +132,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorSelectRole => 'Please select your role to continue.';
 
   @override
+  String get signUpCheckEmailMessage =>
+      'Account created! Please check your email to confirm your account before logging in.';
+
+  @override
   String get dashboard => 'Dashboard';
 
   @override

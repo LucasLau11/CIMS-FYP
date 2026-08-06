@@ -42,6 +42,7 @@
   "errorFillAllFields": "Sila isi semua ruangan.",
   "errorPasswordsDoNotMatch": "Kata laluan tidak sepadan.",
   "errorSelectRole": "Sila pilih peranan anda untuk teruskan.",
+  "signUpCheckEmailMessage": "Akaun berjaya dicipta! Sila semak e-mel anda untuk mengesahkan akaun sebelum log masuk.",
 
   "dashboard": "Papan Pemuka",
   "overview": "Gambaran Keseluruhan",

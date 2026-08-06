@@ -334,6 +334,12 @@ abstract class AppLocalizations {
   /// **'Please select your role to continue.'**
   String get errorSelectRole;
 
+  /// No description provided for @signUpCheckEmailMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created! Please check your email to confirm your account before logging in.'**
+  String get signUpCheckEmailMessage;
+
   /// No description provided for @dashboard.
   ///
   /// In en, this message translates to:
