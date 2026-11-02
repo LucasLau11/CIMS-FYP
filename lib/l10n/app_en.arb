@@ -236,6 +236,7 @@
   "supNoReportsYet": "No reports yet",
   "supStudentDetails": "Student details",
   "supEvaluate": "Evaluate",
+  "supEvaluateLockedNote": "Evaluation unlocks once this student's internship period has ended.",
   "supMessage": "Message",
   "supLatestEvaluation": "Latest evaluation",
   "supSubmittedAgo": "Submitted {time}",
@@ -798,6 +799,8 @@
   "adminMonitorSubtitle": "Student progress, reports & documents",
   "adminDocumentTemplatesTitle": "Document Templates",
   "adminDocumentTemplatesSubtitle": "Manage fillable PDF forms (e.g. parent acknowledgement)",
+  "adminIntakesTitle": "Intakes",
+  "adminIntakesSubtitle": "Set internship windows and assign students",
   "adminSectionCommunication": "Communication",
   "adminMessagesSubtitle": "Message students, supervisors, or companies",
   "adminNotifications": "Notifications",
@@ -920,5 +923,34 @@
   "companyProfileReviewSubmitted": "Review submitted. Thank you!",
   "companyProfileReviewError": "Could not submit review: {error}",
   "@companyProfileReviewError": { "placeholders": { "error": { "type": "String" } } },
-  "companyProfileMustApplyNote": "Only students who have applied to this company can leave a review."
+  "companyProfileMustApplyNote": "Only students who have applied to this company can leave a review.",
+
+  "docFillAndSignAction": "Fill & Sign",
+  "docAwaitingCompanyUpload": "Awaiting upload from company",
+  "docAvailableOnceAccepted": "Available once your application is accepted",
+
+  "studentLetterNotConfiguredError": "This form has not been set up yet. Please contact the university.",
+  "studentLetterCouldNotLoadError": "Could not load the form: {error}",
+  "@studentLetterCouldNotLoadError": { "placeholders": { "error": { "type": "String" } } },
+  "studentLetterTapToFillInstruction": "Tap directly on the form to fill it in, then submit at the bottom.",
+  "studentLetterSignAndSubmitButton": "Sign & Submit",
+  "studentLetterSignatureTimestampNote": "Your digital signature will be recorded with a timestamp.",
+  "studentLetterDrawSignatureTitle": "Draw your signature",
+  "studentLetterCouldNotSubmitError": "Could not submit form: {error}",
+  "@studentLetterCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "studentLetterCouldNotOpenError": "Could not open form: {error}",
+  "@studentLetterCouldNotOpenError": { "placeholders": { "error": { "type": "String" } } },
+  "studentLetterSubmittedTitle": "Form submitted successfully",
+  "studentLetterSubmittedDescription": "Your signed letter has been saved.",
+  "studentLetterSignedOnDate": "Signed on {date}",
+  "@studentLetterSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "studentLetterViewPdfButton": "View PDF",
+  "studentLetterBackButton": "Back",
+
+  "hrOfferLetterSectionTitle": "Offer Letter",
+  "hrUploadOfferLetter": "Upload Offer Letter",
+  "hrReplaceOfferLetter": "Replace",
+
+  "csDocuments": "Documents",
+  "csNoDocumentsOnFile": "No documents on file yet."
 }

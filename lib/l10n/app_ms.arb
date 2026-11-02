@@ -236,6 +236,7 @@
   "supNoReportsYet": "Belum ada laporan",
   "supStudentDetails": "Butiran pelajar",
   "supEvaluate": "Nilai",
+  "supEvaluateLockedNote": "Penilaian akan dibuka sebaik sahaja tempoh latihan industri pelajar ini berakhir.",
   "supMessage": "Mesej",
   "supLatestEvaluation": "Penilaian terkini",
   "supSubmittedAgo": "Dihantar {time}",
@@ -798,6 +799,8 @@
   "adminMonitorSubtitle": "Kemajuan pelajar, laporan & dokumen",
   "adminDocumentTemplatesTitle": "Templat Dokumen",
   "adminDocumentTemplatesSubtitle": "Urus borang PDF boleh isi (cth. pengakuan ibu bapa)",
+  "adminIntakesTitle": "Kemasukan",
+  "adminIntakesSubtitle": "Tetapkan tempoh latihan industri dan tugaskan pelajar",
   "adminSectionCommunication": "Komunikasi",
   "adminMessagesSubtitle": "Hantar mesej kepada pelajar, penyelia, atau syarikat",
   "adminNotifications": "Notifikasi",
@@ -920,5 +923,34 @@
   "companyProfileReviewSubmitted": "Ulasan dihantar. Terima kasih!",
   "companyProfileReviewError": "Tidak dapat menghantar ulasan: {error}",
   "@companyProfileReviewError": { "placeholders": { "error": { "type": "String" } } },
-  "companyProfileMustApplyNote": "Hanya pelajar yang telah memohon ke syarikat ini boleh memberi ulasan."
+  "companyProfileMustApplyNote": "Hanya pelajar yang telah memohon ke syarikat ini boleh memberi ulasan.",
+
+  "docFillAndSignAction": "Isi & Tandatangan",
+  "docAwaitingCompanyUpload": "Menunggu muat naik daripada syarikat",
+  "docAvailableOnceAccepted": "Tersedia setelah permohonan anda diterima",
+
+  "studentLetterNotConfiguredError": "Borang ini belum disediakan lagi. Sila hubungi universiti.",
+  "studentLetterCouldNotLoadError": "Tidak dapat memuatkan borang: {error}",
+  "@studentLetterCouldNotLoadError": { "placeholders": { "error": { "type": "String" } } },
+  "studentLetterTapToFillInstruction": "Ketik terus pada borang untuk mengisinya, kemudian hantar di bahagian bawah.",
+  "studentLetterSignAndSubmitButton": "Tandatangan & Hantar",
+  "studentLetterSignatureTimestampNote": "Tandatangan digital anda akan direkodkan dengan cap masa.",
+  "studentLetterDrawSignatureTitle": "Lukis tandatangan anda",
+  "studentLetterCouldNotSubmitError": "Tidak dapat menghantar borang: {error}",
+  "@studentLetterCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "studentLetterCouldNotOpenError": "Tidak dapat membuka borang: {error}",
+  "@studentLetterCouldNotOpenError": { "placeholders": { "error": { "type": "String" } } },
+  "studentLetterSubmittedTitle": "Borang berjaya dihantar",
+  "studentLetterSubmittedDescription": "Surat bertandatangan anda telah disimpan.",
+  "studentLetterSignedOnDate": "Ditandatangani pada {date}",
+  "@studentLetterSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "studentLetterViewPdfButton": "Lihat PDF",
+  "studentLetterBackButton": "Kembali",
+
+  "hrOfferLetterSectionTitle": "Surat Tawaran",
+  "hrUploadOfferLetter": "Muat Naik Surat Tawaran",
+  "hrReplaceOfferLetter": "Gantikan",
+
+  "csDocuments": "Dokumen",
+  "csNoDocumentsOnFile": "Tiada dokumen direkodkan lagi."
 }

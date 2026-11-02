@@ -3,6 +3,10 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Reads google-services.json in this directory and wires up Firebase —
+    // required for the OneSignal Android SDK to register with FCM and get a
+    // real push token (see push-notification-not-working investigation).
+    id("com.google.gms.google-services")
 }
 
 android {
