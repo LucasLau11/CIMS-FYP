@@ -30,7 +30,7 @@ class _ParentAcknowledgementScreenState extends State<ParentAcknowledgementScree
   Map<String, dynamic>? _template;
   List<TemplateField> _fields = [];
   Uint8List? _preparedPdfBytes;
-  Uint8List? _pageImage;
+  List<Uint8List> _pageImages = [];
   double _pageAspectRatio = 1;
   Map<String, dynamic>? _existingSubmission;
 
@@ -79,7 +79,11 @@ class _ParentAcknowledgementScreenState extends State<ParentAcknowledgementScree
       }
 
       final preparedBytes = await DocumentTemplateService.instance.downloadTemplatePdf(template['storage_path'] as String);
-      final image = await PdfTemplateService.instance.renderPageImage(preparedBytes);
+      final pageCount = await PdfTemplateService.instance.getPageCount(preparedBytes);
+      final images = <Uint8List>[];
+      for (var i = 0; i < pageCount; i++) {
+        images.add(await PdfTemplateService.instance.renderPageImage(preparedBytes, pageIndex: i));
+      }
       final pageWidth = (template['page_width'] as num).toDouble();
       final pageHeight = (template['page_height'] as num).toDouble();
 
@@ -92,7 +96,7 @@ class _ParentAcknowledgementScreenState extends State<ParentAcknowledgementScree
         _template = template;
         _fields = fields;
         _preparedPdfBytes = preparedBytes;
-        _pageImage = image;
+        _pageImages = images;
         _pageAspectRatio = pageWidth / pageHeight;
         _isLoading = false;
       });
@@ -304,20 +308,23 @@ class _ParentAcknowledgementScreenState extends State<ParentAcknowledgementScree
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                AspectRatio(
-                  aspectRatio: _pageAspectRatio,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final size = constraints.biggest;
-                      return Stack(
-                        children: [
-                          Image.memory(_pageImage!, width: size.width, height: size.height, fit: BoxFit.fill),
-                          for (final f in _fields) _buildFieldOverlay(f, size),
-                        ],
-                      );
-                    },
+                for (var pageIndex = 0; pageIndex < _pageImages.length; pageIndex++) ...[
+                  if (pageIndex > 0) const SizedBox(height: 16),
+                  AspectRatio(
+                    aspectRatio: _pageAspectRatio,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final size = constraints.biggest;
+                        return Stack(
+                          children: [
+                            Image.memory(_pageImages[pageIndex], width: size.width, height: size.height, fit: BoxFit.fill),
+                            for (final f in _fields.where((f) => f.page == pageIndex)) _buildFieldOverlay(f, size),
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

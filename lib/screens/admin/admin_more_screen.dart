@@ -7,6 +7,7 @@ import '../login_screen.dart';
 import '../student/student_messages_screen.dart' show StudentMessagesScreen;
 import '../student/student_notifications_screen.dart' show StudentNotificationsScreen;
 import 'admin_document_templates_screen.dart';
+import 'admin_intakes_screen.dart';
 import 'admin_monitor_screen.dart';
 import 'admin_profile_screen.dart';
 
@@ -399,6 +400,13 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
             subtitle: l10n.adminDocumentTemplatesSubtitle,
             color: AppColors.primary,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDocumentTemplatesScreen())),
+          ),
+          _MenuTile(
+            icon: Icons.groups_outlined,
+            label: l10n.adminIntakesTitle,
+            subtitle: l10n.adminIntakesSubtitle,
+            color: AppColors.primary,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminIntakesScreen())),
           ),
           SectionHeader(title: l10n.adminSectionCommunication),
           _MenuTile(

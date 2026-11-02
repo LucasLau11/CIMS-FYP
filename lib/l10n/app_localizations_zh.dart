@@ -671,6 +671,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get supEvaluate => '评估';
 
   @override
+  String get supEvaluateLockedNote => '该学生的实习期结束后即可进行评估。';
+
+  @override
   String get supMessage => '消息';
 
   @override
@@ -2265,6 +2268,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminDocumentTemplatesSubtitle => '管理可填写的PDF表格（如家长确认书）';
 
   @override
+  String get adminIntakesTitle => '招生批次';
+
+  @override
+  String get adminIntakesSubtitle => '设置实习时间段并分配学生';
+
+  @override
   String get adminSectionCommunication => '通讯';
 
   @override
@@ -2601,4 +2610,75 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get companyProfileMustApplyNote => '只有申请过该公司的学生才能发表评价。';
+
+  @override
+  String get docFillAndSignAction => '填写并签署';
+
+  @override
+  String get docAwaitingCompanyUpload => '等待公司上传';
+
+  @override
+  String get docAvailableOnceAccepted => '申请被接受后即可使用';
+
+  @override
+  String get studentLetterNotConfiguredError => '此表格尚未设置。请联系大学。';
+
+  @override
+  String studentLetterCouldNotLoadError(String error) {
+    return '无法加载表格：$error';
+  }
+
+  @override
+  String get studentLetterTapToFillInstruction => '直接点击表格进行填写，然后在底部提交。';
+
+  @override
+  String get studentLetterSignAndSubmitButton => '签署并提交';
+
+  @override
+  String get studentLetterSignatureTimestampNote => '您的电子签名将附带时间戳记录。';
+
+  @override
+  String get studentLetterDrawSignatureTitle => '绘制您的签名';
+
+  @override
+  String studentLetterCouldNotSubmitError(String error) {
+    return '无法提交表格：$error';
+  }
+
+  @override
+  String studentLetterCouldNotOpenError(String error) {
+    return '无法打开表格：$error';
+  }
+
+  @override
+  String get studentLetterSubmittedTitle => '表格提交成功';
+
+  @override
+  String get studentLetterSubmittedDescription => '您已签署的信件已保存。';
+
+  @override
+  String studentLetterSignedOnDate(String date) {
+    return '签署于 $date';
+  }
+
+  @override
+  String get studentLetterViewPdfButton => '查看PDF';
+
+  @override
+  String get studentLetterBackButton => '返回';
+
+  @override
+  String get hrOfferLetterSectionTitle => '录取信';
+
+  @override
+  String get hrUploadOfferLetter => '上传录取信';
+
+  @override
+  String get hrReplaceOfferLetter => '替换';
+
+  @override
+  String get csDocuments => '文件';
+
+  @override
+  String get csNoDocumentsOnFile => '暂无已存档的文件。';
 }

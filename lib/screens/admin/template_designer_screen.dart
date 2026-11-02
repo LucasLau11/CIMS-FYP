@@ -13,6 +13,7 @@ const Map<String, String> kAutoFieldOptions = {
   'student_reg_no': 'Student Reg. No.',
   'programme': 'Programme',
   'company_name': 'Company Name',
+  'job_title': 'Job Title / Role',
   'today_date': "Today's Date",
 };
 
@@ -45,9 +46,13 @@ class TemplateDesignerScreen extends StatefulWidget {
 class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
-  Uint8List? _pageImage;
+  Uint8List? _pdfBytes;
   double _pageAspectRatio = 1;
   List<TemplateField> _fields = [];
+
+  int _pageIndex = 0;
+  int _pageCount = 1;
+  final Map<int, Uint8List> _pageImages = {};
 
   @override
   void initState() {
@@ -61,13 +66,16 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
       final template = templates.firstWhere((t) => t['id'] == widget.templateId);
       final storagePath = template['storage_path'] as String;
       final pdfBytes = await DocumentTemplateService.instance.downloadTemplatePdf(storagePath);
-      final image = await PdfTemplateService.instance.renderPageImage(pdfBytes);
+      final pageCount = await PdfTemplateService.instance.getPageCount(pdfBytes);
+      final image = await PdfTemplateService.instance.renderPageImage(pdfBytes, pageIndex: 0);
       final pageWidth = (template['page_width'] as num).toDouble();
       final pageHeight = (template['page_height'] as num).toDouble();
       final existingFields = (template['fields'] as List).map((f) => TemplateField.fromJson(f as Map<String, dynamic>)).toList();
       if (!mounted) return;
       setState(() {
-        _pageImage = image;
+        _pdfBytes = pdfBytes;
+        _pageCount = pageCount;
+        _pageImages[0] = image;
         _pageAspectRatio = pageWidth / pageHeight;
         _fields = existingFields;
         _isLoading = false;
@@ -77,6 +85,16 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not load template: $e'), backgroundColor: AppColors.error));
     }
+  }
+
+  Future<void> _goToPage(int index) async {
+    if (index < 0 || index >= _pageCount || index == _pageIndex) return;
+    if (!_pageImages.containsKey(index)) {
+      final image = await PdfTemplateService.instance.renderPageImage(_pdfBytes!, pageIndex: index);
+      _pageImages[index] = image;
+    }
+    if (!mounted) return;
+    setState(() => _pageIndex = index);
   }
 
   Set<String> get _usedKeys => _fields.map((f) => f.key).toSet();
@@ -92,6 +110,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
           key: spec.key,
           type: spec.type,
           label: spec.label,
+          page: _pageIndex,
           x: (normX - size.width / 2).clamp(0, 1 - size.width),
           y: (normY - size.height / 2).clamp(0, 1 - size.height),
           width: size.width,
@@ -110,6 +129,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
           key: field.key,
           type: field.type,
           label: field.label,
+          page: field.page,
           x: (field.x + dNormX).clamp(0, 1 - field.width),
           y: (field.y + dNormY).clamp(0, 1 - field.height),
           width: field.width,
@@ -254,7 +274,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
           ),
         ],
       ),
-      body: _isLoading || _pageImage == null
+      body: _isLoading || _pageImages[_pageIndex] == null
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Column(
               children: [
@@ -268,6 +288,26 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+                if (_pageCount > 1)
+                  Container(
+                    width: double.infinity,
+                    color: Colors.white.withValues(alpha: 0.06),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left, color: Colors.white),
+                          onPressed: _pageIndex > 0 ? () => _goToPage(_pageIndex - 1) : null,
+                        ),
+                        Text('Page ${_pageIndex + 1} of $_pageCount', style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white)),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right, color: Colors.white),
+                          onPressed: _pageIndex < _pageCount - 1 ? () => _goToPage(_pageIndex + 1) : null,
+                        ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
@@ -276,6 +316,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             final size = constraints.biggest;
+                            final pageFieldIndices = [for (int i = 0; i < _fields.length; i++) if (_fields[i].page == _pageIndex) i];
                             return GestureDetector(
                               onTapUp: (details) => _addFieldAt(
                                 (details.localPosition.dx / size.width).clamp(0, 1),
@@ -283,8 +324,8 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                               ),
                               child: Stack(
                                 children: [
-                                  Image.memory(_pageImage!, width: size.width, height: size.height, fit: BoxFit.fill),
-                                  for (int i = 0; i < _fields.length; i++)
+                                  Image.memory(_pageImages[_pageIndex]!, width: size.width, height: size.height, fit: BoxFit.fill),
+                                  for (final i in pageFieldIndices)
                                     Positioned(
                                       left: _fields[i].x * size.width,
                                       top: _fields[i].y * size.height,

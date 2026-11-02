@@ -88,6 +88,16 @@ class SupervisorDataService {
         .inFilter('student_id', studentIds);
     final documentList = List<Map<String, dynamic>>.from(documents);
 
+    // Drives whether the "Evaluate" action is available — see migration
+    // 00022_intakes_and_evaluation_gating.sql: evaluations are only
+    // insertable once student_internship_status() = 'completed', so the UI
+    // gates on the same value here rather than letting a supervisor tap
+    // Evaluate and hit an RLS error.
+    final internshipStatuses = await _client.from('v_student_internship_status').select('student_id, status').inFilter('student_id', studentIds);
+    final statusById = {
+      for (final r in List<Map<String, dynamic>>.from(internshipStatuses)) r['student_id'] as String: r['status'] as String,
+    };
+
     final result = studentList.map((student) {
       final id = student['profile_id'] as String;
       final profile = student['profiles'] as Map<String, dynamic>?;
@@ -117,6 +127,8 @@ class SupervisorDataService {
         'faculty': student['faculty'],
         'company_name': companyName,
         'has_active_internship': hasActiveInternship,
+        'internship_status': statusById[id] ?? 'unassigned',
+        'can_evaluate': statusById[id] == 'completed',
         'last_report_at': myReports.isEmpty ? null : myReports.first['submitted_at'],
         'pending_review_count': pendingReports + pendingDocuments,
         'report_count': myReports.length,

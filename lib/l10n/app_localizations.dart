@@ -1354,6 +1354,12 @@ abstract class AppLocalizations {
   /// **'Evaluate'**
   String get supEvaluate;
 
+  /// No description provided for @supEvaluateLockedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation unlocks once this student\'s internship period has ended.'**
+  String get supEvaluateLockedNote;
+
   /// No description provided for @supMessage.
   ///
   /// In en, this message translates to:
@@ -4234,6 +4240,18 @@ abstract class AppLocalizations {
   /// **'Manage fillable PDF forms (e.g. parent acknowledgement)'**
   String get adminDocumentTemplatesSubtitle;
 
+  /// No description provided for @adminIntakesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Intakes'**
+  String get adminIntakesTitle;
+
+  /// No description provided for @adminIntakesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set internship windows and assign students'**
+  String get adminIntakesSubtitle;
+
   /// No description provided for @adminSectionCommunication.
   ///
   /// In en, this message translates to:
@@ -4815,6 +4833,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only students who have applied to this company can leave a review.'**
   String get companyProfileMustApplyNote;
+
+  /// No description provided for @docFillAndSignAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill & Sign'**
+  String get docFillAndSignAction;
+
+  /// No description provided for @docAwaitingCompanyUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting upload from company'**
+  String get docAwaitingCompanyUpload;
+
+  /// No description provided for @docAvailableOnceAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Available once your application is accepted'**
+  String get docAvailableOnceAccepted;
+
+  /// No description provided for @studentLetterNotConfiguredError.
+  ///
+  /// In en, this message translates to:
+  /// **'This form has not been set up yet. Please contact the university.'**
+  String get studentLetterNotConfiguredError;
+
+  /// No description provided for @studentLetterCouldNotLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the form: {error}'**
+  String studentLetterCouldNotLoadError(String error);
+
+  /// No description provided for @studentLetterTapToFillInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap directly on the form to fill it in, then submit at the bottom.'**
+  String get studentLetterTapToFillInstruction;
+
+  /// No description provided for @studentLetterSignAndSubmitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign & Submit'**
+  String get studentLetterSignAndSubmitButton;
+
+  /// No description provided for @studentLetterSignatureTimestampNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your digital signature will be recorded with a timestamp.'**
+  String get studentLetterSignatureTimestampNote;
+
+  /// No description provided for @studentLetterDrawSignatureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw your signature'**
+  String get studentLetterDrawSignatureTitle;
+
+  /// No description provided for @studentLetterCouldNotSubmitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not submit form: {error}'**
+  String studentLetterCouldNotSubmitError(String error);
+
+  /// No description provided for @studentLetterCouldNotOpenError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open form: {error}'**
+  String studentLetterCouldNotOpenError(String error);
+
+  /// No description provided for @studentLetterSubmittedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Form submitted successfully'**
+  String get studentLetterSubmittedTitle;
+
+  /// No description provided for @studentLetterSubmittedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your signed letter has been saved.'**
+  String get studentLetterSubmittedDescription;
+
+  /// No description provided for @studentLetterSignedOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed on {date}'**
+  String studentLetterSignedOnDate(String date);
+
+  /// No description provided for @studentLetterViewPdfButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View PDF'**
+  String get studentLetterViewPdfButton;
+
+  /// No description provided for @studentLetterBackButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get studentLetterBackButton;
+
+  /// No description provided for @hrOfferLetterSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer Letter'**
+  String get hrOfferLetterSectionTitle;
+
+  /// No description provided for @hrUploadOfferLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Offer Letter'**
+  String get hrUploadOfferLetter;
+
+  /// No description provided for @hrReplaceOfferLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get hrReplaceOfferLetter;
+
+  /// No description provided for @csDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get csDocuments;
+
+  /// No description provided for @csNoDocumentsOnFile.
+  ///
+  /// In en, this message translates to:
+  /// **'No documents on file yet.'**
+  String get csNoDocumentsOnFile;
 }
 
 class _AppLocalizationsDelegate

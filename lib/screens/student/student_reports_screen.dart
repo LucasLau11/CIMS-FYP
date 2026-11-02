@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../document_letter_fill_screen.dart';
 import '../document_preview_screen.dart';
 import 'student_profile_screen.dart';
 
@@ -15,6 +16,15 @@ import 'student_profile_screen.dart';
 // uploaded by the student. Industrial Training Form (LI01) was replaced by
 // two separate documents. There's no optional-documents section anymore —
 // every required document is required.
+//
+// None of these three are manually uploaded by the student anymore:
+// offer_letter and company_acceptance_letter are provided by company HR
+// (uploaded / filled+signed respectively) once the student is accepted —
+// see hr_applicants_screen.dart. Only indemnity_letter is filled + signed
+// by the student themselves, via DocumentLetterFillScreen (see _LetterTile
+// below), which records the generated PDF straight into `documents` — this
+// list still just reads `documents`/`v_document_with_review`, so nothing
+// else about how these render needs to change.
 const List<String> _requiredDocCategories = ['offer_letter', 'indemnity_letter', 'company_acceptance_letter'];
 
 String _requiredDocTitle(AppLocalizations l10n, String category) {
@@ -356,7 +366,7 @@ class _DocumentsTab extends StatelessWidget {
         SectionHeader(title: l10n.requiredDocuments),
         _ResumeChecklistTile(resumeFilename: resumeFilename),
         ..._requiredDocCategories.map(
-          (category) => _DocumentTile(
+          (category) => _LetterTile(
             category: category,
             title: _requiredDocTitle(l10n, category),
             document: _docFor(category),
@@ -529,6 +539,128 @@ class _DocumentTile extends StatelessWidget {
               ],
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tile for offer_letter/indemnity_letter/company_acceptance_letter — none
+/// of which the student manually uploads anymore (see the comment above
+/// `_requiredDocCategories`). Only indemnity_letter is student-filled (Fill
+/// & Sign); offer_letter and company_acceptance_letter are both provided by
+/// company HR (upload / fill+sign respectively — see hr_applicants_screen
+/// .dart), so the student only ever views them once present.
+class _LetterTile extends StatelessWidget {
+  final String category;
+  final String title;
+  final Map<String, dynamic>? document;
+  final VoidCallback onChanged;
+
+  const _LetterTile({required this.category, required this.title, required this.document, required this.onChanged});
+
+  String _formatToday() {
+    final d = DateTime.now();
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+
+  Future<void> _openFillScreen(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentLetterFillScreen(
+          purpose: category,
+          title: title,
+          studentId: AuthService.instance.currentUserId!,
+          loadAutoValues: () async {
+            final profile = await AuthService.instance.getCurrentProfile();
+            final activeApplication = await StudentDataService.instance.getActiveApplicationSummary();
+            return {
+              'student_name': profile?['full_name'] as String? ?? '',
+              'student_reg_no': profile?['student_reg_no'] as String? ?? '',
+              'programme': profile?['programme'] as String? ?? '',
+              'company_name': activeApplication?['company_name'] as String? ?? '',
+              'job_title': activeApplication?['job_title'] as String? ?? '',
+              'today_date': _formatToday(),
+            };
+          },
+          recordDocument: (bytes, fileName) => StudentDataService.instance.recordGeneratedDocument(category: category, pdfBytes: bytes, fileName: fileName),
+        ),
+      ),
+    );
+    onChanged();
+  }
+
+  Future<void> _viewDocument(BuildContext context) async {
+    try {
+      final url = await StudentDataService.instance.getDocumentSignedUrl(document!['storage_path'] as String);
+      if (!context.mounted) return;
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => DocumentPreviewScreen(
+          url: url,
+          fileName: (document!['file_name'] as String?) ?? (document!['storage_path'] as String).split('/').last,
+        ),
+      ));
+    } catch (_) {
+      // Matches _DocumentTile's "open" action — non-fatal, just don't navigate.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isPresent = document != null;
+    final isProvidedByCompany = category == 'offer_letter' || category == 'company_acceptance_letter';
+    final canFillSign = !isPresent && !isProvidedByCompany;
+
+    return GestureDetector(
+      onTap: isPresent ? () => _viewDocument(context) : null,
+      child: AccentCard(
+        accentColor: isPresent ? AppColors.success : AppColors.error,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isPresent ? AppColors.successBg : AppColors.errorBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                isPresent ? Icons.picture_as_pdf_outlined : Icons.edit_document,
+                size: 20,
+                color: isPresent ? AppColors.success : AppColors.error,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  if (isPresent)
+                    Text('${document!['file_name']} · ${formatFileSize(parseNum(document!['file_size_bytes'])?.toInt() ?? 0)}',
+                        style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)
+                  else if (isProvidedByCompany)
+                    Text(l10n.docAwaitingCompanyUpload, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error))
+                  else
+                    Text(l10n.notUploadedYet, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+                ],
+              ),
+            ),
+            if (canFillSign) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _openFillScreen(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
+                  child: Text(l10n.docFillAndSignAction,
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

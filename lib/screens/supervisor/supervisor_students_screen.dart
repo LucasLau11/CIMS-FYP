@@ -270,6 +270,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     final name = (student['full_name'] as String?)?.isNotEmpty == true ? student['full_name'] as String : 'Unnamed student';
     final hasActive = student['has_active_internship'] == true;
     final companyName = student['company_name'] as String?;
+    final canEvaluate = student['can_evaluate'] == true;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -306,10 +307,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => SupervisorEvaluateScreen(student: student)));
-                      _load();
-                    },
+                    onPressed: canEvaluate
+                        ? () async {
+                            await Navigator.push(context, MaterialPageRoute(builder: (_) => SupervisorEvaluateScreen(student: student)));
+                            _load();
+                          }
+                        : null,
                     icon: const Icon(Icons.assessment_outlined, size: 16),
                     label: Text(l10n.supEvaluate),
                     style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
@@ -326,6 +329,15 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 ),
               ],
             ),
+            // Evaluations are gated on the student's derived internship
+            // status (see migration 00022) — 'completed' means their
+            // assigned intake's end date has passed while they still have
+            // an active internship. RLS enforces this too; this note just
+            // explains the disabled button instead of letting a tap fail.
+            if (!canEvaluate) ...[
+              const SizedBox(height: 8),
+              Text(l10n.supEvaluateLockedNote, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+            ],
             if (_evaluations.isNotEmpty) ...[
               const SizedBox(height: 20),
               Text(l10n.supLatestEvaluation, style: AppTextStyles.h3),

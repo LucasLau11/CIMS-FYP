@@ -1,9 +1,12 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/hr_data_service.dart';
+import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../document_letter_fill_screen.dart';
 import '../document_preview_screen.dart';
 import '../student/address_picker_screen.dart';
 
@@ -203,6 +206,139 @@ class ApplicantDetailScreen extends StatefulWidget {
 
 class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
   bool _isBusy = false;
+  bool _isLoadingOfferLetter = false;
+  Map<String, dynamic>? _offerLetterDoc;
+  bool _isLoadingAcceptanceLetter = false;
+  Map<String, dynamic>? _acceptanceLetterDoc;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.data['status'] == 'active') {
+      _loadOfferLetter();
+      _loadAcceptanceLetter();
+    }
+  }
+
+  Future<void> _loadAcceptanceLetter() async {
+    setState(() => _isLoadingAcceptanceLetter = true);
+    try {
+      final doc = await HrDataService.instance.getLetterDocument(widget.data['student_id'] as String, 'company_acceptance_letter');
+      if (!mounted) return;
+      setState(() {
+        _acceptanceLetterDoc = doc;
+        _isLoadingAcceptanceLetter = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingAcceptanceLetter = false);
+    }
+  }
+
+  String _formatToday() {
+    final d = DateTime.now();
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+
+  Future<void> _fillAcceptanceLetter() async {
+    final l10n = AppLocalizations.of(context)!;
+    final studentId = widget.data['student_id'] as String;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentLetterFillScreen(
+          purpose: 'company_acceptance_letter',
+          title: l10n.docTypeCompanyAcceptanceLetter,
+          studentId: studentId,
+          loadAutoValues: () async => {
+            'student_name': widget.data['student_name'] as String? ?? '',
+            'student_reg_no': widget.data['student_reg_no'] as String? ?? '',
+            'programme': widget.data['programme'] as String? ?? '',
+            'company_name': widget.data['company_name'] as String? ?? '',
+            'job_title': widget.data['internship_title'] as String? ?? '',
+            'today_date': _formatToday(),
+          },
+          recordDocument: (bytes, fileName) => HrDataService.instance.uploadGeneratedLetter(
+            studentId: studentId,
+            category: 'company_acceptance_letter',
+            pdfBytes: bytes,
+            fileName: fileName,
+          ),
+        ),
+      ),
+    );
+    _loadAcceptanceLetter();
+  }
+
+  Future<void> _viewAcceptanceLetter() async {
+    final path = _acceptanceLetterDoc?['storage_path'] as String?;
+    if (path == null) return;
+    try {
+      final url = await HrDataService.instance.getOfferLetterSignedUrl(path);
+      if (!mounted) return;
+      final fileName = (_acceptanceLetterDoc?['file_name'] as String?) ?? path.split('/').last;
+      Navigator.push(context, MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: url, fileName: fileName)));
+    } catch (_) {
+      // Non-fatal — just don't navigate.
+    }
+  }
+
+  Future<void> _loadOfferLetter() async {
+    setState(() => _isLoadingOfferLetter = true);
+    try {
+      final doc = await HrDataService.instance.getOfferLetterDocument(widget.data['student_id'] as String);
+      if (!mounted) return;
+      setState(() {
+        _offerLetterDoc = doc;
+        _isLoadingOfferLetter = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingOfferLetter = false);
+    }
+  }
+
+  Future<void> _uploadOfferLetter() async {
+    final result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['pdf', 'docx'], withData: true);
+    if (result == null || result.files.isEmpty) return;
+    final picked = result.files.single;
+
+    if (picked.size > 10 * 1024 * 1024) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorFileTooLarge10mb), backgroundColor: AppColors.error));
+      return;
+    }
+
+    setState(() => _isLoadingOfferLetter = true);
+    try {
+      final file = await resolvePickedFile(picked);
+      await HrDataService.instance.uploadOfferLetter(
+        studentId: widget.data['student_id'] as String,
+        file: file,
+        fileName: picked.name,
+        fileSizeBytes: picked.size,
+      );
+      await _loadOfferLetter();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingOfferLetter = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not upload offer letter: $e'), backgroundColor: AppColors.error));
+    }
+  }
+
+  Future<void> _viewOfferLetter() async {
+    final path = _offerLetterDoc?['storage_path'] as String?;
+    if (path == null) return;
+    try {
+      final url = await HrDataService.instance.getOfferLetterSignedUrl(path);
+      if (!mounted) return;
+      final fileName = (_offerLetterDoc?['file_name'] as String?) ?? path.split('/').last;
+      Navigator.push(context, MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: url, fileName: fileName)));
+    } catch (_) {
+      // Non-fatal — just don't navigate.
+    }
+  }
 
   Future<void> _reject() async {
     setState(() => _isBusy = true);
@@ -296,6 +432,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     final name = data['student_name'] as String;
     final isNew = data['status'] == 'pending';
     final isInterview = data['status'] == 'interview';
+    final isActive = data['status'] == 'active';
     final skills = List<String>.from(data['skills'] as List? ?? []);
 
     return Scaffold(
@@ -459,6 +596,96 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                 ),
               ],
             ),
+          ] else if (isActive) ...[
+            Text(l10n.hrOfferLetterSectionTitle, style: AppTextStyles.label),
+            const SizedBox(height: 8),
+            if (_isLoadingOfferLetter)
+              const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            else if (_offerLetterDoc != null)
+              GestureDetector(
+                onTap: _viewOfferLetter,
+                child: AccentCard(
+                  accentColor: AppColors.success,
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: AppColors.successBg, borderRadius: BorderRadius.circular(8)),
+                        child: Icon(Icons.picture_as_pdf_outlined, size: 20, color: AppColors.success),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_offerLetterDoc!['file_name'] as String,
+                                style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                overflow: TextOverflow.ellipsis),
+                            const SizedBox(height: 2),
+                            Text(formatFileSize(parseNum(_offerLetterDoc!['file_size_bytes'])?.toInt() ?? 0), style: AppTextStyles.caption),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(onPressed: _uploadOfferLetter, child: Text(l10n.hrReplaceOfferLetter)),
+                    ],
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _uploadOfferLetter,
+                  icon: const Icon(Icons.upload_file, size: 16),
+                  label: Text(l10n.hrUploadOfferLetter),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                ),
+              ),
+            const SizedBox(height: 20),
+            Text(l10n.docTypeCompanyAcceptanceLetter, style: AppTextStyles.label),
+            const SizedBox(height: 8),
+            if (_isLoadingAcceptanceLetter)
+              const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            else if (_acceptanceLetterDoc != null)
+              GestureDetector(
+                onTap: _viewAcceptanceLetter,
+                child: AccentCard(
+                  accentColor: AppColors.success,
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: AppColors.successBg, borderRadius: BorderRadius.circular(8)),
+                        child: Icon(Icons.picture_as_pdf_outlined, size: 20, color: AppColors.success),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_acceptanceLetterDoc!['file_name'] as String,
+                                style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                overflow: TextOverflow.ellipsis),
+                            const SizedBox(height: 2),
+                            Text(formatFileSize(parseNum(_acceptanceLetterDoc!['file_size_bytes'])?.toInt() ?? 0), style: AppTextStyles.caption),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _fillAcceptanceLetter,
+                  icon: const Icon(Icons.edit_document, size: 16),
+                  label: Text(l10n.docFillAndSignAction),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                ),
+              ),
           ],
         ],
       ),

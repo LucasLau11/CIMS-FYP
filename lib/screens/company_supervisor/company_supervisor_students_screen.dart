@@ -5,6 +5,7 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/company_supervisor_data_service.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../document_preview_screen.dart';
 import '../student/student_messages_screen.dart';
 import 'company_supervisor_evaluate_screen.dart';
 
@@ -146,6 +147,7 @@ class InternDetailScreen extends StatefulWidget {
 class _InternDetailScreenState extends State<InternDetailScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _reports = [];
+  List<Map<String, dynamic>> _documents = [];
 
   @override
   void initState() {
@@ -155,16 +157,30 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
 
   Future<void> _load() async {
     try {
-      final reports = await CompanySupervisorDataService.instance.getReviewItems();
       final studentId = widget.data['id'] as String;
+      final reports = await CompanySupervisorDataService.instance.getReviewItems();
+      final documents = await CompanySupervisorDataService.instance.getInternDocuments(studentId);
       if (!mounted) return;
       setState(() {
         _reports = reports.where((r) => r['student_id'] == studentId).toList();
+        _documents = documents;
         _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _viewDocument(Map<String, dynamic> document) async {
+    try {
+      final url = await StudentDataService.instance.getDocumentSignedUrl(document['storage_path'] as String);
+      if (!mounted) return;
+      await Navigator.push(context, MaterialPageRoute(
+        builder: (_) => DocumentPreviewScreen(url: url, fileName: (document['file_name'] as String?) ?? 'document.pdf'),
+      ));
+    } catch (_) {
+      // Non-fatal — just don't navigate.
     }
   }
 
@@ -192,6 +208,7 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final data = widget.data;
     final name = data['full_name'] as String;
+    final canEvaluate = data['can_evaluate'] == true;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -224,10 +241,12 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await Navigator.push(context, MaterialPageRoute(builder: (_) => CompanySupervisorEvaluateScreen(intern: data)));
-                    _load();
-                  },
+                  onPressed: canEvaluate
+                      ? () async {
+                          await Navigator.push(context, MaterialPageRoute(builder: (_) => CompanySupervisorEvaluateScreen(intern: data)));
+                          _load();
+                        }
+                      : null,
                   icon: const Icon(Icons.assessment_outlined, size: 16),
                   label: Text(l10n.supEvaluate),
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
@@ -244,6 +263,10 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
               ),
             ],
           ),
+          if (!canEvaluate) ...[
+            const SizedBox(height: 8),
+            Text(l10n.supEvaluateLockedNote, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+          ],
           const SizedBox(height: 20),
           Text(l10n.csReportSubmissions, style: AppTextStyles.h3),
           const SizedBox(height: 10),
@@ -274,8 +297,52 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
                     ],
                   ),
                 )),
+          const SizedBox(height: 20),
+          Text(l10n.csDocuments, style: AppTextStyles.h3),
+          const SizedBox(height: 10),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          else if (_documents.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(l10n.csNoDocumentsOnFile, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+            )
+          else
+            ..._documents.map((d) => GestureDetector(
+                  onTap: () => _viewDocument(d),
+                  child: AccentCard(
+                    accentColor: AppColors.success,
+                    child: Row(
+                      children: [
+                        Icon(Icons.picture_as_pdf_outlined, size: 18, color: AppColors.success),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_documentCategoryLabel(l10n, d['category'] as String),
+                                  style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                              Text(d['file_name'] as String, style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )),
         ],
       ),
     );
+  }
+}
+
+String _documentCategoryLabel(AppLocalizations l10n, String category) {
+  switch (category) {
+    case 'offer_letter':
+      return l10n.docTypeOfferLetter;
+    case 'indemnity_letter':
+      return l10n.docTypeIndemnityLetter;
+    default:
+      return l10n.docTypeCompanyAcceptanceLetter;
   }
 }

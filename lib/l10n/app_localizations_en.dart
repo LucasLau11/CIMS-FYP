@@ -680,6 +680,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supEvaluate => 'Evaluate';
 
   @override
+  String get supEvaluateLockedNote =>
+      'Evaluation unlocks once this student\'s internship period has ended.';
+
+  @override
   String get supMessage => 'Message';
 
   @override
@@ -2343,6 +2347,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Manage fillable PDF forms (e.g. parent acknowledgement)';
 
   @override
+  String get adminIntakesTitle => 'Intakes';
+
+  @override
+  String get adminIntakesSubtitle =>
+      'Set internship windows and assign students';
+
+  @override
   String get adminSectionCommunication => 'Communication';
 
   @override
@@ -2698,4 +2709,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get companyProfileMustApplyNote =>
       'Only students who have applied to this company can leave a review.';
+
+  @override
+  String get docFillAndSignAction => 'Fill & Sign';
+
+  @override
+  String get docAwaitingCompanyUpload => 'Awaiting upload from company';
+
+  @override
+  String get docAvailableOnceAccepted =>
+      'Available once your application is accepted';
+
+  @override
+  String get studentLetterNotConfiguredError =>
+      'This form has not been set up yet. Please contact the university.';
+
+  @override
+  String studentLetterCouldNotLoadError(String error) {
+    return 'Could not load the form: $error';
+  }
+
+  @override
+  String get studentLetterTapToFillInstruction =>
+      'Tap directly on the form to fill it in, then submit at the bottom.';
+
+  @override
+  String get studentLetterSignAndSubmitButton => 'Sign & Submit';
+
+  @override
+  String get studentLetterSignatureTimestampNote =>
+      'Your digital signature will be recorded with a timestamp.';
+
+  @override
+  String get studentLetterDrawSignatureTitle => 'Draw your signature';
+
+  @override
+  String studentLetterCouldNotSubmitError(String error) {
+    return 'Could not submit form: $error';
+  }
+
+  @override
+  String studentLetterCouldNotOpenError(String error) {
+    return 'Could not open form: $error';
+  }
+
+  @override
+  String get studentLetterSubmittedTitle => 'Form submitted successfully';
+
+  @override
+  String get studentLetterSubmittedDescription =>
+      'Your signed letter has been saved.';
+
+  @override
+  String studentLetterSignedOnDate(String date) {
+    return 'Signed on $date';
+  }
+
+  @override
+  String get studentLetterViewPdfButton => 'View PDF';
+
+  @override
+  String get studentLetterBackButton => 'Back';
+
+  @override
+  String get hrOfferLetterSectionTitle => 'Offer Letter';
+
+  @override
+  String get hrUploadOfferLetter => 'Upload Offer Letter';
+
+  @override
+  String get hrReplaceOfferLetter => 'Replace';
+
+  @override
+  String get csDocuments => 'Documents';
+
+  @override
+  String get csNoDocumentsOnFile => 'No documents on file yet.';
 }

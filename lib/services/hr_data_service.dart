@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
 
@@ -154,7 +156,7 @@ class HrDataService {
 
     final rows = await _client
         .from('applications')
-        .select('*, job_postings!inner(job_posting_id, title, company_id), interviews(scheduled_at, mode, location)')
+        .select('*, job_postings!inner(job_posting_id, title, company_id, companies(name)), interviews(scheduled_at, mode, location)')
         .eq('job_postings.company_id', companyId)
         .order('applied_at', ascending: false);
     final apps = List<Map<String, dynamic>>.from(rows);
@@ -167,7 +169,7 @@ class HrDataService {
     // "more than one relationship was found" and this whole query throws.
     final studentRows = await _client
         .from('students')
-        .select('profile_id, programme, resume_path, resume_filename, profiles!students_profile_id_fkey(full_name)')
+        .select('profile_id, programme, student_reg_no, resume_path, resume_filename, profiles!students_profile_id_fkey(full_name)')
         .inFilter('profile_id', studentIds);
     final studentMap = {for (final s in List<Map<String, dynamic>>.from(studentRows)) s['profile_id'] as String: s};
 
@@ -180,11 +182,13 @@ class HrDataService {
       final fullName = profile?['full_name'] as String?;
       result['student_name'] = fullName?.isNotEmpty == true ? fullName! : 'Unnamed student';
       result['programme'] = student?['programme'];
+      result['student_reg_no'] = student?['student_reg_no'];
       result['resume_path'] = student?['resume_path'];
       result['resume_filename'] = student?['resume_filename'];
 
       final jobPosting = result.remove('job_postings') as Map<String, dynamic>?;
       result['internship_title'] = jobPosting?['title'];
+      result['company_name'] = (jobPosting?['companies'] as Map?)?['name'];
 
       // `interviews.application_id` has a UNIQUE constraint, so PostgREST
       // treats applications->interviews as a to-one embed and returns a
@@ -201,6 +205,148 @@ class HrDataService {
       }
       return result;
     }).toList();
+  }
+
+  // ---------------------------------------------------------------------
+  // Offer letter + company acceptance letter — both only valid once the
+  // applicant's status is 'active'; see migrations
+  // offer_letter_and_company_document_visibility and
+  // company_acceptance_letter_filled_by_hr for the documents/storage RLS
+  // that enforces this server-side too. The offer letter is a plain
+  // upload; the acceptance letter is filled + signed in-app via
+  // DocumentLetterFillScreen (see hr_applicants_screen.dart), which calls
+  // [uploadGeneratedLetter] below instead of [uploadOfferLetter].
+  // ---------------------------------------------------------------------
+
+  Future<Map<String, dynamic>?> getLetterDocument(String studentId, String category) async {
+    return await _client
+        .from('documents')
+        .select()
+        .eq('student_id', studentId)
+        .eq('category', category)
+        .maybeSingle();
+  }
+
+  Future<Map<String, dynamic>?> getOfferLetterDocument(String studentId) => getLetterDocument(studentId, 'offer_letter');
+
+  /// Uploads (or replaces) the offer letter for [studentId]. Written
+  /// straight to 'approved' — offer letters aren't reviewed, just kept on
+  /// file for the student/academic supervisor/admin/company supervisor to
+  /// see (see documents_select_company / documents_select_involved).
+  Future<void> uploadOfferLetter({
+    required String studentId,
+    required File file,
+    required String fileName,
+    required int fileSizeBytes,
+  }) async {
+    final existing = await getOfferLetterDocument(studentId);
+    if (existing != null) {
+      final oldPath = existing['storage_path'] as String;
+      if (oldPath.isNotEmpty) {
+        try {
+          await _client.storage.from('student_files').remove([oldPath]);
+        } catch (_) {
+          // Non-fatal — proceed to replace the DB row regardless.
+        }
+      }
+      await _client.from('documents').delete().eq('document_id', existing['document_id'] as String);
+    }
+
+    final inserted = await _client
+        .from('documents')
+        .insert({
+          'student_id': studentId,
+          'category': 'offer_letter',
+          'status': 'approved',
+          'storage_path': '',
+          'file_name': fileName,
+          'file_size_bytes': fileSizeBytes,
+        })
+        .select()
+        .single();
+    final documentId = inserted['document_id'] as String;
+
+    final ext = fileName.contains('.') ? fileName.split('.').last.toLowerCase() : 'dat';
+    final storagePath = '$studentId/documents/$documentId.$ext';
+    await _client.storage.from('student_files').upload(storagePath, file);
+    await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId);
+
+    try {
+      await _client.from('notifications').insert({
+        'user_id': studentId,
+        'title': 'Offer letter uploaded',
+        'body': '$fileName has been uploaded by your company.',
+        'type': 'document',
+        'related_id': documentId,
+      });
+    } catch (_) {
+      // Non-fatal — the upload itself already succeeded.
+    }
+  }
+
+  Future<String> getOfferLetterSignedUrl(String storagePath) async {
+    return await _client.storage.from('student_files').createSignedUrl(storagePath, 300);
+  }
+
+  /// Records a filled+signed template PDF (see DocumentLetterFillScreen) as
+  /// [studentId]'s `documents` row for [category] — the HR-side
+  /// counterpart to StudentDataService.recordGeneratedDocument, used for
+  /// the company acceptance letter, which HR fills on the student's
+  /// behalf rather than the student filling it themselves. Same
+  /// singleton-per-category replace + insert-then-upload-then-patch flow
+  /// as [uploadOfferLetter].
+  Future<void> uploadGeneratedLetter({
+    required String studentId,
+    required String category,
+    required Uint8List pdfBytes,
+    required String fileName,
+  }) async {
+    final existing = await getLetterDocument(studentId, category);
+    if (existing != null) {
+      final oldPath = existing['storage_path'] as String;
+      if (oldPath.isNotEmpty) {
+        try {
+          await _client.storage.from('student_files').remove([oldPath]);
+        } catch (_) {
+          // Non-fatal — proceed to replace the DB row regardless.
+        }
+      }
+      await _client.from('documents').delete().eq('document_id', existing['document_id'] as String);
+    }
+
+    final inserted = await _client
+        .from('documents')
+        .insert({
+          'student_id': studentId,
+          'category': category,
+          'status': 'approved',
+          'storage_path': '',
+          'file_name': fileName,
+          'file_size_bytes': pdfBytes.length,
+        })
+        .select()
+        .single();
+    final documentId = inserted['document_id'] as String;
+
+    final storagePath = '$studentId/documents/$documentId.pdf';
+    await _client.storage.from('student_files').uploadBinary(
+          storagePath,
+          pdfBytes,
+          fileOptions: const FileOptions(contentType: 'application/pdf'),
+        );
+    await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId);
+
+    try {
+      await _client.from('notifications').insert({
+        'user_id': studentId,
+        'title': 'Document signed',
+        'body': '$fileName has been signed by your company.',
+        'type': 'document',
+        'related_id': documentId,
+      });
+    } catch (_) {
+      // Non-fatal — the upload itself already succeeded.
+    }
   }
 
   Future<void> updateApplicationStatus({
@@ -241,7 +387,7 @@ class HrDataService {
         break;
       case 'active':
         title = 'Application accepted';
-        body = 'Congratulations! Your application for $roleLabel has been accepted.';
+        body = 'Congratulations! Your application for $roleLabel has been accepted. Please sign your Company Acceptance Letter in the Documents tab.';
         break;
       case 'rejected':
         title = 'Application update';

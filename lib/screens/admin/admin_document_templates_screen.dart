@@ -18,6 +18,8 @@ import 'template_designer_screen.dart';
 /// match" look identical from the query's side.
 const Map<String, String> kTemplatePurposes = {
   'parent_acknowledgement': 'Parent Acknowledgement Form',
+  'indemnity_letter': 'Indemnity Letter',
+  'company_acceptance_letter': 'Company Acceptance Letter',
 };
 
 class AdminDocumentTemplatesScreen extends StatefulWidget {
@@ -69,35 +71,40 @@ class _AdminDocumentTemplatesScreenState
               fontWeight: FontWeight.w700,
             ),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  hintText: 'e.g. Parent Acknowledgement Form',
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    hintText: 'e.g. Parent Acknowledgement Form',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              // Fixed set, not free text — `purpose` is matched by exact
-              // string against the one screen that consumes it
-              // (getActiveTemplate('parent_acknowledgement')); a typo or a
-              // human-readable description here used to fail silently with
-              // no error anywhere, since the consuming screen just sees "no
-              // active template" either way.
-              DropdownButtonFormField<String>(
-                initialValue: purpose,
-                decoration: const InputDecoration(labelText: 'Used for'),
-                items: kTemplatePurposes.entries
-                    .map(
-                      (e) =>
-                          DropdownMenuItem(value: e.key, child: Text(e.value)),
-                    )
-                    .toList(),
-                onChanged: (val) => setDialogState(() => purpose = val!),
-              ),
-            ],
+                const SizedBox(height: 12),
+                // Fixed set, not free text — `purpose` is matched by exact
+                // string against the one screen that consumes it
+                // (getActiveTemplate('parent_acknowledgement')); a typo or a
+                // human-readable description here used to fail silently with
+                // no error anywhere, since the consuming screen just sees "no
+                // active template" either way.
+                DropdownButtonFormField<String>(
+                  initialValue: purpose,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Used for'),
+                  items: kTemplatePurposes.entries
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e.key,
+                          child: Text(e.value, overflow: TextOverflow.ellipsis),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (val) => setDialogState(() => purpose = val!),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(

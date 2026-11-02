@@ -88,6 +88,16 @@ class CompanySupervisorDataService {
     final documents = await _client.from('documents').select('student_id, status').inFilter('student_id', studentIds);
     final documentList = List<Map<String, dynamic>>.from(documents);
 
+    // Drives whether the "Evaluate" action is available — see migration
+    // 00022_intakes_and_evaluation_gating.sql: evaluations are only
+    // insertable once student_internship_status() = 'completed', so the UI
+    // gates on the same value here rather than letting a supervisor tap
+    // Evaluate and hit an RLS error.
+    final internshipStatuses = await _client.from('v_student_internship_status').select('student_id, status').inFilter('student_id', studentIds);
+    final statusById = {
+      for (final r in List<Map<String, dynamic>>.from(internshipStatuses)) r['student_id'] as String: r['status'] as String,
+    };
+
     return apps.map((a) {
       final id = a['student_id'] as String;
       final student = studentMap[id];
@@ -108,8 +118,26 @@ class CompanySupervisorDataService {
         'role_title': jobPosting?['title'],
         'applied_at': a['applied_at'],
         'pending_review_count': pendingCount,
+        'internship_status': statusById[id] ?? 'unassigned',
+        'can_evaluate': statusById[id] == 'completed',
       };
     }).toList();
+  }
+
+  /// Offer/indemnity/company-acceptance letters for [studentId] — visible
+  /// to company staff via the documents_select_company RLS policy (see
+  /// migration offer_letter_and_company_document_visibility), unlike the
+  /// broader documents_select_involved policy which doesn't cover this
+  /// role at all. Deliberately narrower than SupervisorDataService.
+  /// getStudentDocuments — a company supervisor only ever sees these 3
+  /// categories for their own accepted interns, never 'other' uploads.
+  Future<List<Map<String, dynamic>>> getInternDocuments(String studentId) async {
+    final rows = await _client.from('v_document_with_review').select().eq('student_id', studentId).order('uploaded_at', ascending: false);
+    final list = List<Map<String, dynamic>>.from(rows);
+    for (final r in list) {
+      r['id'] = r['document_id'];
+    }
+    return list;
   }
 
   // ---------------------------------------------------------------------

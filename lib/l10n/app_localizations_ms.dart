@@ -682,6 +682,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get supEvaluate => 'Nilai';
 
   @override
+  String get supEvaluateLockedNote =>
+      'Penilaian akan dibuka sebaik sahaja tempoh latihan industri pelajar ini berakhir.';
+
+  @override
   String get supMessage => 'Mesej';
 
   @override
@@ -2345,6 +2349,13 @@ class AppLocalizationsMs extends AppLocalizations {
       'Urus borang PDF boleh isi (cth. pengakuan ibu bapa)';
 
   @override
+  String get adminIntakesTitle => 'Kemasukan';
+
+  @override
+  String get adminIntakesSubtitle =>
+      'Tetapkan tempoh latihan industri dan tugaskan pelajar';
+
+  @override
   String get adminSectionCommunication => 'Komunikasi';
 
   @override
@@ -2702,4 +2713,80 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get companyProfileMustApplyNote =>
       'Hanya pelajar yang telah memohon ke syarikat ini boleh memberi ulasan.';
+
+  @override
+  String get docFillAndSignAction => 'Isi & Tandatangan';
+
+  @override
+  String get docAwaitingCompanyUpload => 'Menunggu muat naik daripada syarikat';
+
+  @override
+  String get docAvailableOnceAccepted =>
+      'Tersedia setelah permohonan anda diterima';
+
+  @override
+  String get studentLetterNotConfiguredError =>
+      'Borang ini belum disediakan lagi. Sila hubungi universiti.';
+
+  @override
+  String studentLetterCouldNotLoadError(String error) {
+    return 'Tidak dapat memuatkan borang: $error';
+  }
+
+  @override
+  String get studentLetterTapToFillInstruction =>
+      'Ketik terus pada borang untuk mengisinya, kemudian hantar di bahagian bawah.';
+
+  @override
+  String get studentLetterSignAndSubmitButton => 'Tandatangan & Hantar';
+
+  @override
+  String get studentLetterSignatureTimestampNote =>
+      'Tandatangan digital anda akan direkodkan dengan cap masa.';
+
+  @override
+  String get studentLetterDrawSignatureTitle => 'Lukis tandatangan anda';
+
+  @override
+  String studentLetterCouldNotSubmitError(String error) {
+    return 'Tidak dapat menghantar borang: $error';
+  }
+
+  @override
+  String studentLetterCouldNotOpenError(String error) {
+    return 'Tidak dapat membuka borang: $error';
+  }
+
+  @override
+  String get studentLetterSubmittedTitle => 'Borang berjaya dihantar';
+
+  @override
+  String get studentLetterSubmittedDescription =>
+      'Surat bertandatangan anda telah disimpan.';
+
+  @override
+  String studentLetterSignedOnDate(String date) {
+    return 'Ditandatangani pada $date';
+  }
+
+  @override
+  String get studentLetterViewPdfButton => 'Lihat PDF';
+
+  @override
+  String get studentLetterBackButton => 'Kembali';
+
+  @override
+  String get hrOfferLetterSectionTitle => 'Surat Tawaran';
+
+  @override
+  String get hrUploadOfferLetter => 'Muat Naik Surat Tawaran';
+
+  @override
+  String get hrReplaceOfferLetter => 'Gantikan';
+
+  @override
+  String get csDocuments => 'Dokumen';
+
+  @override
+  String get csNoDocumentsOnFile => 'Tiada dokumen direkodkan lagi.';
 }

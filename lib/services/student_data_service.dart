@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
 
@@ -451,6 +452,80 @@ class StudentDataService {
 
   Future<String> getDocumentSignedUrl(String storagePath) async {
     return await _client.storage.from('student_files').createSignedUrl(storagePath, 300);
+  }
+
+  /// Company name + job title for the student's current active (accepted)
+  /// application — feeds the 'auto' fields on the company acceptance
+  /// letter template. Returns null if the student has no active
+  /// application (the acceptance letter isn't offered until they do).
+  Future<Map<String, dynamic>?> getActiveApplicationSummary() async {
+    final rows = await _client
+        .from('applications')
+        .select('application_id, job_postings(title, companies(name))')
+        .eq('student_id', _userId)
+        .eq('status', 'active')
+        .limit(1);
+    final list = List<Map<String, dynamic>>.from(rows);
+    if (list.isEmpty) return null;
+    final posting = list.first['job_postings'] as Map<String, dynamic>?;
+    final company = posting?['companies'] as Map<String, dynamic>?;
+    return {
+      'job_title': posting?['title'] as String?,
+      'company_name': company?['name'] as String?,
+    };
+  }
+
+  /// Records a template-generated (filled + signed) PDF as this student's
+  /// `documents` row for [category] — same singleton-per-category replace
+  /// and insert-then-upload-then-patch flow as [uploadDocument] (the
+  /// storage path embeds the generated `document_id`, so it can't be
+  /// known before the row exists), but written straight to 'approved':
+  /// these letters are never manually reviewed, so there's no 'submitted'
+  /// state to pass through (see the offer_letter/indemnity_letter/
+  /// company_acceptance_letter categories' design — sign or upload once,
+  /// then always shown as on file, not pending action).
+  Future<void> recordGeneratedDocument({
+    required String category,
+    required Uint8List pdfBytes,
+    required String fileName,
+  }) async {
+    final existing = await _client
+        .from('documents')
+        .select('document_id, storage_path')
+        .eq('student_id', _userId)
+        .eq('category', category)
+        .maybeSingle();
+    if (existing != null) {
+      await removeDocument(existing['document_id'] as String, existing['storage_path'] as String);
+    }
+
+    final inserted = await _client
+        .from('documents')
+        .insert({
+          'student_id': _userId,
+          'category': category,
+          'status': 'approved',
+          'storage_path': '',
+          'file_name': fileName,
+          'file_size_bytes': pdfBytes.length,
+        })
+        .select()
+        .single();
+    final documentId = inserted['document_id'] as String;
+
+    final storagePath = '$_userId/documents/$documentId.pdf';
+    await _client.storage.from('student_files').uploadBinary(
+          storagePath,
+          pdfBytes,
+          fileOptions: const FileOptions(contentType: 'application/pdf'),
+        );
+    await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId);
+
+    await createSelfNotification(
+      title: 'Document signed',
+      body: '$fileName has been signed and saved.',
+      type: 'document',
+    );
   }
 
   // ---------------------------------------------------------------------

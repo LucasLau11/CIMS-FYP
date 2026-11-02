@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_service.dart';
 import 'supervisor_data_service.dart';
 
 /// Real data access for the admin screens. Same singleton style as the
@@ -190,6 +191,71 @@ class AdminDataService {
 
   Future<void> promoteToAdmin(String userId) async {
     await _client.rpc('promote_to_admin', params: {'p_target_profile_id': userId});
+  }
+
+  // ---------------------------------------------------------------------
+  // Intakes — cohort start/end windows used to gate evaluations until a
+  // student's internship has run its course. See migration
+  // 00022_intakes_and_evaluation_gating.sql for the derivation rules
+  // (student_internship_status()) and v_student_internship_status.
+  // ---------------------------------------------------------------------
+
+  Future<List<Map<String, dynamic>>> getIntakes() async {
+    final rows = await _client.from('intakes').select().order('start_date', ascending: false);
+    final list = List<Map<String, dynamic>>.from(rows);
+    for (final r in list) {
+      r['id'] = r['intake_id'];
+    }
+    return list;
+  }
+
+  Future<String> createIntake({required String name, required DateTime startDate, required DateTime endDate}) async {
+    final inserted = await _client
+        .from('intakes')
+        .insert({
+          'name': name,
+          'start_date': startDate.toIso8601String().substring(0, 10),
+          'end_date': endDate.toIso8601String().substring(0, 10),
+          'created_by': AuthService.instance.currentUserId,
+        })
+        .select('intake_id')
+        .single();
+    return inserted['intake_id'] as String;
+  }
+
+  Future<void> deleteIntake(String intakeId) async {
+    await _client.from('intakes').delete().eq('intake_id', intakeId);
+  }
+
+  /// Every student, with their current intake assignment (if any) and
+  /// derived internship status — the roster the intake-assignment screen
+  /// picks from and displays.
+  ///
+  /// `v_student_internship_status` is a view, not a table with its own FK
+  /// constraints, so PostgREST can't resolve a `profiles!<fkey>(...)` embed
+  /// against it the way it can for `students` directly — fetched and
+  /// merged separately instead, same pattern used everywhere else in this
+  /// codebase for cross-table lookups.
+  Future<List<Map<String, dynamic>>> getStudentsWithIntakeStatus() async {
+    final rows = await _client.from('v_student_internship_status').select().order('student_id');
+    final list = List<Map<String, dynamic>>.from(rows);
+    if (list.isEmpty) return [];
+
+    final studentIds = list.map((r) => r['student_id'] as String).toList();
+    final profiles = await _client.from('profile_directory').select('profile_id, full_name').inFilter('profile_id', studentIds);
+    final nameById = {for (final p in List<Map<String, dynamic>>.from(profiles)) p['profile_id'] as String: p['full_name'] as String?};
+
+    for (final r in list) {
+      r['id'] = r['student_id'];
+      r['full_name'] = nameById[r['student_id']];
+    }
+    return list;
+  }
+
+  /// Bulk-assigns [studentIds] to [intakeId] (or unassigns them, when
+  /// [intakeId] is null) in one request.
+  Future<void> assignStudentsToIntake({required List<String> studentIds, required String? intakeId}) async {
+    await _client.from('students').update({'intake_id': intakeId}).inFilter('profile_id', studentIds);
   }
 
   // ---------------------------------------------------------------------
