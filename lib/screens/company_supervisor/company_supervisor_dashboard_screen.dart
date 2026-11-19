@@ -11,6 +11,9 @@ import '../staff_profile_screen.dart';
 import '../student/student_notifications_screen.dart';
 import 'company_supervisor_reviews_screen.dart';
 import 'company_supervisor_students_screen.dart';
+import '../../theme/role_theme.dart';
+import '../../utils/responsive.dart';
+import '../../widgets/common/flex_grid.dart';
 
 class CompanySupervisorDashboardScreen extends StatefulWidget {
   const CompanySupervisorDashboardScreen({super.key});
@@ -88,15 +91,12 @@ class _CompanySupervisorDashboardScreenState extends State<CompanySupervisorDash
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              expandedHeight: 140,
+              expandedHeight: scaledExtent(context, 140),
               pinned: true,
               backgroundColor: AppColors.primary,
               automaticallyImplyLeading: false,
               flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [AppColors.primary, AppColors.primaryLight]),
-                  ),
+                background: RoleHeaderBackground(
                   child: SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -131,8 +131,8 @@ class _CompanySupervisorDashboardScreenState extends State<CompanySupervisorDash
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text(displayName, style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-                          Text(companyLabel, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white70)),
+                          Text(displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                          Text(companyLabel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: kOnBannerSoft)),
                         ],
                       ),
                     ),
@@ -141,7 +141,7 @@ class _CompanySupervisorDashboardScreenState extends State<CompanySupervisorDash
               ),
             ),
             if (_isLoading)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+              SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
             else
               SliverToBoxAdapter(
                 child: Column(
@@ -150,14 +150,7 @@ class _CompanySupervisorDashboardScreenState extends State<CompanySupervisorDash
                     SectionHeader(title: l10n.overview),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 1.1,
-                        children: [
+                      child: FlexGrid(columns: 2, minColumnWidth: 110, children: [
                           MetricCard(
                             label: l10n.csCurrentInterns,
                             value: '${_counts['interns'] ?? 0}',
@@ -204,7 +197,7 @@ class _CompanySupervisorDashboardScreenState extends State<CompanySupervisorDash
                                 CircleAvatar(
                                   radius: 18,
                                   backgroundColor: AppColors.surfaceVariant,
-                                  child: Text(logoLetter(item['student_name'] as String), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                  child: Text(logoLetter(item['student_name'] as String), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -268,7 +261,7 @@ class _InternProgressRow extends StatelessWidget {
             CircleAvatar(
               radius: 16,
               backgroundColor: AppColors.infoBg,
-              child: Text(logoLetter(name), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              child: Text(logoLetter(name), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
             ),
             const SizedBox(width: 10),
             Expanded(

@@ -3,12 +3,12 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'force_password_change_screen.dart';
 import 'admin_shell.dart';
 import 'student_shell.dart';
 import 'supervisor_shell.dart';
 import 'hr_shell.dart';
 import 'company_supervisor_shell.dart';
-import 'parent_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -73,9 +73,6 @@ class _SplashScreenState extends State<SplashScreen>
             case UserRole.companySupervisor:
               destination = const CompanySupervisorShell();
               break;
-            case UserRole.parent:
-              destination = const ParentShell();
-              break;
             case UserRole.admin:
               destination = const AdminShell();
               break;
@@ -87,6 +84,10 @@ class _SplashScreenState extends State<SplashScreen>
         debugPrint('🔴 Splash: session check failed or timed out: $e');
         destination = const LoginScreen();
       }
+
+      // An account created by an administrator must choose its own password
+      // before anything else loads.
+      if (destination is! LoginScreen) destination = PasswordChangeGate(child: destination);
 
       debugPrint('🔵 Splash: navigating to $destination');
 
@@ -114,11 +115,11 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppColors.primary, AppColors.primaryLight],
+            colors: AppColors.headerGradient,
           ),
         ),
         child: SafeArea(
@@ -161,7 +162,7 @@ class _SplashScreenState extends State<SplashScreen>
                           fontFamily: 'Inter',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white70,
+                          color: kOnBannerSoft,
                           letterSpacing: 3,
                         ),
                       ),
@@ -202,7 +203,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13,
-                          color: Colors.white70),
+                          color: kOnBannerSoft),
                     ),
                   ],
                 ),

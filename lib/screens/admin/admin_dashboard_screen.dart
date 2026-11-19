@@ -3,6 +3,8 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/student_data_service.dart';
+import '../student/student_notifications_screen.dart';
 import '../../utils/format_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../admin_shell.dart';
@@ -10,6 +12,9 @@ import '../staff_profile_screen.dart';
 import 'admin_companies_screen.dart';
 import 'admin_students_screen.dart';
 import 'admin_monitor_screen.dart';
+import '../../theme/role_theme.dart';
+import '../../utils/responsive.dart';
+import '../../widgets/common/flex_grid.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -24,6 +29,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   List<Map<String, dynamic>> _recentStudents = [];
   String? _name;
   String? _avatarUrl;
+  int _unreadNotifications = 0;
 
   @override
   void initState() {
@@ -53,10 +59,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     try {
       final counts = await AdminDataService.instance.getDashboardCounts();
       final recentStudents = await AdminDataService.instance.getRecentStudents();
+      var unread = _unreadNotifications;
+      try {
+        unread = await StudentDataService.instance.getUnreadNotificationCount();
+      } catch (_) {
+        // Non-fatal: the bell keeps its last count.
+      }
       if (!mounted) return;
       setState(() {
         _counts = counts;
         _recentStudents = recentStudents;
+        _unreadNotifications = unread;
       });
     } catch (_) {
       // Non-fatal — keep whatever stats were already displayed.
@@ -75,19 +88,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              expandedHeight: 130,
+              expandedHeight: scaledExtent(context, 130),
               pinned: true,
               backgroundColor: AppColors.primary,
               automaticallyImplyLeading: false,
               flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [AppColors.primary, AppColors.primaryLight],
-                    ),
-                  ),
+                background: RoleHeaderBackground(
                   child: SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -97,7 +103,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
+                              Flexible(
+                                child: Row(
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(4),
@@ -105,15 +112,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     child: const CimsLogoMark(size: 26),
                                   ),
                                   const SizedBox(width: 10),
-                                  Column(
+                                  Flexible(
+                                    child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(l10n.adminBrandLabel,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                                      Text(l10n.tarumt, style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white70)),
+                                      Text(l10n.tarumt,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: kOnBannerSoft)),
                                     ],
                                   ),
+                                  ),
                                 ],
+                              ),
                               ),
                               Row(
                                 children: [
@@ -136,13 +151,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  NotificationBell(count: 0, onTap: () {}),
+                                  NotificationBell(
+                    count: _unreadNotifications,
+                    onTap: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentNotificationsScreen()));
+                      _load();
+                    },
+                  ),
                                 ],
                               ),
                             ],
                           ),
                           const SizedBox(height: 10),
                           Text(l10n.adminWelcomeBack((_name?.isNotEmpty ?? false) ? _name! : l10n.adminFallbackName),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontFamily: 'Poppins', fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
                         ],
                       ),
@@ -152,7 +175,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             if (_isLoading)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+              SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
             else
               SliverToBoxAdapter(
                 child: Column(
@@ -161,14 +184,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     SectionHeader(title: l10n.adminSystemOverview),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 1.1,
-                        children: [
+                      child: FlexGrid(columns: 2, minColumnWidth: 110, children: [
                           MetricCard(
                             label: l10n.adminTotalStudents,
                             value: '${_counts['students'] ?? 0}',
@@ -277,14 +293,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     SectionHeader(title: l10n.quickActions),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 3,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 1,
-                        children: [
+                      child: FlexGrid(columns: 3, minColumnWidth: 90, children: [
                           _QuickAction(
                             icon: Icons.add_business_outlined,
                             label: l10n.adminAddCompany,
@@ -349,7 +358,7 @@ class _QuickAction extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(8)),
-              child: Icon(icon, size: 18, color: AppColors.primary),
+              child: Icon(icon, size: 18, color: AppColors.primaryText),
             ),
             const SizedBox(height: 6),
             Text(label,

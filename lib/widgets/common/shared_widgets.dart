@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/format_utils.dart';
+import '../../theme/role_theme.dart';
 
 // Gradient wave app bar used throughout the app
 class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -24,15 +26,8 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [AppColors.primary, AppColors.primaryLight],
-        ),
-      ),
-      child: SafeArea(
+    return RoleHeaderBackground(
+                  child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -72,6 +67,32 @@ class _WavePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// A person's photo, or their initials on a tinted circle when they have none
+/// (or the photo cannot be loaded).
+class ProfileAvatar extends StatelessWidget {
+  final String name;
+  final String? avatarUrl;
+  final double radius;
+
+  const ProfileAvatar({super.key, required this.name, this.avatarUrl, this.radius = 20});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = nameColor(name);
+    final hasPhoto = avatarUrl != null && avatarUrl!.isNotEmpty;
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: color.withOpacity(0.15),
+      foregroundImage: hasPhoto ? NetworkImage(avatarUrl!) : null,
+      onForegroundImageError: hasPhoto ? (_, __) {} : null,
+      child: Text(
+        logoLetter(name),
+        style: TextStyle(fontFamily: 'Poppins', fontSize: radius * 0.6, fontWeight: FontWeight.w700, color: nameTextColor(name)),
+      ),
+    );
+  }
 }
 
 // Accent card with left teal border
@@ -179,6 +200,20 @@ class StatusBadge extends StatelessWidget {
     textColor: AppColors.info,
   );
 
+  /// An internship offer the student has not answered yet.
+  factory StatusBadge.offered(BuildContext context) => StatusBadge(
+    label: 'Offer',
+    backgroundColor: AppColors.infoBg,
+    textColor: AppColors.info,
+  );
+
+  /// The student accepted a different offer, so this application is closed.
+  factory StatusBadge.unavailable(BuildContext context) => StatusBadge(
+    label: 'Closed',
+    backgroundColor: AppColors.surfaceVariant,
+    textColor: AppColors.textMuted,
+  );
+
   factory StatusBadge.active(BuildContext context) => StatusBadge(
     label: AppLocalizations.of(context)!.active,
     backgroundColor: AppColors.successBg,
@@ -232,14 +267,14 @@ class SectionHeader extends StatelessWidget {
           if (actionIcon != null)
             GestureDetector(
               onTap: onAction,
-              child: Icon(actionIcon, size: 20, color: AppColors.primary),
+              child: Icon(actionIcon, size: 20, color: AppColors.primaryText),
             )
           else if (actionLabel != null)
             GestureDetector(
               onTap: onAction,
               child: Text(
                 actionLabel!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -293,15 +328,19 @@ class MetricCard extends StatelessWidget {
               child: Icon(icon, size: 18, color: color),
             ),
             const SizedBox(height: 10),
-            Text(value,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                )),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(value,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  )),
+            ),
             const SizedBox(height: 2),
-            Text(label, style: AppTextStyles.caption),
+            Text(label, style: AppTextStyles.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
           ],
         ),
       ),
@@ -328,36 +367,42 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                shape: BoxShape.circle,
+    // Scrollable, so on a short area (landscape, split screen, large text) the
+    // message scrolls instead of overflowing; centred when there is room.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        primary: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.hasBoundedHeight ? constraints.maxHeight : 0),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, size: 36, color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(title, style: AppTextStyles.h3, textAlign: TextAlign.center),
+                  const SizedBox(height: 8),
+                  Text(description, style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
+                  if (buttonLabel != null) ...[
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: onButton,
+                      child: Text(buttonLabel!, textAlign: TextAlign.center),
+                    ),
+                  ],
+                ],
               ),
-              child: Icon(icon, size: 36, color: AppColors.textMuted),
             ),
-            const SizedBox(height: 16),
-            Text(title,
-                style: AppTextStyles.h3,
-                textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(description,
-                style: AppTextStyles.bodySecondary,
-                textAlign: TextAlign.center),
-            if (buttonLabel != null) ...[
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: onButton,
-                child: Text(buttonLabel!),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

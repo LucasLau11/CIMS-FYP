@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../utils/validators.dart';
+import '../../widgets/common/validated_field.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../../utils/error_text.dart';
+import '../../utils/grade_export.dart';
+import '../../utils/lang.dart';
+import '../../services/supervisor_data_service.dart';
+import '../student_grade_screen.dart';
 
 /// Admin defines intake cohorts (a start/end window) and assigns students
 /// to one — the window student_internship_status() (see migration
@@ -57,17 +64,55 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
     DateTime? startDate;
     DateTime? endDate;
     String? errorText;
+    bool attempted = false;
+    final formKey = GlobalKey<FormState>();
+
+    // Live rules for the dates, shown under the date rows.
+    String? startError() => startDate == null ? 'Choose a start date.' : null;
+    String? endError() {
+      if (endDate == null) return 'Choose an end date.';
+      final order = Validators.endAfterStart(startDate, endDate);
+      if (order != null) return order;
+      if (startDate != null) {
+        final days = endDate!.difference(startDate!).inDays;
+        if (days < 30) return 'An intake must last at least 30 days (this one is $days).';
+        if (days > 400) return 'An intake can last at most 400 days (this one is $days).';
+      }
+      return null;
+    }
+
+    Widget fieldError(String? message) => message == null
+        ? const SizedBox.shrink()
+        : Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 4),
+            child: Text(message, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+          );
 
     final created = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('New intake', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
-          content: Column(
+          content: SingleChildScrollView(
+            child: Form(
+            key: formKey,
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name', hintText: 'e.g. March 2026 Intake')),
+              ValidatedField(
+                controller: nameController,
+                fieldValidator: (v) {
+                  final rule = Validators.text(v, field: 'Intake name', min: 3, max: 60);
+                  if (rule != null) return rule;
+                  final taken = _intakes.any((i) => (i['name'] as String).trim().toLowerCase() == v.trim().toLowerCase());
+                  return taken ? 'An intake with this name already exists.' : null;
+                },
+                textCapitalization: TextCapitalization.words,
+                maxLength: 60,
+                labelText: tt('Name'),
+                hintText: 'e.g. March 2026 Intake',
+              ),
               const SizedBox(height: 12),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -83,6 +128,7 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
                   if (picked != null) setDialogState(() => startDate = picked);
                 },
               ),
+              if (attempted || startDate != null) fieldError(startError()),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(endDate == null ? 'End date' : _formatDate(endDate!.toIso8601String())),
@@ -97,33 +143,31 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
                   if (picked != null) setDialogState(() => endDate = picked);
                 },
               ),
+              if (attempted || endDate != null) fieldError(endError()),
               if (errorText != null) ...[
                 const SizedBox(height: 8),
                 Text(errorText!, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
               ],
             ],
           ),
+          ),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(tt('Cancel'))),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.trim().isEmpty || startDate == null || endDate == null) {
-                  setDialogState(() => errorText = 'Fill in a name and both dates.');
-                  return;
-                }
-                if (!endDate!.isAfter(startDate!)) {
-                  setDialogState(() => errorText = 'End date must be after the start date.');
-                  return;
-                }
+                setDialogState(() => attempted = true);
+                final nameOk = formKey.currentState?.validate() ?? false;
+                if (!nameOk || startError() != null || endError() != null) return;
                 try {
                   await AdminDataService.instance.createIntake(name: nameController.text.trim(), startDate: startDate!, endDate: endDate!);
                   if (!dialogContext.mounted) return;
                   Navigator.pop(dialogContext, true);
                 } catch (e) {
-                  setDialogState(() => errorText = 'Could not create: $e');
+                  setDialogState(() => errorText = 'Could not create: ${friendlyError(e)}');
                 }
               },
-              child: const Text('Create'),
+              child: Text(tt('Create')),
             ),
           ],
         ),
@@ -140,8 +184,8 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
         title: const Text('Delete intake?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
         content: Text('"${intake['name']}" will be removed. Students assigned to it become unassigned, not deleted.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text('Delete', style: TextStyle(color: AppColors.error))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(tt('Cancel'))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(tt('Delete'), style: TextStyle(color: AppColors.error))),
         ],
       ),
     );
@@ -151,7 +195,7 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not delete: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not delete')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -165,19 +209,19 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(
-        title: 'Intakes',
+        title: tt('Intakes'),
         actions: [IconButton(icon: const Icon(Icons.add, color: Colors.white), onPressed: _createIntake)],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: _intakes.isEmpty
                   ? ListView(
-                      children: const [
+                      children: [
                         EmptyState(
                           icon: Icons.groups_outlined,
-                          title: 'No intakes yet',
+                          title: tt('No intakes yet'),
                           description: 'Create an intake to define a cohort\'s internship start and end dates.',
                         ),
                       ],
@@ -202,6 +246,13 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
                                     Text('${_formatDate(intake['start_date'] as String)} – ${_formatDate(intake['end_date'] as String)}',
                                         style: AppTextStyles.caption),
                                     const SizedBox(height: 4),
+                                    Text(
+                                        () {
+                                          final m = intakeMonths(DateTime.parse(intake['start_date'] as String), DateTime.parse(intake['end_date'] as String));
+                                          return '$m month${m == 1 ? '' : 's'} · $m monthly report${m == 1 ? '' : 's'} required';
+                                        }(),
+                                        style: AppTextStyles.caption),
+                                    const SizedBox(height: 4),
                                     Text('${_studentCount(intake['id'] as String)} student(s)', style: AppTextStyles.caption),
                                   ],
                                 ),
@@ -221,18 +272,23 @@ class _AdminIntakesScreenState extends State<AdminIntakesScreen> {
   }
 }
 
+String _gradeText(Object? v) {
+  final d = double.tryParse('$v') ?? 0;
+  return d == d.roundToDouble() ? d.toStringAsFixed(0) : d.toStringAsFixed(1);
+}
+
 StatusBadge _statusBadge(String status) {
   switch (status) {
     case 'completed':
-      return StatusBadge(label: 'Completed', backgroundColor: AppColors.successBg, textColor: AppColors.success);
+      return StatusBadge(label: tt('Completed'), backgroundColor: AppColors.successBg, textColor: AppColors.success);
     case 'ongoing':
-      return StatusBadge(label: 'Ongoing', backgroundColor: AppColors.infoBg, textColor: AppColors.info);
+      return StatusBadge(label: tt('Ongoing'), backgroundColor: AppColors.infoBg, textColor: AppColors.info);
     case 'failed':
-      return StatusBadge(label: 'Failed', backgroundColor: AppColors.errorBg, textColor: AppColors.error);
+      return StatusBadge(label: tt('Failed'), backgroundColor: AppColors.errorBg, textColor: AppColors.error);
     case 'not_started':
-      return StatusBadge(label: 'Not started', backgroundColor: AppColors.warningBg, textColor: AppColors.warning);
+      return StatusBadge(label: tt('Not started'), backgroundColor: AppColors.warningBg, textColor: AppColors.warning);
     default:
-      return StatusBadge(label: 'Unassigned', backgroundColor: AppColors.surfaceVariant, textColor: AppColors.textMuted);
+      return StatusBadge(label: tt('Unassigned'), backgroundColor: AppColors.surfaceVariant, textColor: AppColors.textMuted);
   }
 }
 
@@ -247,6 +303,8 @@ class _IntakeStudentsScreen extends StatefulWidget {
 class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _allStudents = [];
+  // student id -> overall grade (out of 100) and whether every part has been graded
+  Map<String, Map<String, dynamic>> _grades = {};
 
   String get _intakeId => widget.intake['id'] as String;
 
@@ -260,9 +318,17 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
     setState(() => _isLoading = true);
     try {
       final students = await AdminDataService.instance.getStudentsWithIntakeStatus();
+      Map<String, Map<String, dynamic>> grades = {};
+      try {
+        final rows = await SupervisorDataService.instance.getIntakeGrades(_intakeId);
+        grades = {for (final r in rows) r['student_id'] as String: r};
+      } catch (_) {
+        // the grades are an extra: the list still works without them
+      }
       if (!mounted) return;
       setState(() {
         _allStudents = students;
+        _grades = grades;
         _isLoading = false;
       });
     } catch (_) {
@@ -279,7 +345,7 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not remove: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not remove')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -301,8 +367,8 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Assign students', style: AppTextStyles.h3),
-                    TextButton(onPressed: () => Navigator.pop(sheetContext, selected), child: const Text('Done')),
+                    Flexible(child: Text(tt('Assign students'), style: AppTextStyles.h3, overflow: TextOverflow.ellipsis)),
+                    TextButton(onPressed: () => Navigator.pop(sheetContext, selected), child: Text(tt('Done'))),
                   ],
                 ),
               ),
@@ -317,7 +383,7 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
                     return CheckboxListTile(
                       value: selected.contains(id),
                       title: Text((student['full_name'] as String?)?.isNotEmpty == true ? student['full_name'] as String : 'Unnamed student'),
-                      subtitle: otherIntake ? const Text('Already in another intake — will be moved here', style: TextStyle(fontSize: 11)) : null,
+                      subtitle: otherIntake ? Text(tt('Already in another intake — will be moved here'), style: TextStyle(fontSize: 11)) : null,
                       onChanged: (checked) => setSheetState(() {
                         if (checked == true) {
                           selected.add(id);
@@ -345,7 +411,7 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not save')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -354,9 +420,22 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
     final intake = widget.intake;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: GradientAppBar(title: intake['name'] as String),
+      appBar: GradientAppBar(
+        title: intake['name'] as String,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.download_outlined, color: Colors.white),
+            tooltip: tr('Download grades', ms: 'Muat turun gred', zh: '下载成绩'),
+            onSelected: (value) => downloadIntakeGrades(context, intakeId: _intakeId, intakeName: intake['name'] as String, pdf: value == 'pdf'),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'csv', child: Text(tr('Spreadsheet (CSV) of all students', ms: 'Hamparan (CSV) semua pelajar', zh: '全部学生电子表格（CSV）'))),
+              PopupMenuItem(value: 'pdf', child: Text(tr('Grade slips of all students (PDF)', ms: 'Slip gred semua pelajar (PDF)', zh: '全部学生成绩单（PDF）'))),
+            ],
+          ),
+        ],
+      ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
@@ -378,19 +457,35 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
                   else
                     ..._assigned.map((s) => AccentCard(
                           accentColor: AppColors.primaryLight,
+                          // tapping a student opens their evaluation and grade
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => StudentGradeScreen(
+                                studentId: s['id'] as String,
+                                studentName: (s['full_name'] as String?)?.isNotEmpty == true ? s['full_name'] as String : 'Unnamed student',
+                              ),
+                            ),
+                          ),
                           child: Row(
                             children: [
                               CircleAvatar(
                                 radius: 16,
                                 backgroundColor: AppColors.infoBg,
                                 child: Text(logoLetter((s['full_name'] as String?) ?? '?'),
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text((s['full_name'] as String?)?.isNotEmpty == true ? s['full_name'] as String : 'Unnamed student',
                                     style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                               ),
+                              if (_grades[s['id']] != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Text('${_gradeText(_grades[s['id']]!['total'])} / 100',
+                                      style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
+                                ),
                               _statusBadge(s['status'] as String),
                               IconButton(
                                 icon: Icon(Icons.close, size: 18, color: AppColors.textMuted),
@@ -407,7 +502,7 @@ class _IntakeStudentsScreenState extends State<_IntakeStudentsScreen> {
                       child: OutlinedButton.icon(
                         onPressed: _manageStudents,
                         icon: const Icon(Icons.people_outline, size: 18),
-                        label: const Text('Manage students'),
+                        label: Text(tt('Manage students')),
                       ),
                     ),
                   ),

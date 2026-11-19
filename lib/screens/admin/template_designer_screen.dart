@@ -1,21 +1,19 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../utils/validators.dart';
+import '../../widgets/common/validated_field.dart';
 import '../../theme/app_theme.dart';
 import '../../services/document_template_service.dart';
 import '../../services/pdf_template_service.dart';
+import '../../utils/error_text.dart';
+import '../../utils/letter_auto_values.dart';
+import '../../utils/lang.dart';
 
 /// Known fields the app can resolve automatically at fill time (see
 /// parent_acknowledgement_screen.dart's `_resolveAutoValue`). Admin picks
 /// one of these for 'auto' markers instead of typing a free-form key, so
 /// the fill screen and the designer always agree on the vocabulary.
-const Map<String, String> kAutoFieldOptions = {
-  'student_name': 'Student Name',
-  'student_reg_no': 'Student Reg. No.',
-  'programme': 'Programme',
-  'company_name': 'Company Name',
-  'job_title': 'Job Title / Role',
-  'today_date': "Today's Date",
-};
+const Map<String, String> kAutoFieldOptions = kLetterAutoFields;
 
 const Map<String, String> _typeLabels = {
   'auto': 'Auto-filled',
@@ -83,7 +81,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not load template: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not load template')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -140,6 +138,74 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
     });
   }
 
+  /// Tap on a field: rename it (typed, date and signature fields; an auto-filled one has a fixed meaning) or remove it.
+  Future<void> _editFieldAt(int index) async {
+    final field = _fields[index];
+    final controller = TextEditingController(text: field.label);
+    String? error;
+    final action = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(tr('Edit field', ms: 'Sunting medan', zh: '编辑字段'), style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_typeLabels[field.type] ?? field.type, style: AppTextStyles.caption),
+              const SizedBox(height: 10),
+              if (field.type == 'auto')
+                Text(tr('This field is filled in automatically, so it keeps its name. You can move or remove it.',
+                    ms: 'Medan ini diisi secara automatik, jadi namanya tidak boleh ditukar. Anda boleh menggerakkan atau membuangnya.',
+                    zh: '此字段自动填写，因此名称不可更改。您可以移动或删除它。'))
+              else
+                TextField(
+                  controller: controller,
+                  maxLength: 40,
+                  decoration: InputDecoration(labelText: tt('Label'), errorText: error),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, 'delete'), child: Text(tt('Remove'), style: TextStyle(color: AppColors.error))),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(tt('Cancel'))),
+            if (field.type != 'auto')
+              ElevatedButton(
+                onPressed: () {
+                  final label = controller.text.trim();
+                  if (label.length < 2) {
+                    setDialogState(() => error = tr('Enter at least 2 characters.', ms: 'Masukkan sekurang-kurangnya 2 aksara.', zh: '请至少输入 2 个字符。'));
+                    return;
+                  }
+                  final taken = [for (var i = 0; i < _fields.length; i++) if (i != index) _fields[i].label.trim().toLowerCase()].contains(label.toLowerCase());
+                  if (taken) {
+                    setDialogState(() => error = tr('Another field already has this name.', ms: 'Medan lain sudah menggunakan nama ini.', zh: '已有其他字段使用该名称。'));
+                    return;
+                  }
+                  Navigator.pop(dialogContext, 'save');
+                },
+                child: Text(tt('Save')),
+              ),
+          ],
+        ),
+      ),
+    );
+    final label = controller.text.trim();
+    controller.dispose();
+    if (!mounted) return;
+    if (action == 'delete') {
+      await _removeFieldAt(index);
+    } else if (action == 'save' && label != field.label) {
+      setState(() {
+        _fields = [
+          ..._fields.sublist(0, index),
+          TemplateField(key: field.key, type: field.type, label: label, page: field.page, x: field.x, y: field.y, width: field.width, height: field.height),
+          ..._fields.sublist(index + 1),
+        ];
+      });
+    }
+  }
+
   Future<void> _removeFieldAt(int index) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -147,8 +213,8 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
         title: const Text('Remove field?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
         content: Text('Remove "${_fields[index].label}" from this template.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text('Remove', style: TextStyle(color: AppColors.error))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(tt('Cancel'))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(tt('Remove'), style: TextStyle(color: AppColors.error))),
         ],
       ),
     );
@@ -160,6 +226,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
     String type = 'auto';
     String? autoKey = kAutoFieldOptions.keys.first;
     final labelController = TextEditingController();
+    final labelKey = GlobalKey<FormFieldState<String>>();
 
     return showModalBottomSheet<_FieldSpec>(
       context: context,
@@ -188,19 +255,28 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                   ),
                   const SizedBox(height: 16),
                   if (type == 'auto') ...[
-                    Text('Field', style: AppTextStyles.label),
+                    Text(tt('Field'), style: AppTextStyles.label),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: autoKey,
                       items: kAutoFieldOptions.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
                       onChanged: (val) => setSheetState(() => autoKey = val),
                     ),
                   ] else ...[
-                    Text('Label', style: AppTextStyles.label),
+                    Text(tt('Label'), style: AppTextStyles.label),
                     const SizedBox(height: 6),
-                    TextField(
+                    ValidatedField(
+                      key: labelKey,
                       controller: labelController,
-                      decoration: InputDecoration(hintText: type == 'signature' ? 'e.g. Parent Signature' : 'e.g. Parent Full Name'),
+                      fieldValidator: (v) {
+                        final rule = Validators.text(v, field: 'Label', min: 2, max: 40);
+                        if (rule != null) return rule;
+                        final taken = _fields.any((f) => f.label.trim().toLowerCase() == v.trim().toLowerCase());
+                        return taken ? 'A field called "${v.trim()}" is already on this template.' : null;
+                      },
+                      maxLength: 40,
+                      hintText: type == 'signature' ? 'e.g. Parent Signature' : 'e.g. Parent Full Name',
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -212,8 +288,10 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                           Navigator.pop(sheetContext, _FieldSpec(key: autoKey!, type: 'auto', label: kAutoFieldOptions[autoKey]!));
                           return;
                         }
+                        // Shows the reason under the label (empty, too short, duplicate)
+                        // instead of silently doing nothing.
+                        if (!(labelKey.currentState?.validate() ?? false)) return;
                         final label = labelController.text.trim();
-                        if (label.isEmpty) return;
                         var key = _slugify(label);
                         var suffix = 2;
                         while (_usedKeys.contains(key)) {
@@ -237,7 +315,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
   Future<void> _save() async {
     if (_fields.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('Add at least one field before saving.'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(tt('Add at least one field before saving.')), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -247,13 +325,13 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('Template saved and activated.'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(tt('Template saved and activated.')), backgroundColor: AppColors.primary),
       );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not save')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -270,7 +348,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
             onPressed: _isSaving ? null : _save,
             child: _isSaving
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Save', style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                : Text(tt('Save'), style: TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ],
       ),
@@ -283,7 +361,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                   color: AppColors.primary.withValues(alpha: 0.15),
                   padding: const EdgeInsets.all(10),
                   child: const Text(
-                    'Tap anywhere on the page to add a field. Drag a field to reposition it, tap it to remove it.',
+                    'Tap anywhere on the page to add a field. Drag a field to reposition it, tap it to rename or remove it.',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
@@ -332,7 +410,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                                       width: _fields[i].width * size.width,
                                       height: _fields[i].height * size.height,
                                       child: GestureDetector(
-                                        onTap: () => _removeFieldAt(i),
+                                        onTap: () => _editFieldAt(i),
                                         onPanUpdate: (details) => _moveField(i, details.delta.dx / size.width, details.delta.dy / size.height),
                                         child: Container(
                                           decoration: BoxDecoration(
@@ -343,7 +421,7 @@ class _TemplateDesignerScreenState extends State<TemplateDesignerScreen> {
                                           alignment: Alignment.center,
                                           child: Text(
                                             _fields[i].label,
-                                            style: const TextStyle(fontFamily: 'Inter', fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.primary),
+                                            style: TextStyle(fontFamily: 'Inter', fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.primaryText),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),

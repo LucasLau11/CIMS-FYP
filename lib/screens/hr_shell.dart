@@ -62,7 +62,7 @@ class _HrShellState extends State<HrShell> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+      return Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
     }
     if (!_hasCompany) {
       return CompanySetupScreen(onDone: _checkCompany);
@@ -97,8 +97,8 @@ class _HrShellState extends State<HrShell> {
           onTap: _onTabTapped,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.dashboard_outlined),
-              activeIcon: const Icon(Icons.dashboard),
+              icon: const Icon(Icons.badge_outlined),
+              activeIcon: const Icon(Icons.badge),
               label: l10n.dashboard,
             ),
             BottomNavigationBarItem(

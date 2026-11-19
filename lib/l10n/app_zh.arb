@@ -1,11 +1,9 @@
 {
   "@@locale": "zh",
-
   "appTitle": "CIMS",
   "tarumt": "拉曼理工大学",
   "splashTagline": "实习管理\n综合系统",
   "loading": "加载中...",
-
   "welcomeToCims": "欢迎使用 CIMS",
   "cimsFullName": "实习管理综合系统",
   "emailAddress": "电子邮箱",
@@ -26,7 +24,6 @@
   "cancel": "取消",
   "sendResetLink": "发送重置链接",
   "resetLinkSentMessage": "如果该邮箱存在账户，重置链接已发送。",
-
   "createYourAccount": "创建您的 CIMS 账户",
   "signupRoleNote": "学生/教职员邮箱将自动分配角色。\nGmail、Outlook 或 Hotmail 邮箱将需要在下方选择角色。",
   "createAPassword": "设置密码",
@@ -34,7 +31,6 @@
   "reEnterYourPassword": "请再次输入密码",
   "selectYourRole": "选择您的角色",
   "notInstitutionalEmailNote": "您的邮箱不是 TARC 机构邮箱，请选择适用于您的角色。",
-  "parentGuardian": "家长/监护人",
   "hrPersonnel": "人力资源人员",
   "companySupervisor": "公司主管",
   "signUp": "注册",
@@ -43,7 +39,6 @@
   "errorPasswordsDoNotMatch": "两次输入的密码不一致。",
   "errorSelectRole": "请选择您的角色以继续。",
   "signUpCheckEmailMessage": "账户已创建！请检查您的电子邮件以确认账户，然后再登录。",
-
   "dashboard": "主页",
   "overview": "概览",
   "internshipProgress": "实习进度",
@@ -59,11 +54,15 @@
   "stepCompleted": "已完成",
   "submitCompanyReview": "提交公司评价",
   "viewMyProgress": "查看我的进度",
+  "defaultUserName": "用户",
   "goodMorning": "早上好，{name}！",
   "@goodMorning": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
-
   "personalInformation": "个人信息",
   "academicInformation": "学业信息",
   "resume": "简历",
@@ -109,13 +108,11 @@
   "newPassword": "新密码",
   "confirmNewPassword": "确认新密码",
   "change": "更改",
-
   "delete": "删除",
   "add": "添加",
   "confirm": "确认",
   "close": "关闭",
   "notSpecified": "未注明",
-
   "hrRecruitmentOverview": "招聘概览",
   "hrActivePostings": "招聘中职位",
   "hrNewApplicants": "新申请者",
@@ -128,9 +125,21 @@
   "hrPersonnelLabel": "人力资源人员",
   "hrJobPostings": "职位招聘",
   "hrPostingsCount": "{count} 个职位",
-  "@hrPostingsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrPostingsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrActiveCount": "{count} 个招聘中",
-  "@hrActiveCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrNoPostingsYet": "尚无职位",
   "hrCreateFirstPosting": "创建您的第一个实习职位。",
   "hrClosePosting": "关闭职位",
@@ -138,9 +147,21 @@
   "hrDeletePostingTitle": "删除职位？",
   "hrDeletePostingMessage": "此操作将永久删除此职位。现有申请将被保留作记录。",
   "hrApplicantsCount": "{count} 位申请者",
-  "@hrApplicantsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrApplicantsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrPostedAgo": "发布于 {time}",
-  "@hrPostedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@hrPostedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrEditPosting": "编辑职位",
   "hrPostingDetails": "职位详情",
   "hrJobTitle": "职位名称",
@@ -153,11 +174,23 @@
   "hrJobType": "工作类型",
   "hrDuration": "期限",
   "hrMonths": "{count} 个月",
-  "@hrMonths": { "placeholders": { "count": { "type": "int" } } },
+  "@hrMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrMonthlyAllowance": "每月津贴 (RM)",
   "hrMonthlyAllowanceHint": "例如：1500",
   "hrDeadlineLabel": "截止日期：{date}",
-  "@hrDeadlineLabel": { "placeholders": { "date": { "type": "String" } } },
+  "@hrDeadlineLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "hrApplicationDeadlineOptional": "申请截止日期（可选）",
   "hrSkillsRequired": "所需技能",
   "hrAddASkill": "添加技能",
@@ -169,19 +202,55 @@
   "hrSkillRequired": "请至少添加一项所需技能。",
   "hrApplicants": "申请者",
   "hrTabNew": "新申请 ({count})",
-  "@hrTabNew": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabInterview": "面试中 ({count})",
-  "@hrTabInterview": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabInterview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabAccepted": "已录取 ({count})",
-  "@hrTabAccepted": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabAccepted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabRejected": "已拒绝 ({count})",
-  "@hrTabRejected": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrNoApplicantsHere": "暂无申请者",
   "hrApplicantsAppearHere": "此阶段的申请者将显示在此处。",
   "hrInterviewColon": "面试：{time}",
-  "@hrInterviewColon": { "placeholders": { "time": { "type": "String" } } },
+  "@hrInterviewColon": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrAppliedAgo": "申请于 {time}",
-  "@hrAppliedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@hrAppliedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrApplicantProfile": "申请者资料",
   "hrAppliedFor": "申请职位",
   "hrNoResumeUploaded": "尚未上传简历",
@@ -191,7 +260,13 @@
   "hrReject": "拒绝",
   "hrScheduleInterview": "安排面试",
   "hrInterviewScheduledColon": "面试已安排：{time}",
-  "@hrInterviewScheduledColon": { "placeholders": { "time": { "type": "String" } } },
+  "@hrInterviewScheduledColon": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrAccept": "接受",
   "hrDate": "日期",
   "hrSelectDate": "选择日期",
@@ -211,7 +286,6 @@
   "hrPostings": "职位",
   "hrInterns": "实习生",
   "hrClosedStatus": "已关闭",
-
   "supAssignedStudents": "已分配学生",
   "supPendingReviews": "待审核",
   "supApprovedThisMonth": "本月已批准",
@@ -222,17 +296,35 @@
   "supNoStudentsYet": "尚无学生。",
   "supUpToDate": "已是最新",
   "supPendingCount": "{count} 项待处理",
-  "@supPendingCount": { "placeholders": { "count": { "type": "int" } } },
+  "@supPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "supMyStudentsTitle": "我的学生",
   "supSearchByNameOrProgramme": "按姓名或课程搜索...",
   "supStudentsCount": "{count} 位学生",
-  "@supStudentsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@supStudentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "supNoStudents": "暂无学生",
   "supNoStudentsMatch": "没有符合搜索条件的学生。",
   "supActiveInternship": "进行中的实习",
   "supNoActiveInternship": "暂无进行中的实习",
   "supLastReportAgo": "最近报告于 {time}",
-  "@supLastReportAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@supLastReportAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "supNoReportsYet": "尚无报告",
   "supStudentDetails": "学生详情",
   "supEvaluate": "评估",
@@ -240,7 +332,13 @@
   "supMessage": "消息",
   "supLatestEvaluation": "最新评估",
   "supSubmittedAgo": "提交于 {time}",
-  "@supSubmittedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@supSubmittedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "supSubmissionHistory": "提交记录",
   "supNoSubmissionsYet": "尚无提交记录。",
   "supReviews": "审核",
@@ -267,10 +365,15 @@
   "supSubmitEvaluation": "提交评估",
   "supEvaluationSubmitted": "评估已提交",
   "supEvaluationRecorded": "您对 {name} 的评估已记录。",
-  "@supEvaluationRecorded": { "placeholders": { "name": { "type": "String" } } },
+  "@supEvaluationRecorded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "supBackToStudent": "返回学生页面",
   "supStudents": "学生",
-
   "csCurrentInterns": "现有实习生",
   "csReportsToReview": "待审核报告",
   "csApprovedThisMonth": "本月已批准",
@@ -281,9 +384,21 @@
   "csNoInternsYet": "尚无实习生。",
   "csInterns": "实习生",
   "csCurrentInternsCount": "{count} 位现有实习生",
-  "@csCurrentInternsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@csCurrentInternsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "csNeedsAttention": "{count} 项需要注意",
-  "@csNeedsAttention": { "placeholders": { "count": { "type": "int" } } },
+  "@csNeedsAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "csNoInternsTitle": "尚无实习生",
   "csNoInternsDescription": "贵公司录取的申请者将显示在此处。",
   "csInternDetails": "实习生详情",
@@ -296,7 +411,13 @@
   "csSubmitEvaluation": "提交评估",
   "csEvaluationSubmitted": "评估已提交",
   "csEvaluationRecorded": "您对 {name} 的职场评估已记录并与学校共享。",
-  "@csEvaluationRecorded": { "placeholders": { "name": { "type": "String" } } },
+  "@csEvaluationRecorded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "csBackToIntern": "返回实习生页面",
   "csReportReviews": "报告审核",
   "csTabPending": "待处理",
@@ -314,7 +435,6 @@
   "csGradeSatisfactory": "满意",
   "csGradeNeedsImprovement": "需要改进",
   "csAverageScore": "平均分",
-
   "setupYourCompany": "设置您的公司",
   "setupLinkCompanyNote": "请先将您的账户关联至公司，才能管理职位、申请者或实习生。",
   "setupJoinExisting": "加入现有公司",
@@ -328,7 +448,6 @@
   "setupLocationOptional": "地点（可选）— 点击在地图上选择",
   "setupRegisterCompany": "注册公司",
   "setupCompanyNameRequired": "公司名称为必填项。",
-
   "profileMyProfile": "我的资料",
   "profilePersonalInformation": "个人信息",
   "profileFullName": "姓名",
@@ -355,27 +474,73 @@
   "profileChooseFromGallery": "从相册选择",
   "profileRemovePhoto": "移除照片",
   "profilePasswordChanged": "密码已成功更改。",
-
   "justNow": "刚刚",
   "minutesAgo": "{count, plural, other{{count} 分钟前}}",
-  "@minutesAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hoursAgo": "{count, plural, other{{count} 小时前}}",
-  "@hoursAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "daysAgo": "{count, plural, other{{count} 天前}}",
-  "@daysAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weeksAgo": "{count, plural, other{{count} 周前}}",
-  "@weeksAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@weeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "monthsAgo": "{count, plural, other{{count} 个月前}}",
-  "@monthsAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@monthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "yearsAgo": "{count, plural, other{{count} 年前}}",
-  "@yearsAgo": { "placeholders": { "count": { "type": "int" } } },
-
+  "@yearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatConversationFallbackName": "此对话",
   "chatDeleteConversationTitle": "删除对话？",
   "chatDeleteConversationMessage": "这将删除您与{name}的整个对话，双方都会受到影响。此操作无法撤销。",
-  "@chatDeleteConversationMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@chatDeleteConversationMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatCouldNotLoadContacts": "无法加载联系人：{error}",
-  "@chatCouldNotLoadContacts": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotLoadContacts": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatNewMessageTitle": "新消息",
   "chatNoContactsToMessage": "暂无其他可联系的账号。",
   "chatTabTitle": "消息",
@@ -390,19 +555,43 @@
   "chatPhotoAttachmentPreview": "📷 照片",
   "chatArchiveAction": "归档",
   "chatCouldNotSendMessage": "无法发送消息：{error}",
-  "@chatCouldNotSendMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotSendMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatFileTooLarge": "文件过大，最大为10MB。",
   "chatCouldNotSendAttachment": "无法发送附件：{error}",
-  "@chatCouldNotSendAttachment": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotSendAttachment": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatDeleteForMeAction": "为我删除",
   "chatDeleteForEveryoneAction": "为所有人删除",
   "chatDeleteForMeTitle": "为我删除？",
   "chatDeleteForMeMessage": "此消息将仅从您的视图中移除，对方仍可看到该消息。",
   "chatCouldNotDeleteMessage": "无法删除消息：{error}",
-  "@chatCouldNotDeleteMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotDeleteMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatEditMessageTitle": "编辑消息",
   "chatCouldNotEditMessage": "无法编辑消息：{error}",
-  "@chatCouldNotEditMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotEditMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatDeleteMessageTitle": "删除消息？",
   "chatCannotBeUndone": "此操作无法撤销。",
   "chatSayHello": "打个招呼 👋",
@@ -410,7 +599,13 @@
   "chatEditedLabel": "已编辑",
   "chatAttachmentFallbackName": "附件",
   "chatCouldNotUpdateMute": "无法更新静音设置：{error}",
-  "@chatCouldNotUpdateMute": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotUpdateMute": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatBlockContactTitle": "屏蔽此联系人？",
   "chatUnblockContactTitle": "取消屏蔽此联系人？",
   "chatBlockContactMessage": "对方将无法在此对话中再向您发送消息。",
@@ -418,9 +613,21 @@
   "chatBlockAction": "屏蔽",
   "chatUnblockAction": "取消屏蔽",
   "chatCouldNotUpdateBlock": "无法更新屏蔽状态：{error}",
-  "@chatCouldNotUpdateBlock": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotUpdateBlock": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatCouldNotDeleteConversation": "无法删除对话：{error}",
-  "@chatCouldNotDeleteConversation": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotDeleteConversation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatContactInfoTitle": "联系人信息",
   "chatPhoneNotAvailable": "不可用",
   "chatSharedMediaFiles": "共享媒体与文件",
@@ -428,24 +635,49 @@
   "chatMuteNotifications": "静音通知",
   "chatBlockContactToggle": "屏蔽联系人",
   "chatDeleteConversationButton": "删除对话",
-
   "errorAddressSearchFailed": "地址搜索失败：{error}",
-  "@errorAddressSearchFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@errorAddressSearchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unknownLocationCoords": "未知位置（{lat}, {lng}）",
-  "@unknownLocationCoords": { "placeholders": { "lat": { "type": "String" }, "lng": { "type": "String" } } },
+  "@unknownLocationCoords": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotResolveAddress": "无法解析此位置的地址。",
   "selectYourAddress": "选择您的地址",
   "searchForYourAddressHint": "搜索您的地址...",
   "mapSearchOrTapHint": "在上方搜索，或点击地图微调图钉位置",
   "resolvingAddress": "正在解析地址...",
   "confirmThisAddress": "确认此地址",
-
   "coverLetterLoadedFromFile": "求职信已从文件加载——请在继续前检查并编辑。",
   "errorCouldNotReadFile": "无法读取文件：{error}",
-  "@errorCouldNotReadFile": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotReadFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "notifApplicationSubmittedTitle": "申请已提交",
   "notifApplicationSubmittedBody": "您对{company}的申请已发送。",
-  "@notifApplicationSubmittedBody": { "placeholders": { "company": { "type": "String" } } },
+  "@notifApplicationSubmittedBody": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
   "apply": "申请",
   "coverLetter": "求职信",
   "review": "查看",
@@ -473,15 +705,32 @@
   "applicationCannotBeEditedNote": "提交后，您的申请将无法编辑。",
   "applicationSubmittedExclaim": "申请已提交！",
   "applicationSubmittedDetail": "您对{company}的申请已发送。如有更新我们会通知您。",
-  "@applicationSubmittedDetail": { "placeholders": { "company": { "type": "String" } } },
+  "@applicationSubmittedDetail": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
   "backToSearch": "返回搜索",
-
   "withdrawApplicationTitle": "撤回申请？",
   "withdrawApplicationMessage": "如果您改变主意，之后仍可重新申请{title}。",
-  "@withdrawApplicationMessage": { "placeholders": { "title": { "type": "String" } } },
+  "@withdrawApplicationMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "withdraw": "撤回",
   "errorCouldNotWithdraw": "无法撤回：{error}",
-  "@errorCouldNotWithdraw": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotWithdraw": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "coverLetterLabel": "求职信",
   "skillsLabel": "技能",
   "myApplications": "我的申请",
@@ -493,10 +742,8 @@
   "rejected": "已拒绝",
   "noApplicationsHere": "此处暂无申请",
   "applicationsAppearHere": "此类别的申请将显示在这里。",
-
   "statusApproved": "已批准",
   "statusSubmitted": "已提交",
-
   "noInterviewScheduled": "尚未安排面试",
   "interviewNotifiedOnceScheduled": "公司安排面试后将通知您。",
   "onlineInterviewLabel": "线上面试",
@@ -505,7 +752,6 @@
   "directionsUnavailableNote": "路线不可用 — 请参见上方地址",
   "inPersonNoJoinLinkNote": "这是现场面试 — 无需线上加入链接。",
   "errorCouldNotOpenMeetingLink": "无法打开会议链接。",
-
   "internshipDetails": "实习详情",
   "monthlyAllowance": "每月津贴",
   "applicationDeadline": "申请截止日期",
@@ -519,7 +765,6 @@
   "alreadyApplied": "已申请",
   "companyPendingVerification": "公司待验证",
   "applyNow": "立即申请",
-
   "notifications": "通知",
   "markAllRead": "全部标记为已读",
   "noNotificationsYet": "暂无通知",
@@ -527,11 +772,15 @@
   "newLabel": "新",
   "notificationApprove": "批准",
   "notificationReject": "拒绝",
-  "errorParentAlreadyLinked": "该学生已有一位已批准并关联的家长。同一时间只能关联一位已批准的家长。",
   "errorCouldNotRespondToRequest": "无法回应此请求：{error}",
-  "@errorCouldNotRespondToRequest": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRespondToRequest": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "earlier": "更早",
-
   "docTypeOfferLetter": "录取信",
   "docTypeIndemnityLetter": "弥偿书",
   "docTypeCompanyAcceptanceLetter": "公司接受函",
@@ -556,10 +805,22 @@
   "upload": "上传",
   "errorFileTooLarge10mb": "文件过大。最大限制为 10MB。",
   "errorUploadFailed": "上传失败：{error}",
-  "@errorUploadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@errorUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorEnterPeriod": "请输入期间，例如“2026年6月”。",
   "errorCouldNotSubmit": "无法提交：{error}",
-  "@errorCouldNotSubmit": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "newSubmission": "新提交",
   "submissionType": "提交类型",
   "period": "期间",
@@ -568,15 +829,26 @@
   "notesForSupervisorHint": "为您的主管添加任何备注...",
   "tapToSelectFile": "点击选择文件",
   "pdfDocxUpTo10mb": "PDF、DOCX，最大 10MB",
-
   "errorLoadInternships": "无法加载实习：{error}",
-  "@errorLoadInternships": { "placeholders": { "error": { "type": "String" } } },
+  "@errorLoadInternships": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "searchInternships": "搜索实习",
   "titleSomethingWentWrong": "出了点问题",
   "retry": "重试",
   "searchByRoleCompanySkillHint": "按职位、公司或技能搜索...",
   "opportunitiesFoundCount": "{count, plural, other{找到 {count} 个机会}}",
-  "@opportunitiesFoundCount": { "placeholders": { "count": { "type": "int" } } },
+  "@opportunitiesFoundCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noMatches": "没有匹配结果",
   "tryAdjustingSearchFilters": "请尝试调整您的搜索或筛选条件。",
   "pendingVerification": "待验证",
@@ -587,10 +859,8 @@
   "minAllowanceLabel": "最低津贴 (RM)",
   "maxAllowanceLabel": "最高津贴 (RM)",
   "applyFilters": "应用筛选",
-
   "search": "搜索",
   "applications": "申请",
-
   "programmeNotSet": "尚未设置课程",
   "applicationsSent": "已发送申请",
   "interviewsScheduled": "已安排面试",
@@ -601,9 +871,24 @@
   "errorPhotoEmpty": "所选照片为空（0 字节）。请尝试其他照片。",
   "errorPhotoNotFound": "在磁盘上找不到所选照片。",
   "errorCouldNotAccessSource": "无法访问{source}：{error}",
-  "@errorCouldNotAccessSource": { "placeholders": { "source": { "type": "String" }, "error": { "type": "String" } } },
+  "@errorCouldNotAccessSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotRemovePhoto": "无法移除照片：{error}",
-  "@errorCouldNotRemovePhoto": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemovePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "selectDateOfBirthHelpText": "选择出生日期",
   "errorFullNameBlank": "全名不能为空。",
   "errorPhoneBlank": "电话号码不能为空。",
@@ -614,7 +899,13 @@
   "errorSelectAddress": "请在地图上选择您的地址。",
   "personalInfoUpdated": "个人信息已更新。",
   "errorCouldNotSave": "无法保存：{error}",
-  "@errorCouldNotSave": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorSelectProgramme": "请选择您的课程。",
   "errorSelectFaculty": "请选择您的学院。",
   "errorSelectSemester": "请选择您的学期。",
@@ -633,7 +924,13 @@
   "errorPositionCompanyRequired": "职位和公司为必填项。",
   "removeThisEntryTitle": "移除此条目？",
   "errorCouldNotRemove": "无法移除：{error}",
-  "@errorCouldNotRemove": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemove": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unknownCompany": "未知公司",
   "unknownPosition": "未知职位",
   "errorEnterCurrentPassword": "请输入您的当前密码。",
@@ -649,24 +946,54 @@
   "reviewAndApply": "检查并申请",
   "fieldsFilledReviewNote": "以下字段已填写 — 请检查并点击保存（工作经验则点击添加）以确认。",
   "errorCouldNotOpenResumeColon": "无法打开简历：{error}",
-  "@errorCouldNotOpenResumeColon": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotOpenResumeColon": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotRemoveResume": "无法移除简历：{error}",
-  "@errorCouldNotRemoveResume": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemoveResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "prefApplicationUpdates": "申请更新",
   "prefReportDeadlines": "报告截止日期",
   "prefMessages": "消息",
   "prefSupervisorFeedback": "主管反馈",
   "errorCouldNotSaveLanguage": "无法保存语言：{error}",
-  "@errorCouldNotSaveLanguage": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSaveLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotSaveTheme": "无法保存主题：{error}",
-  "@errorCouldNotSaveTheme": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSaveTheme": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "yourNamePlaceholder": "您的姓名",
   "workExperience": "工作经验",
   "selectYourProgrammeHint": "选择您的课程",
   "selectYourFacultyHint": "选择您的学院",
   "selectYourSemesterHint": "选择您的学期",
   "semesterNumber": "第 {number} 学期",
-  "@semesterNumber": { "placeholders": { "number": { "type": "int" } } },
+  "@semesterNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "cgpaHint": "例如：3.62",
   "noSkillsAddedYet": "尚未添加技能。",
   "addSkillHint": "例如：HTML、CSS、Java、公开演讲",
@@ -675,16 +1002,26 @@
   "dismiss": "关闭",
   "noWorkExperienceAddedYet": "尚未添加工作经验。",
   "updatedOnDate": "· 更新于 {date}",
-  "@updatedOnDate": { "placeholders": { "date": { "type": "String" } } },
-
+  "@updatedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "adminStudentsTitle": "学生",
   "adminCompaniesTitle": "公司",
   "adminSupervisorsTitle": "主管",
   "adminMoreTitle": "更多",
-
   "adminBrandLabel": "CIMS 管理端",
   "adminWelcomeBack": "欢迎回来，{name}",
-  "@adminWelcomeBack": { "placeholders": { "name": { "type": "String" } } },
+  "@adminWelcomeBack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminFallbackName": "管理员",
   "adminSystemOverview": "系统概览",
   "adminTotalStudents": "学生总数",
@@ -693,35 +1030,82 @@
   "adminNeedsAttention": "需要关注",
   "adminAllClear": "一切正常 — 目前没有需要您关注的事项。",
   "adminStudentsUnassignedCount": "{count} 名学生未分配",
-  "@adminStudentsUnassignedCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminStudentsUnassignedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoSupervisorAssignedYet": "尚未分配学术主管",
   "adminSubmissionsPendingReviewCount": "{count} 份提交待审核",
-  "@adminSubmissionsPendingReviewCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminSubmissionsPendingReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminAwaitingReview": "等待主管或管理员审核",
   "adminAddCompany": "添加公司",
   "adminAssignSupervisor": "分配主管",
   "adminRecentlyRegistered": "最近注册",
   "adminStudentRegisteredActivity": "{name} 已注册",
-  "@adminStudentRegisteredActivity": { "placeholders": { "name": { "type": "String" } } },
+  "@adminStudentRegisteredActivity": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminUnnamedStudent": "未命名学生",
-
   "adminSearchCompaniesHint": "搜索公司...",
   "adminRegisteredCompaniesCount": "{count} 家注册公司",
-  "@adminRegisteredCompaniesCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminRegisteredCompaniesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminPendingVerificationCount": "{count} 家待验证",
-  "@adminPendingVerificationCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminPendingVerificationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoCompaniesTitle": "没有公司",
   "adminNoCompaniesDescription": "请尝试调整搜索条件，或添加一家公司。",
   "adminLocationNotSet": "位置未设置",
   "adminStatusPending": "待处理",
   "adminStatusVerified": "已验证",
   "adminCouldNotVerify": "无法验证：{error}",
-  "@adminCouldNotVerify": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotVerify": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminRemoveCompanyTitle": "移除公司？",
   "adminRemoveCompanyMessage": "这将从名录中移除 {name}。此操作无法撤销。",
-  "@adminRemoveCompanyMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@adminRemoveCompanyMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotRemove": "无法移除：{error}",
-  "@adminCouldNotRemove": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotRemove": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCompanyDetailsTitle": "公司详情",
   "adminCompanyInformation": "公司信息",
   "adminLocationLabel": "位置",
@@ -733,7 +1117,13 @@
   "adminRemoveCompanyButton": "移除公司",
   "adminCompanyNameRequired": "公司名称为必填项。",
   "adminCouldNotSave": "无法保存：{error}",
-  "@adminCouldNotSave": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminEditCompanyTitle": "编辑公司",
   "adminCompanyNameLabel": "公司名称",
   "adminIndustryLabel": "行业",
@@ -744,11 +1134,16 @@
   "adminHrContactNameLabel": "人事联系人姓名",
   "adminHrEmailFieldLabel": "人事邮箱",
   "adminHrPhoneNumberLabel": "人事电话号码",
-
   "adminUnassign": "取消分配",
   "adminUnnamed": "未命名",
   "adminCouldNotAssign": "无法分配：{error}",
-  "@adminCouldNotAssign": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotAssign": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSearchByNameHint": "按姓名搜索...",
   "adminFilterAll": "全部",
   "adminFilterAssigned": "已分配",
@@ -757,31 +1152,65 @@
   "adminNoStudentsFoundDescription": "请尝试调整您的搜索或筛选条件。",
   "adminProgrammeNotSet": "尚未设置课程",
   "adminSupervisorColonName": "主管：{name}",
-  "@adminSupervisorColonName": { "placeholders": { "name": { "type": "String" } } },
+  "@adminSupervisorColonName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminNoSupervisorAssigned": "未分配主管",
   "adminAssign": "分配",
-
   "adminSearchSupervisorsHint": "搜索主管...",
   "adminAcademicSupervisorsCount": "{count} 位学术主管",
-  "@adminAcademicSupervisorsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminAcademicSupervisorsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoSupervisorsFoundTitle": "未找到主管",
   "adminNoSupervisorsFoundDescription": "尚未有学术主管账户注册。",
   "adminFacultyNotSet": "学院未设置",
   "adminThisSupervisorFallback": "此主管",
   "adminPromoteToAdminTitle": "提升为管理员？",
   "adminPromoteToAdminMessage": "{name} 将立即成为系统管理员 — 其账户将在下次登录时获得完整管理员权限，并且不再出现在主管列表中。此操作无法在此撤销。",
-  "@adminPromoteToAdminMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@adminPromoteToAdminMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminPromote": "提升",
   "adminCouldNotPromote": "无法提升：{error}",
-  "@adminCouldNotPromote": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotPromote": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSupervisorDetailsTitle": "主管详情",
   "adminPromoteToAdminButton": "提升为管理员",
   "adminNoStudentsAssignedYet": "尚未分配学生。",
-
   "adminCouldNotSaveReview": "无法保存审核：{error}",
-  "@adminCouldNotSaveReview": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotSaveReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotOpenFile": "无法打开文件：{error}",
-  "@adminCouldNotOpenFile": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotOpenFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminMonitorTitle": "监控",
   "adminTabStudentProgress": "学生进度",
   "adminTabReports": "报告",
@@ -789,7 +1218,6 @@
   "adminNoStudentsTitle": "没有学生",
   "adminNoStudentsRegisteredDescription": "尚未有学生注册。",
   "adminSubmissionsAppearHere": "提交内容将显示在这里。",
-
   "adminEnterCurrentPassword": "请输入您的当前密码。",
   "adminNewPasswordsDoNotMatch": "新密码不匹配。",
   "adminPasswordChanged": "密码已更改",
@@ -808,113 +1236,106 @@
   "adminSectionPreferences": "偏好设置",
   "adminNotifPrefsSubtitle": "选择您想接收的通知",
   "adminSectionSystem": "系统",
-
   "adminFullNameCannotBeBlank": "全名不能为空。",
   "adminUnsupportedFileFormat": "不支持的文件格式。请上传 JPG、JPEG 或 PNG 图片。",
   "adminPhotoEmptyError": "所选照片为空（0 字节）。请尝试其他照片。",
   "adminPhotoNotFoundError": "在磁盘上找不到所选照片。",
   "adminUploadFailed": "上传失败：{error}",
-  "@adminUploadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@adminUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSourceCamera": "相机",
   "adminSourceGallery": "相册",
   "adminCouldNotAccessSource": "无法访问{source}：{error}",
-  "@adminCouldNotAccessSource": { "placeholders": { "source": { "type": "String" }, "error": { "type": "String" } } },
+  "@adminCouldNotAccessSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotRemovePhoto": "无法移除照片：{error}",
-  "@adminCouldNotRemovePhoto": { "placeholders": { "error": { "type": "String" } } },
-
+  "@adminCouldNotRemovePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "cropPhotoTitle": "调整照片位置",
   "cropPhotoConfirm": "完成",
   "errorCropFailed": "无法裁剪照片，请重试。",
-
   "clear": "清除",
-
-  "parentWelcomeName": "欢迎，{name}",
-  "@parentWelcomeName": { "placeholders": { "name": { "type": "String" } } },
-  "parentWelcomeDefault": "欢迎，家长",
-  "parentDashboardSubtitle": "监督您孩子的实习进度",
-  "parentNoChildrenTitle": "尚未关联任何孩子",
-  "parentNoChildrenDescription": "关联您孩子的账户以开始监督其实习进度。他们需要先批准请求，您才能查看任何信息。",
-  "parentLinkChildButton": "关联孩子",
-  "parentUnnamedStudent": "未命名学生",
-  "parentNoApplicationYet": "尚无实习申请",
-  "parentSignFormButton": "签署表格",
-  "parentProgressButton": "进度",
-
-  "parentStudentEmailLabel": "学生电子邮件",
-  "parentStudentEmailHint": "例如 john.doe",
-  "parentRelationshipLabel": "关系",
-  "parentRelationshipFather": "父亲",
-  "parentRelationshipMother": "母亲",
-  "parentRelationshipGuardian": "监护人",
-  "parentNoStudentFoundError": "找不到该电子邮件对应的学生。",
-  "parentSearchError": "无法搜索：{error}",
-  "@parentSearchError": { "placeholders": { "error": { "type": "String" } } },
-  "parentSendRequestButton": "发送请求",
-  "parentRequestSentMessage": "请求已发送。学生需要批准该请求。",
-  "parentSendRequestError": "无法发送请求：{error}",
-  "@parentSendRequestError": { "placeholders": { "error": { "type": "String" } } },
-  "parentCancelRequestError": "无法取消：{error}",
-  "@parentCancelRequestError": { "placeholders": { "error": { "type": "String" } } },
-  "parentYourRequestsTitle": "您的请求",
-  "parentNoRequestsYet": "尚未发送任何请求。",
-  "parentAsRelationship": "身份：{relationship}",
-  "@parentAsRelationship": { "placeholders": { "relationship": { "type": "String" } } },
-  "parentUnknownStudent": "未知学生",
-
-  "parentProgressTitle": "实习进度",
-  "parentApplicationStatusTitle": "申请状态",
-  "parentNoApplicationSubmittedYet": "尚未提交实习申请。",
-  "parentUnknownCompany": "未知公司",
-  "parentAtAGlanceTitle": "概览",
-  "parentReportsSubmittedLabel": "已提交报告",
-  "parentDurationLabel": "时长",
-  "parentEvaluationTitle": "评估",
-  "parentNoEvaluationsYet": "尚未提交任何评估。",
-  "parentAcademicSupervisorEvaluation": "学术导师评估",
-  "parentCompanySupervisorEvaluation": "公司主管评估",
-  "parentRequiredDocumentsTitle": "所需文件",
-  "parentDocNotSubmitted": "尚未提交",
-  "parentMonthlyReportsTitle": "月度报告",
-  "parentNoMonthlyReportsYet": "尚未提交任何月度报告。",
-  "parentFinalReportTitle": "最终报告",
-  "parentNoFinalReportYet": "尚未提交最终报告。",
-  "parentMonthlyReportLabel": "月度报告 — {period}",
-  "@parentMonthlyReportLabel": { "placeholders": { "period": { "type": "String" } } },
-  "parentFinalReportLabel": "最终报告 — {period}",
-  "@parentFinalReportLabel": { "placeholders": { "period": { "type": "String" } } },
-  "parentSubmittedDate": "提交于 {date}",
-  "@parentSubmittedDate": { "placeholders": { "date": { "type": "String" } } },
-  "parentReadOnlyNotice": "这是只读视图。如有关于您孩子实习的疑问，请联系大学。",
-
   "parentAcknowledgementTitle": "确认书",
   "parentFormNotConfiguredError": "确认表格尚未设置。请联系大学。",
   "parentCouldNotLoadFormError": "无法加载确认表格：{error}",
-  "@parentCouldNotLoadFormError": { "placeholders": { "error": { "type": "String" } } },
-  "parentTapToFillInstruction": "直接点击表格进行填写，然后在底部提交。",
+  "@parentCouldNotLoadFormError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentSignAndSubmitButton": "签署并提交",
   "parentSignatureTimestampNote": "您的电子签名将附带时间戳记录。",
   "parentDrawSignatureTitle": "绘制您的签名",
   "parentCouldNotSubmitError": "无法提交表格：{error}",
-  "@parentCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "@parentCouldNotSubmitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentCouldNotOpenFormError": "无法打开表格：{error}",
-  "@parentCouldNotOpenFormError": { "placeholders": { "error": { "type": "String" } } },
+  "@parentCouldNotOpenFormError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentFormSubmittedTitle": "表格提交成功",
   "parentFormSubmittedDescription": "您的确认书已记录。",
   "parentSignedOnDate": "签署于 {date}",
-  "@parentSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "@parentSignedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "parentViewPdfButton": "查看PDF",
   "parentBackToHomeButton": "返回主页",
-
   "viewCompanyProfile": "查看公司简介",
   "companyProfileTitle": "公司简介",
   "companyProfileJobPostings": "职位发布",
   "companyProfileNoPostings": "该公司尚未发布任何职位。",
   "companyProfilePastInterns": "历届实习生",
   "companyProfileInternCount": "{count, plural, other{已有{count}名学生在此实习}}",
-  "@companyProfileInternCount": { "placeholders": { "count": { "type": "int" } } },
+  "@companyProfileInternCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "companyProfileReviews": "评价",
   "companyProfileReviewCount": "{count, plural, other{{count}则评价}}",
-  "@companyProfileReviewCount": { "placeholders": { "count": { "type": "int" } } },
+  "@companyProfileReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "companyProfileNoReviewsYet": "暂无评价。成为第一个分享经验的人吧。",
   "companyProfileWriteReview": "撰写评价",
   "companyProfileEditReview": "编辑您的评价",
@@ -922,35 +1343,453 @@
   "companyProfileReviewHint": "分享您在这里工作的经验（选填）",
   "companyProfileReviewSubmitted": "评价已提交，谢谢！",
   "companyProfileReviewError": "无法提交评价：{error}",
-  "@companyProfileReviewError": { "placeholders": { "error": { "type": "String" } } },
+  "@companyProfileReviewError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "companyProfileMustApplyNote": "只有申请过该公司的学生才能发表评价。",
-
   "docFillAndSignAction": "填写并签署",
   "docAwaitingCompanyUpload": "等待公司上传",
   "docAvailableOnceAccepted": "申请被接受后即可使用",
-
   "studentLetterNotConfiguredError": "此表格尚未设置。请联系大学。",
   "studentLetterCouldNotLoadError": "无法加载表格：{error}",
-  "@studentLetterCouldNotLoadError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterTapToFillInstruction": "直接点击表格进行填写，然后在底部提交。",
   "studentLetterSignAndSubmitButton": "签署并提交",
   "studentLetterSignatureTimestampNote": "您的电子签名将附带时间戳记录。",
   "studentLetterDrawSignatureTitle": "绘制您的签名",
   "studentLetterCouldNotSubmitError": "无法提交表格：{error}",
-  "@studentLetterCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotSubmitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterCouldNotOpenError": "无法打开表格：{error}",
-  "@studentLetterCouldNotOpenError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotOpenError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterSubmittedTitle": "表格提交成功",
   "studentLetterSubmittedDescription": "您已签署的信件已保存。",
   "studentLetterSignedOnDate": "签署于 {date}",
-  "@studentLetterSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "@studentLetterSignedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterViewPdfButton": "查看PDF",
   "studentLetterBackButton": "返回",
-
   "hrOfferLetterSectionTitle": "录取信",
   "hrUploadOfferLetter": "上传录取信",
   "hrReplaceOfferLetter": "替换",
-
   "csDocuments": "文件",
-  "csNoDocumentsOnFile": "暂无已存档的文件。"
+  "csNoDocumentsOnFile": "暂无已存档的文件。",
+  "addToCalendar": "添加到日历",
+  "calendarCouldNotOpen": "无法打开您的日历。",
+  "calendarEventTitle": "面试：{title}",
+  "calendarEventDetails": "与 {company} 的 CIMS 面试",
+  "hrSearchApplicants": "按姓名、专业或技能搜索",
+  "hrAllPostings": "所有职位",
+  "hrShortlisted": "已入围",
+  "hrShortlist": "加入入围名单",
+  "hrRemoveShortlist": "移出入围名单",
+  "hrPrivateNotes": "私人备注",
+  "hrPrivateNotesInfo": "只有您可以看到，学生看不到。",
+  "hrNoteHint": "写下关于该申请人的备注",
+  "hrSaveNote": "保存备注",
+  "hrNoteSaved": "备注已保存",
+  "hrNoMatchingApplicants": "没有符合搜索条件的申请人。",
+  "hrTabOffered": "已发Offer（{count}）",
+  "hrTabClosed": "已关闭（{count}）",
+  "hrClearFilters": "清除筛选",
+  "adminAuditLogTitle": "审计日志",
+  "adminAuditLogSubtitle": "谁批准、创建或修改了什么",
+  "auditFilterAll": "全部",
+  "auditFilterAccounts": "账户",
+  "auditFilterCompanies": "公司",
+  "auditFilterStudents": "学生",
+  "auditFilterSetup": "设置",
+  "auditEmpty": "目前还没有记录。",
+  "auditSystem": "系统",
+  "auditLoadMore": "加载更多",
+  "adminAnalyticsTitle": "实习安置分析",
+  "adminAnalyticsSubtitle": "安置率、申请数量以及尚未获得实习的学生",
+  "analyticsPlacementRate": "安置率",
+  "analyticsPlacedOf": "{total} 名学生中有 {placed} 名已安置",
+  "analyticsStudentsApplied": "已申请",
+  "analyticsApplications": "申请",
+  "analyticsWithoutPlacement": "尚未安置",
+  "analyticsByStatus": "按状态统计申请",
+  "analyticsByProgramme": "按专业",
+  "analyticsByCompany": "按公司",
+  "analyticsTopPostings": "申请最多的职位",
+  "analyticsUnplaced": "尚未安置的学生",
+  "analyticsExportCsv": "导出 CSV",
+  "analyticsExportFailed": "无法创建或打开文件。",
+  "analyticsRowStudentsPlaced": "已安置 {placed}/{students}",
+  "analyticsRowCompany": "{postings} 个职位 · {applications} 份申请 · {placed} 人已安置",
+  "analyticsRowPosting": "{company} · {applications} 份申请 · {offered} 个 Offer",
+  "analyticsNoStudentsUnplaced": "所有学生都已安置。",
+  "ivTheCompany": "公司",
+  "ivTheStudent": "学生",
+  "ivTheSystem": "系统",
+  "ivRequestSentCompany": "请求已发送。只有公司同意后面试才会改期。",
+  "ivDeclineNewTimeTitle": "拒绝新的时间",
+  "ivDeclinePromptToCompany": "请告诉公司您拒绝的原因。面试时间保持不变。",
+  "ivDeclineHint": "例如：我那个时间无法参加。",
+  "ivDecline": "拒绝",
+  "ivAccept": "接受",
+  "ivAcceptedMoved": "已接受。您的面试已改期。",
+  "ivDeclinedStays": "已拒绝。面试保持原样。",
+  "ivCancelInterview": "取消面试",
+  "ivCancelPromptToCompany": "请告诉公司您取消 {when} 面试的原因。对方会看到此原因。",
+  "ivCancelledNotified": "面试已取消。公司已收到您的原因通知。",
+  "ivCouldNotCancel": "无法取消：{error}",
+  "ivCancelButton": "取消",
+  "ivRescheduleButton": "改期",
+  "ivChangeWindowStudent": "面试只能在开始前 2 小时之前取消或改期。如果您无法参加，请给公司发消息。",
+  "ivCompanyWillArrange": "如果您的申请继续，公司会安排新的时间。",
+  "ivChangesTitle": "变更记录",
+  "ivChangeMoved": "{actor}已将面试改期",
+  "ivChangeMovedFromTo": "{actor}已将面试从 {from} 改到 {to}",
+  "ivChangeAsked": "{actor}申请将面试改期",
+  "ivChangeAskedTo": "{actor}申请将面试改到 {to}",
+  "ivChangeDeclined": "{actor}拒绝了新的时间",
+  "ivChangeDeclinedFor": "{actor}拒绝了新的时间（{time}）",
+  "ivAutoCancelled": "面试已被自动取消",
+  "ivChangeCancelled": "{actor}取消了面试",
+  "ivReasonLine": "原因：{reason}",
+  "ivYouAskedToReschedule": "您申请了改期",
+  "ivAskedToReschedule": "{who}申请改期",
+  "ivLineNow": "当前",
+  "ivLineProposed": "建议时间",
+  "ivLineReason": "原因",
+  "ivWaitingFor": "正在等待{who}回复。除非对方同意，否则面试时间保持不变。",
+  "ivMovesOnlyIfYouAccept": "只有您接受，面试才会改期。如果您拒绝，面试时间保持不变。",
+  "ivWithdrawRequest": "撤回请求",
+  "ivTryAgain": "重试",
+  "ivNoFreeTimes": "未来 {days} 天内没有空闲的面试时间。",
+  "ivNoFreeTimesHint": "面试时间来自面试官每周的空闲时间。可能所有时段都已被预订，或尚未设置空闲时间。",
+  "ivChooseDay": "选择日期",
+  "ivChooseTime": "选择时间",
+  "ivPickFirst": "请先选择新的日期和时间。",
+  "ivRequestNewTime": "申请新的时间",
+  "ivReasonForChange": "改期原因",
+  "ivWillSeeReason": "{who}会看到此原因。只有对方同意后面试才会改期；在此之前时间保持不变。",
+  "ivReasonHint": "例如：我那个时间有大学考试。",
+  "ivSendRequest": "发送请求",
+  "offAcceptTitle": "接受此 Offer 吗？",
+  "offAcceptBody": "{company} 的 {title} 将成为您当前的实习。",
+  "offAcceptCloses": "您其他 {count} 个未结束的申请将被关闭，且无法重新打开。",
+  "offAcceptOne": "您只能有一个进行中的实习。",
+  "offNotYet": "暂不",
+  "offAcceptOffer": "接受 Offer",
+  "offAccepted": "已接受 Offer。{company} 已收到通知。",
+  "offCouldNotAccept": "无法接受 Offer：{error}",
+  "appTabOffers": "Offer（{count}）",
+  "appInterviewCancelledTap": "面试已取消。点击查看原因。",
+  "appOfferedBody": "恭喜，这家公司向您发出了实习 Offer。您可以同时持有多个 Offer；接受其中一个后其余将被关闭。",
+  "appReasonFromCompany": "公司给出的原因",
+  "appNoReasonRecorded": "未记录原因。",
+  "appClosedAcceptedOther": "因您已接受其他 Offer 而关闭。",
+  "pushOffTitle": "应用外的提醒已关闭",
+  "pushOffBody": "您的手机屏蔽了 CIMS 通知，因此新的面试、Offer 和消息只会显示在这里。请开启通知以便即时收到提醒。",
+  "pushTurnOn": "开启通知",
+  "reasonRequiredHelper": "必填，至少 {min} 个字符。",
+  "reasonOptionalHelper": "选填。",
+  "ivSlotsFree": "空闲 {count}",
+  "avHoursSaved": "时间已保存。",
+  "avRemoveTitle": "删除这些时间段吗？",
+  "avRemoveBody": "{day} {from} 至 {to} 将不再开放给新的面试预约。该时间段内已预订的面试保持不变。",
+  "avKeep": "保留",
+  "avRemove": "删除",
+  "avDayOffHelp": "您不方便的日期",
+  "avTitle": "面试空闲时间",
+  "avAddHours": "添加时间",
+  "avIntro": "设置您可以面试的时间。每个时间段会按您选择的时长切分成时段，时段一旦被预订就会消失，因此不会出现重复预订。时间为马来西亚时间。",
+  "avWeeklyHours": "每周时间",
+  "avNoHoursYet": "尚未设置时间。点击“添加时间”后才能为您安排面试。",
+  "avDaysOff": "休息日",
+  "avAddDayOff": "添加休息日",
+  "avNoDaysOff": "暂无即将到来的休息日。在此添加休假或公共假期，这些日子将不会开放面试。",
+  "avNotAvailable": "不可用",
+  "avMinutesShort": "{minutes} 分钟",
+  "avPickOneDay": "请至少选择一天。",
+  "avEndAfterStart": "结束时间必须晚于开始时间。",
+  "avShorterThanSlot": "该时间段短于一个 {minutes} 分钟的时段。",
+  "avOverlap": "这些时间与您在所选某一天已设置的时间重叠。请先删除或修改已有的时间。",
+  "avAddAvailableHours": "添加空闲时间",
+  "avDays": "日期",
+  "avMonFri": "周一至周五",
+  "avEveryDay": "每天",
+  "avFromTime": "从 {time}",
+  "avToTime": "到 {time}",
+  "avLengthOfInterview": "每场面试时长",
+  "avSlotsSummary": "每个所选日期有 {count} 个 {minutes} 分钟的时段。",
+  "avSaveHours": "保存时间",
+  "apTitle": "学生资料",
+  "apUnnamed": "未命名学生",
+  "apCouldNotOpenResume": "无法打开简历：{error}",
+  "apCouldNotLoad": "无法加载完整资料：{error}",
+  "apContact": "联系方式",
+  "apEmail": "电子邮件",
+  "apPhone": "电话",
+  "apStudies": "学业",
+  "apProgramme": "专业",
+  "apFaculty": "学院",
+  "apSemester": "学期",
+  "apCgpa": "CGPA",
+  "apSkills": "技能",
+  "apNoSkills": "未列出技能。",
+  "apWorkExperience": "工作经历",
+  "apNoExperience": "未列出工作经历。",
+  "apResume": "简历",
+  "apNoResume": "未上传简历",
+  "apView": "查看",
+  "apNotProvided": "未提供",
+  "apPresent": "至今",
+  "hrViewFullProfile": "查看完整资料",
+  "hrvInterviewCancelledWas": "面试已取消（原定 {when}）",
+  "hrvInterviewLine": "面试：{when}",
+  "hrvAcceptedAnother": "该学生已接受其他 Offer。",
+  "hrvCouldNotUploadOffer": "无法上传 Offer 信：{error}",
+  "hrvWithdrawOffer": "撤回 Offer",
+  "hrvRejectApplication": "拒绝申请",
+  "hrvWithdrawPrompt": "请告诉 {name} 撤回 Offer 的原因。对方会看到此原因。",
+  "hrvRejectPrompt": "请告诉 {name} 申请未通过的原因。对方会看到此原因。",
+  "hrvReject": "拒绝",
+  "hrvRejectHint": "例如：该职位已由经验更相关的候选人担任。",
+  "hrvCouldNotReject": "无法拒绝：{error}",
+  "hrvMakeOfferTitle": "发出 Offer 吗？",
+  "hrvMakeOfferBody": "{name} 会收到通知，并可在“申请”页面接受 Offer。他们可能同时持有多家公司的 Offer；一旦接受其中一个，其余将被关闭。",
+  "hrvMakeOffer": "发出 Offer",
+  "hrvCouldNotMakeOffer": "无法发出 Offer：{error}",
+  "hrvNoResumeUploaded": "未上传简历。",
+  "hrvSetMyAvailability": "设置我的空闲时间",
+  "hrvDeclinePrompt": "请告诉 {name} 您拒绝的原因。面试时间保持不变。",
+  "hrvDeclineHint": "例如：那天面试官没有空。",
+  "hrvAcceptedMoved": "已接受。面试已改期。",
+  "hrvCancelPrompt": "请告诉 {name} 取消 {when} 面试的原因。对方会看到此原因。",
+  "hrvCancelHint": "例如：面试官那天无法参加。",
+  "hrvCancelledNotified": "面试已取消。{name} 已收到您的原因通知。",
+  "hrvChangeWindow": "面试只能在开始前 2 小时之前取消或改期。",
+  "hrvNoInterviewBooked": "尚未预订面试。",
+  "hrvInterviewWasCancelled": "{when} 的面试已被取消。",
+  "hrvScheduleNew": "安排新的面试",
+  "hrvOfferSent": "Offer 已发送，正在等待 {name} 接受。对方接受后即可添加 Offer 信和接受函。",
+  "hrvAcceptedAnotherCompany": "{name} 已接受其他公司的 Offer，因此该申请已被自动关闭。",
+  "hrvPickDayTime": "请先选择日期和时间。",
+  "hrvChangeNote": "{actor}{verb}。原因：{reason}",
+  "ivVerbAsked": "申请将面试改期",
+  "ivVerbDeclined": "拒绝了面试改期",
+  "ivVerbMoved": "将面试改期",
+  "ivVerbAutoCancelled": "自动取消了面试",
+  "ivVerbCancelled": "取消了面试",
+  "ivVerbBooked": "预订了面试",
+  "acTabOne": "单个学生",
+  "acTabMany": "批量（列表 / CSV）",
+  "acHowItWorks": "每位学生会获得一个符合密码规则的随机密码。您只会在下一个页面看到一次，请发送给学生。学生首次登录时必须设置新密码。",
+  "acFullName": "姓名",
+  "acFullNameHint": "与学生证一致",
+  "acEmail": "电子邮件",
+  "acRegNoOptional": "学号（选填）",
+  "acProgrammeOptional": "专业（选填）",
+  "acProgrammeHint": "例如：计算机科学学士",
+  "acCreateAccount": "创建账户",
+  "acFileCouldNotRead": "无法读取该文件。",
+  "acFileTooLarge": "该文件对学生名单来说太大了（最大 512 KB）。",
+  "acOnePerLine": "每行一名学生：",
+  "acLineFormat": "电子邮件、姓名、学号、专业（后两项选填）。可以包含标题行。",
+  "acChooseCsv": "选择 CSV 文件",
+  "acFileName": "文件：{name}",
+  "acCreateAccounts": "创建账户",
+  "acCreateN": "创建 {count} 个账户",
+  "acRowsSkipped": "有问题的行将被跳过。请修正后重新添加。",
+  "acNoEmailApp": "无法打开邮件应用。请复制信息并用其他方式发送。",
+  "acLeaveTitle": "离开此页面吗？",
+  "acLeaveBody": "临时密码只会在这里显示，之后无法再次查看。请确认您已复制或发送。",
+  "acStay": "留下",
+  "acLeave": "离开",
+  "acNewAccounts": "新账户",
+  "acSendNow": "请现在把邮箱和密码发送给每位学生。密码只会在此页面显示。学生首次登录时必须设置新密码。",
+  "acCopiedCsv": "已将 {count} 个账户复制为 CSV。",
+  "acCopyAllCsv": "全部复制为 CSV",
+  "acLoginCopied": "登录信息已复制。",
+  "acNotCreated": "未创建",
+  "acDone": "完成",
+  "acCopyDetails": "复制信息",
+  "acEmailStudent": "给学生发邮件",
+  "fpIntro": "您使用的是管理员提供的临时密码登录。请现在设置您自己的密码，设置之前无法使用本应用。",
+  "fpNewPassword": "新密码",
+  "fpConfirmPassword": "确认新密码",
+  "fpSaveContinue": "保存并继续",
+  "fpLogOut": "退出登录",
+  "ceNewCodeSent": "新的验证码已发送到 {email}。",
+  "ceTitle": "验证您的邮箱",
+  "ceIntro": "我们已向 {email} 发送了验证码。请在下方输入以验证您的账户。可能需要一分钟，也可能进入垃圾邮件文件夹。",
+  "ceCodeLabel": "邮件中的验证码",
+  "ceCodeHint": "输入验证码",
+  "ceConfirm": "验证账户",
+  "ceResendIn": "{seconds} 秒后可重新发送验证码",
+  "ceResend": "重新发送验证码",
+  "ceBackToLogin": "返回登录",
+  "fgCodeRequested": "已请求新的验证码。",
+  "fgCheckEmail": "请查看邮箱中的验证码。",
+  "fgTitle": "重置密码",
+  "fgEnterEmail": "请输入您账户的邮箱地址，我们会给您发送验证码。",
+  "fgEmailLabel": "邮箱地址",
+  "fgEmailHint": "输入您的邮箱",
+  "fgSendCode": "发送验证码",
+  "fgSentIntro": "如果 {email} 对应的账户存在，我们已向其发送验证码。可能需要一分钟，也可能进入垃圾邮件文件夹。验证码会在短时间后失效。",
+  "fgVerifyCode": "验证验证码",
+  "fgDifferentEmail": "使用其他邮箱",
+  "fgCodeAccepted": "验证码正确。请设置新密码。",
+  "fgNewPasswordHint": "创建新密码",
+  "fgConfirmHint": "再次输入新密码",
+  "fgSaveNew": "保存新密码",
+  "suPrivacyRequired": "请阅读并接受隐私声明后继续。",
+  "suPendingApproval": "账户已创建。管理员批准后您才能登录。",
+  "suCreatedLoginConfirm": "您的账户已创建。请登录并使用新的验证码验证邮箱。",
+  "suEmailConfirmedPending": "邮箱已验证。管理员批准您的账户后您才能登录。",
+  "suExistsTitle": "账户已存在",
+  "suExistsBody": "已存在使用 {email} 创建的账户。请直接登录，如忘记密码可重置密码。已存在的账户不会再收到新邮件。",
+  "suForgotPassword": "忘记密码",
+  "suStudentsCreatedByAdmin": "学生账户由管理员创建。请使用提供给您的邮箱和密码登录。",
+  "suFullNameHint": "输入您的姓名",
+  "suAgreePrefix": "我已阅读并同意",
+  "suPrivacyNotice": "隐私声明",
+  "loPasswordChanged": "密码已修改。请使用新密码登录。",
+  "stMyInterviewTimes": "我的面试日期和时间",
+  "stPrivacyNotice": "隐私声明",
+  "stDeleteMyAccount": "删除我的账户",
+  "errUnsupportedImage": "不支持的文件格式。请上传 JPG、JPEG 或 PNG 图片。",
+  "errPhotoEmpty": "所选照片为空（0 字节）。请换一张照片。",
+  "errPhotoNotFound": "在设备上找不到所选照片。",
+  "errUploadFailed": "上传失败：{error}",
+  "errCouldNotAccessCamera": "无法使用相机：{error}",
+  "errCouldNotAccessGallery": "无法访问相册：{error}",
+  "errCouldNotRemovePhoto": "无法删除照片：{error}",
+  "errCouldNotSave": "无法保存：{error}",
+  "errCouldNotSaveLanguage": "无法保存语言：{error}",
+  "errCouldNotSaveTheme": "无法保存主题：{error}",
+  "hpDeadlinePassed": "该职位的截止日期已过。请编辑职位并选择更晚的截止日期以重新开放。",
+  "hpExpired": "已过期",
+  "hpRecommended": "推荐候选人",
+  "hpChooseLocation": "请在地图上选择实习地点。",
+  "hpAddOneSkill": "请至少添加一项所需技能。",
+  "hpCloseBeforeDeadline": "职位不能早于申请截止日期关闭。",
+  "hpFixFields": "发布前请修正标红的字段。",
+  "hpCouldNotSave": "无法保存职位：{error}",
+  "hpCouldNotDelete": "无法删除职位：{error}",
+  "hpCustom": "自定义…",
+  "hpCustomCategory": "自定义类别",
+  "hpCustomCategoryHint": "例如：市场营销",
+  "hpAllowancePositive": "津贴必须大于 0。",
+  "hpAutoCloseCaption": "职位在此日期后自动关闭（选填）",
+  "hpClosesOn": "职位将于 {date} 关闭",
+  "hpAutoCloseOptional": "自动关闭日期（选填）",
+  "acTitleStudents": "创建学生账户",
+  "acTitleSupervisors": "创建导师账户",
+  "acHowItWorksSupervisor": "每位导师会获得一个符合密码规则的随机密码，账户会立即获批。您只会在下一个页面看到一次密码，请发送给导师。导师首次登录时必须设置新密码。",
+  "acLineFormatSupervisor": "电子邮件、姓名。可以包含标题行。",
+  "acSendNowSupervisor": "请现在把邮箱和密码发送给每位导师。密码只会在此页面显示。导师首次登录时必须设置新密码。",
+  "adminAddSupervisors": "添加导师",
+  "adminAddStudents": "添加学生",
+  "stSummaryTitle": "统计",
+  "stViewFull": "查看完整统计",
+  "stNoCompany": "加入或注册公司后即可在此查看统计。",
+  "stNothingYet": "暂无内容可显示。",
+  "stCouldNotLoad": "无法加载统计：{error}",
+  "stTitleHr": "招聘统计",
+  "stTitleAcademic": "学生进度",
+  "stTitleCompanySup": "实习生进度",
+  "stTitleAdmin": "平台统计",
+  "stPostings": "职位",
+  "stOpenPostings": "开放职位",
+  "stApplications": "申请",
+  "stApplicants": "申请人",
+  "stInterviewing": "面试中",
+  "stOffered": "已发 Offer",
+  "stAccepted": "已接受",
+  "stRejected": "已拒绝",
+  "stPending": "待审核",
+  "stClosed": "已关闭",
+  "stAcceptRate": "接受率",
+  "stInterviewsUpcoming": "即将进行的面试",
+  "stInterviewsDone": "已完成的面试",
+  "stByStatus": "按状态统计申请",
+  "stPerPosting": "各职位情况",
+  "stPostingRow": "{applications} 份申请 · {interview} 人面试 · {offered} 个 Offer · {accepted} 人接受",
+  "stWeekly": "每周申请数（最近 8 周）",
+  "stStudents": "学生",
+  "stPlaced": "已安置",
+  "stNotPlaced": "尚未安置",
+  "stReports": "报告",
+  "stReportsWaiting": "等待您审核",
+  "stReportsApproved": "已批准",
+  "stReportsSentBack": "已退回",
+  "stDocsWaiting": "待审核文件",
+  "stDocsApproved": "已批准的文件",
+  "stEvaluationsDone": "已完成的评估",
+  "stReportProgress": "报告进度",
+  "stPerStudent": "各学生情况",
+  "stStudentRow": "{reports} 份报告 · {approved} 份已批准 · {pending} 份待审",
+  "stPlacedBadge": "已安置",
+  "stNotPlacedBadge": "未安置",
+  "stInterns": "实习生",
+  "stEvaluatedBadge": "已评估",
+  "stNotEvaluatedBadge": "未评估",
+  "stEvaluatedStudents": "已评估的实习生",
+  "stPeople": "平台用户",
+  "stCompanies": "公司",
+  "stCompaniesVerified": "已验证",
+  "stCompaniesPending": "待验证",
+  "stNewCompanies": "新公司（30 天）",
+  "stCompaniesWithPostings": "已发布职位的公司",
+  "stNewPeople": "新用户（30 天）",
+  "stPendingApprovals": "待批准",
+  "stUsersByRole": "按角色统计用户",
+  "stCompaniesByStatus": "按状态统计公司",
+  "stCompaniesJoined": "每月新增公司（最近 6 个月）",
+  "stPeopleJoined": "每月新增用户（最近 6 个月）",
+  "stRoleStudent": "学生",
+  "stRoleAcademic": "学术导师",
+  "stRoleHr": "公司人事",
+  "stRoleCompanySup": "公司导师",
+  "stRoleAdmin": "管理员",
+  "roleLabelStudent": "学生",
+  "roleLabelAcademic": "学术导师",
+  "roleLabelHr": "公司人事",
+  "roleLabelCompanySup": "公司导师",
+  "roleLabelAdmin": "管理员",
+  "acTabOneSupervisor": "单个导师",
+  "acTabManySupervisor": "批量（列表 / CSV）",
+  "acFullNameHintSupervisor": "与员工证一致",
+  "acEmailSupervisor": "给导师发邮件",
+  "acCreateFailedReason": "无法创建账户：{reason}",
+  "adminNeverLoggedIn": "尚未登录",
+  "adminAwaitingApprovalBadge": "等待批准",
+  "adminNotApprovedBadge": "未获批准",
+  "adminFilterVerified": "已认证",
+  "adminFilterNotVerified": "未认证",
+  "adminNoCompaniesInFilter": "此分组中没有公司",
+  "hpClosesAfterDeadline": "职位会在申请截止日期之后自动关闭。未设置截止日期时，职位会一直开放，直到您手动关闭。",
+  "goodAfternoon": "下午好，{name}！",
+  "goodEvening": "晚上好，{name}！"
 }

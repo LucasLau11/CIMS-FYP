@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localisations
+        run: flutter gen-l10n
+
+      # Fails the build on errors and warnings; the remaining lint-level
+      # "info" notes (mostly Flutter deprecation hints) do not block.
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      # The layout tests draw text with the Roboto font that ships inside the
+      # Flutter SDK, so they need to know where the SDK is.
+      - name: Find the Flutter SDK
+        run: echo "FLUTTER_ROOT=$(dirname "$(dirname "$(which flutter)")")" >> "$GITHUB_ENV"
+
+      - name: Test
+        run: flutter test
+
+  # Runs the SQL checks in supabase/tests against a database. Each check runs inside a
+  # transaction that is always rolled back, so it leaves no data behind. It only runs when a
+  # repository secret SUPABASE_DB_URL (a Postgres connection string) exists, and never on
+  # pull requests from forks. Use a development or branch database, not production.
+  database-checks:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' && vars.RUN_DB_CHECKS == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the Postgres client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Run the database checks
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash supabase/tests/run_checks.sh

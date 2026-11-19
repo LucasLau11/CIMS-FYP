@@ -3,9 +3,10 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/hr_data_service.dart';
 import '../../services/student_data_service.dart';
-import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
 import '../student/student_messages_screen.dart' show ChatScreen;
+import '../../utils/error_text.dart';
+import '../../utils/lang.dart';
 
 class RecommendedCandidatesScreen extends StatefulWidget {
   final String postingTitle;
@@ -52,16 +53,16 @@ class _RecommendedCandidatesScreenState extends State<RecommendedCandidatesScree
         title: Text('Recommended candidates', style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: _candidates.isEmpty
                   ? ListView(
                       children: [
                         SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-                        const EmptyState(
+                        EmptyState(
                           icon: Icons.person_search_outlined,
-                          title: 'No matching candidates',
+                          title: tt('No matching candidates'),
                           description: 'No student has listed skills that overlap with this posting\'s requirements yet.',
                         ),
                       ],
@@ -100,7 +101,6 @@ class _CandidateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : 'Unnamed student';
     final matched = List<String>.from(data['matched_skills'] as List? ?? []);
-    final programme = data['programme'] as String?;
 
     return AccentCard(
       accentColor: AppColors.primary,
@@ -109,18 +109,15 @@ class _CandidateCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: AppColors.surfaceVariant,
-                child: Text(logoLetter(name), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
-              ),
+              ProfileAvatar(name: name, avatarUrl: data['avatar_url'] as String?, radius: 18),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(name, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                    Text(programme?.isNotEmpty == true ? programme! : 'Programme not set', style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
+                    // Studies (programme, faculty, semester, CGPA) are private until the student applies.
+                    Text('${matched.length} matching skill${matched.length == 1 ? '' : 's'}', style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
@@ -140,7 +137,7 @@ class _CandidateCard extends StatelessWidget {
                 .map((s) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(20)),
-                      child: Text(s, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.primary)),
+                      child: Text(s, style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.primaryText)),
                     ))
                 .toList(),
           ),
@@ -150,7 +147,7 @@ class _CandidateCard extends StatelessWidget {
             child: OutlinedButton(
               onPressed: onViewProfile,
               style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 9)),
-              child: const Text('View profile'),
+              child: Text(tt('View profile')),
             ),
           ),
         ],
@@ -207,7 +204,7 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isMessaging = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open chat: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not open chat')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -231,18 +228,14 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
           Center(
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 34,
-                  backgroundColor: AppColors.infoBg,
-                  child: Text(logoLetter(name), style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                ),
+                ProfileAvatar(name: name, avatarUrl: data['avatar_url'] as String?, radius: 38),
                 const SizedBox(height: 10),
                 Text(name, style: AppTextStyles.h2),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          Text('Skills', style: AppTextStyles.label),
+          Text(tt('Skills'), style: AppTextStyles.label),
           const SizedBox(height: 8),
           if (skills.isEmpty)
             Text('No skills listed.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary))
@@ -265,7 +258,7 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
             ),
           if (!_isLoadingResume) ...[
             const SizedBox(height: 24),
-            Text('Resume', style: AppTextStyles.label),
+            Text(tt('Resume'), style: AppTextStyles.label),
             const SizedBox(height: 8),
             if (_resume == null)
               Text('No resume uploaded.', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary))
@@ -281,7 +274,7 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
                   decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
                   child: Row(
                     children: [
-                      const Icon(Icons.picture_as_pdf_outlined, size: 18, color: AppColors.primary),
+                      Icon(Icons.picture_as_pdf_outlined, size: 18, color: AppColors.primaryText),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(_resume!['filename']!, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500)),
@@ -300,7 +293,7 @@ class _CandidateProfileScreenState extends State<_CandidateProfileScreen> {
               icon: _isMessaging
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.chat_bubble_outline, size: 16),
-              label: const Text('Message'),
+              label: Text(tt('Message')),
               style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
             ),
           ),

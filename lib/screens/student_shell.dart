@@ -104,23 +104,23 @@ class _StudentShellState extends State<StudentShell> {
           onTap: _onTabTapped,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.dashboard_outlined),
-              activeIcon: const Icon(Icons.dashboard),
+              icon: const Icon(Icons.school_outlined),
+              activeIcon: const Icon(Icons.school),
               label: l10n.dashboard,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.search_outlined),
-              activeIcon: const Icon(Icons.search),
+              icon: const Icon(Icons.travel_explore),
+              activeIcon: const Icon(Icons.travel_explore),
               label: l10n.search,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.work_outline),
-              activeIcon: const Icon(Icons.work),
+              icon: const Icon(Icons.assignment_ind_outlined),
+              activeIcon: const Icon(Icons.assignment_ind),
               label: l10n.applications,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.assignment_outlined),
-              activeIcon: const Icon(Icons.assignment),
+              icon: const Icon(Icons.menu_book_outlined),
+              activeIcon: const Icon(Icons.menu_book),
               label: l10n.reports,
             ),
             BottomNavigationBarItem(

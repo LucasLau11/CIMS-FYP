@@ -1,3 +1,10 @@
+-- *** DEVELOPMENT / DEMO ONLY — NEVER RUN THIS AGAINST A REAL PROJECT. ***
+-- It creates six accounts (including an ADMIN) that all share the same
+-- password, which is written in plain text below and in git history. Anyone
+-- who can read this file can log in as any of them if it is ever applied to a
+-- reachable project. Use it on a throwaway local database only, and delete
+-- the seeded users before sharing or publishing a project it was run on.
+--
 -- Task 22: Fresh, realistic seed data across all 6 roles.
 --
 -- Purpose: the normalized schema (Tasks 1-21) was rewritten and applied on a
@@ -11,19 +18,19 @@
 -- this file is deterministic and every id is referenceable from the task
 -- report. Pattern: a000...00N = the 6 seeded profile_id/auth.users.id
 -- values (N = 1 student, 2 academic_supervisor, 3 company_hr,
--- 4 company_supervisor, 5 parent, 6 admin); b000...00N = the matching
+-- 4 company_supervisor, 6 admin; 5 was the removed parent account and is
+-- intentionally unused); b000...00N = the matching
 -- auth.identities row; c/d/e/f/1/2/3/4/5-prefixed 0000...000N ids are the
 -- company / job_posting / application+interview / report+reviews /
 -- document+review / evaluation / conversation+messages /
--- template+submission / parent_child_link rows respectively.
+-- template+submission rows respectively.
 --
--- Login credentials (all 6 accounts share one password):
+-- Login credentials (all 5 accounts share one password):
 --   password: FypCims2026!
 --   student@fypcims.test            (student)
 --   supervisor@fypcims.test         (academic_supervisor)
 --   hr@fypcims.test                 (company_hr)
 --   companysupervisor@fypcims.test  (company_supervisor)
---   parent@fypcims.test             (parent)
 --   admin@fypcims.test              (admin)
 --
 -- IMPORTANT: `create_profile_with_subtype` is NOT used here -- it relies on
@@ -65,10 +72,6 @@ insert into auth.users (
    'companysupervisor@fypcims.test', extensions.crypt('FypCims2026!', extensions.gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
    '', '', '', '', false, false),
-  ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-0000-0000-000000000005', 'authenticated', 'authenticated',
-   'parent@fypcims.test', extensions.crypt('FypCims2026!', extensions.gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
-   '', '', '', '', false, false),
   ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-0000-0000-000000000006', 'authenticated', 'authenticated',
    'admin@fypcims.test', extensions.crypt('FypCims2026!', extensions.gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
@@ -95,9 +98,6 @@ insert into auth.identities (
   ('b0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000004',
    '{"sub":"a0000000-0000-0000-0000-000000000004","email":"companysupervisor@fypcims.test","email_verified":true,"provider":"email"}'::jsonb,
    'email', now(), now(), now()),
-  ('b0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000005',
-   '{"sub":"a0000000-0000-0000-0000-000000000005","email":"parent@fypcims.test","email_verified":true,"provider":"email"}'::jsonb,
-   'email', now(), now(), now()),
   ('b0000000-0000-0000-0000-000000000006', 'a0000000-0000-0000-0000-000000000006', 'a0000000-0000-0000-0000-000000000006',
    '{"sub":"a0000000-0000-0000-0000-000000000006","email":"admin@fypcims.test","email_verified":true,"provider":"email"}'::jsonb,
    'email', now(), now(), now());
@@ -113,7 +113,6 @@ insert into profiles (profile_id, role, email, full_name, phone, language, theme
   ('a0000000-0000-0000-0000-000000000002', 'academic_supervisor', 'supervisor@fypcims.test', 'Dr. Lim Siew Hoon', '+60123456782', 'English', 'system'),
   ('a0000000-0000-0000-0000-000000000003', 'company_hr', 'hr@fypcims.test', 'Nurul Aina binti Rahman', '+60123456783', 'English', 'system'),
   ('a0000000-0000-0000-0000-000000000004', 'company_supervisor', 'companysupervisor@fypcims.test', 'Rajesh Kumar', '+60123456784', 'English', 'system'),
-  ('a0000000-0000-0000-0000-000000000005', 'parent', 'parent@fypcims.test', 'Tan Ah Kow', '+60123456785', 'English', 'system'),
   ('a0000000-0000-0000-0000-000000000006', 'admin', 'admin@fypcims.test', 'System Administrator', '+60123456786', 'English', 'system');
 
 -- ============================================================================
@@ -136,9 +135,6 @@ insert into students (profile_id, academic_supervisor_id, programme, semester, f
 insert into academic_supervisors (profile_id) values
   ('a0000000-0000-0000-0000-000000000002');
 
-insert into parents (profile_id) values
-  ('a0000000-0000-0000-0000-000000000005');
-
 insert into company_hr (profile_id, company_id) values
   ('a0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001');
 
@@ -147,14 +143,6 @@ insert into company_supervisors (profile_id, company_id) values
 
 insert into administrators (profile_id) values
   ('a0000000-0000-0000-0000-000000000006');
-
--- ============================================================================
--- 6. parent_child_links -- approved link between the seeded parent and student.
--- ============================================================================
-
-insert into parent_child_links (pc_link_id, parent_id, student_id, relationship, status, requested_at, responded_at) values
-  ('50000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000001',
-   'father', 'approved', now() - interval '20 days', now() - interval '19 days');
 
 -- ============================================================================
 -- 7. job_postings / applications / interviews -- the student applies to the
@@ -181,9 +169,10 @@ insert into applications (application_id, student_id, job_posting_id, status, co
    'I am a Year 3 Software Engineering student with hands-on Flutter experience from coursework and personal projects, and I would love to contribute to Skylark''s mobile team.',
    array['Flutter','Dart'], now() - interval '8 days', now() - interval '2 days');
 
-insert into interviews (interview_id, application_id, scheduled_at, mode, location) values
+insert into interviews (interview_id, application_id, scheduled_at, ends_at, mode, location, interviewer_id, status) values
   ('e0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001',
-   now() + interval '3 days', 'online', 'Google Meet (link sent via email)');
+   now() + interval '3 days', now() + interval '3 days 30 minutes', 'online', 'Google Meet (link sent via email)',
+   'a0000000-0000-0000-0000-000000000003', 'scheduled');
 
 -- ============================================================================
 -- 8. reports -- one monthly report with BOTH review stages: an academic
@@ -261,7 +250,8 @@ insert into messages (message_id, conversation_id, sender_id, body, created_at, 
 
 -- ============================================================================
 -- 12. document_templates / document_submissions -- the parent-acknowledgement
---     template flow.
+--     template flow. The parent signs on the student's phone, so the
+--     submission belongs to the student (there is no parent account).
 --     LIMITATION (flagged per task brief guidance): no real PDF was
 --     available to upload to the `document_templates` storage bucket for
 --     this seed, so storage_path below is a placeholder that will 404 if a
@@ -278,7 +268,7 @@ insert into document_templates (template_id, purpose, name, storage_path, page_w
 
 insert into document_submissions (submission_id, template_id, student_id, submitted_by, values, generated_pdf_path, submitted_at) values
   ('40000000-0000-0000-0000-000000000002', '40000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
-   'a0000000-0000-0000-0000-000000000005',
+   'a0000000-0000-0000-0000-000000000001',
    '{"parent_name":"Tan Ah Kow","student_name":"Tan Wei Ming","signature_date":"2026-07-20","acknowledged":true}'::jsonb,
    'document_submissions/placeholder/40000000-0000-0000-0000-000000000002.pdf',
    now() - interval '14 days');

@@ -67,8 +67,8 @@ class _SupervisorShellState extends State<SupervisorShell> {
           onTap: _onTabTapped,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.dashboard_outlined),
-              activeIcon: const Icon(Icons.dashboard),
+              icon: const Icon(Icons.account_balance_outlined),
+              activeIcon: const Icon(Icons.account_balance),
               label: l10n.dashboard,
             ),
             BottomNavigationBarItem(

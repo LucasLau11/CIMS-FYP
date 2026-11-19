@@ -59,7 +59,7 @@ class _CompanySupervisorShellState extends State<CompanySupervisorShell> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+      return Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
     }
     if (!_hasCompany) {
       return CompanySetupScreen(onDone: _checkCompany);
@@ -94,8 +94,8 @@ class _CompanySupervisorShellState extends State<CompanySupervisorShell> {
           onTap: _onTabTapped,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.dashboard_outlined),
-              activeIcon: const Icon(Icons.dashboard),
+              icon: const Icon(Icons.engineering_outlined),
+              activeIcon: const Icon(Icons.engineering),
               label: l10n.dashboard,
             ),
             BottomNavigationBarItem(

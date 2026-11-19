@@ -6,6 +6,9 @@ import '../theme/app_theme.dart';
 import '../services/document_template_service.dart';
 import '../services/pdf_template_service.dart';
 import 'document_preview_screen.dart';
+import '../utils/error_text.dart';
+import '../utils/letter_auto_values.dart';
+import '../utils/lang.dart';
 
 /// Generic fill-and-sign screen for a document template — same mechanics
 /// as ParentAcknowledgementScreen (tap fields on the rendered page(s), draw
@@ -55,6 +58,7 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
   double _pageAspectRatio = 1;
   Map<String, dynamic>? _existingSubmission;
   Map<String, String> _autoValues = {};
+  int _prefilledCount = 0;
 
   final Map<String, TextEditingController> _textControllers = {};
   final Map<String, DateTime?> _dateValues = {};
@@ -109,9 +113,23 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
       final pageWidth = (template['page_width'] as num).toDouble();
       final pageHeight = (template['page_height'] as num).toDouble();
 
+      // Typed and date fields whose meaning the app knows (name, IC, company, address, dates...) start filled in from the
+      // profile and the internship; the person checks them and can change any.
+      var prefilled = 0;
       for (final f in fields) {
-        if (f.type == 'text') _textControllers[f.key] = TextEditingController();
+        final known = resolveLetterValue(autoValues, key: f.key, label: f.label);
+        if (f.type == 'text') {
+          _textControllers[f.key] = TextEditingController(text: known ?? '');
+          if (known != null) prefilled++;
+        } else if (f.type == 'date') {
+          final date = parseLetterDate(known);
+          if (date != null) {
+            _dateValues[f.key] = date;
+            prefilled++;
+          }
+        }
       }
+      _prefilledCount = prefilled;
 
       if (!mounted) return;
       setState(() {
@@ -126,15 +144,35 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _loadError = AppLocalizations.of(context)!.studentLetterCouldNotLoadError(e.toString());
+        _loadError = AppLocalizations.of(context)!.studentLetterCouldNotLoadError(friendlyError(e));
         _isLoading = false;
       });
     }
   }
 
-  String _resolveAutoValue(String key) => _autoValues[key] ?? '';
+  String _resolveAutoValue(String key) => resolveLetterValue(_autoValues, key: key) ?? '';
 
   String _formatDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  /// How many fields still need filling, so the person is told what is
+  /// missing instead of facing a disabled button.
+  int get _remainingFields {
+    var remaining = 0;
+    for (final f in _fields) {
+      switch (f.type) {
+        case 'text':
+          if (_textControllers[f.key]?.text.trim().isEmpty ?? true) remaining++;
+          break;
+        case 'date':
+          if (_dateValues[f.key] == null) remaining++;
+          break;
+        case 'signature':
+          if (_signatureValues[f.key] == null) remaining++;
+          break;
+      }
+    }
+    return remaining;
+  }
 
   bool get _canSubmit {
     for (final f in _fields) {
@@ -228,13 +266,15 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
         fields: _fields,
         values: values,
       );
+      // The document goes on file first: if recording it fails, nothing says "already submitted" and the person
+      // can simply try again (an earlier order left a submission with no document when this step failed).
+      await widget.recordDocument(generatedBytes, '${widget.title}.pdf');
       await DocumentTemplateService.instance.submitDocument(
         templateId: _template!['id'] as String,
         studentId: widget.studentId,
         textValues: textValues,
         generatedPdfBytes: generatedBytes,
       );
-      await widget.recordDocument(generatedBytes, '${widget.title}.pdf');
       final saved = await DocumentTemplateService.instance.getSubmission(templateId: _template!['id'] as String, studentId: widget.studentId);
       if (!mounted) return;
       setState(() {
@@ -244,7 +284,7 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.studentLetterCouldNotSubmitError(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.studentLetterCouldNotSubmitError(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -257,7 +297,7 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: url, fileName: '${widget.title}.pdf')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.studentLetterCouldNotOpenError(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.studentLetterCouldNotOpenError(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -272,7 +312,7 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
         title: Text(widget.title, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _loadError != null
               ? _buildError(_loadError!)
               : _existingSubmission != null
@@ -306,10 +346,23 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
           padding: const EdgeInsets.all(10),
           child: Text(
             l10n.studentLetterTapToFillInstruction,
-            style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary),
+            style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText),
             textAlign: TextAlign.center,
           ),
         ),
+        if (_prefilledCount > 0)
+          Container(
+            width: double.infinity,
+            color: AppColors.successBg,
+            padding: const EdgeInsets.all(10),
+            child: Text(
+              tr('$_prefilledCount field${_prefilledCount == 1 ? ' was' : 's were'} filled in for you from the profile and the internship. Check them, and change anything that is wrong.',
+                  ms: '$_prefilledCount medan telah diisi untuk anda daripada profil dan latihan industri. Semak, dan tukar apa-apa yang salah.',
+                  zh: '已根据个人资料和实习信息为您填写了 $_prefilledCount 个字段。请核对，如有错误请修改。'),
+              style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.success),
+              textAlign: TextAlign.center,
+            ),
+          ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -333,6 +386,17 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
                   ),
                 ],
                 const SizedBox(height: 24),
+                if (!_canSubmit)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      _remainingFields == 1
+                          ? '1 field on the form still needs to be filled in.'
+                          : '$_remainingFields fields on the form still need to be filled in.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error),
+                    ),
+                  ),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -368,6 +432,8 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
       case 'text':
         content = TextField(
           controller: _textControllers[f.key],
+          maxLength: 100,
+          buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
           onChanged: (_) => setState(() {}),
           style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.black),
           decoration: InputDecoration(
@@ -406,7 +472,7 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
             alignment: Alignment.center,
             child: signature != null
                 ? Image.memory(signature, fit: BoxFit.contain)
-                : Text(f.label, style: TextStyle(fontFamily: 'Inter', fontSize: 9, color: AppColors.primary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                : Text(f.label, style: TextStyle(fontFamily: 'Inter', fontSize: 9, color: AppColors.primaryText), maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         );
         break;
@@ -436,7 +502,7 @@ class _DocumentLetterFillScreenState extends State<DocumentLetterFillScreen> {
             Text(l10n.studentLetterSubmittedDescription, style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(l10n.studentLetterSignedOnDate('${submittedAt.day}/${submittedAt.month}/${submittedAt.year}'),
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primary)),
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primaryText)),
             const SizedBox(height: 32),
             SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: _viewSubmittedPdf, icon: const Icon(Icons.picture_as_pdf_outlined, size: 18), label: Text(l10n.studentLetterViewPdfButton))),
             const SizedBox(height: 12),

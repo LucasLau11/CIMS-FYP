@@ -40,6 +40,12 @@ class SupervisorDataService {
 
   final SupabaseClient _client = Supabase.instance.client;
 
+  /// Placement and report progress of the assigned students (migration 00039).
+  Future<Map<String, dynamic>> getStats() async {
+    final result = await _client.rpc('academic_supervisor_stats');
+    return Map<String, dynamic>.from(result as Map);
+  }
+
   String get _userId {
     final id = AuthService.instance.currentUserId;
     if (id == null) throw Exception('You must be logged in.');
@@ -169,6 +175,32 @@ class SupervisorDataService {
     return list;
   }
 
+  /// The overall grade of one student and its parts (company evaluation 60, monthly reports 20,
+  /// final report 20). Administrators see any student, an academic supervisor their own. Migration 00043.
+  Future<Map<String, dynamic>> getStudentGrade(String studentId) async {
+    final result = await _client.rpc('student_grade_summary', params: {'p_student': studentId});
+    return Map<String, dynamic>.from(result as Map);
+  }
+
+  /// The intakes in which the signed-in academic supervisor has students.
+  Future<List<Map<String, dynamic>>> getSupervisorIntakes() async {
+    final rows = List<Map<String, dynamic>>.from(await _client.rpc('supervisor_intakes') as List);
+    for (final r in rows) {
+      r['id'] = r['intake_id'];
+    }
+    return rows;
+  }
+
+  /// The students of an intake with their grades: every student for an administrator, only the
+  /// assigned ones for an academic supervisor.
+  Future<List<Map<String, dynamic>>> getIntakeGrades(String intakeId) async {
+    final rows = List<Map<String, dynamic>>.from(await _client.rpc('intake_grade_overview', params: {'p_intake': intakeId}) as List);
+    for (final r in rows) {
+      r['id'] = r['student_id'];
+    }
+    return rows;
+  }
+
   Future<List<Map<String, dynamic>>> getStudentEvaluations(String studentId) async {
     final rows = await _client
         .from('evaluations')
@@ -207,6 +239,7 @@ class SupervisorDataService {
 
     final reportItems = reportList.map((r) => {
           'kind': 'report',
+          'report_type': r['type'],
           'id': r['report_id'],
           'student_id': r['student_id'],
           'student_name': names[r['student_id']] ?? 'Unknown student',
@@ -214,6 +247,7 @@ class SupervisorDataService {
           'submitted_at': r['submitted_at'],
           'status': r['academic_status'] ?? 'submitted',
           'feedback': r['academic_feedback'],
+          'grade': r['academic_grade'],
           'storage_path': r['storage_path'],
           'file_name': r['file_name'],
           // Two-stage approval: company supervisor reviews first, academic
@@ -255,11 +289,15 @@ class SupervisorDataService {
     }
   }
 
-  Future<void> reviewReport({required String reportId, required String status, String? feedback}) async {
+  /// The academic supervisor's (or an administrator's) decision on a report. An approval carries a mark
+  /// for every criterion of the rubric ([marks], see grading_rubric.dart; the database refuses an approval
+  /// without them and adds them up), a rejection none.
+  Future<void> reviewReport({required String reportId, required String status, String? feedback, Map<String, int>? marks}) async {
     await _client.from('academic_report_reviews').upsert({
       'report_id': reportId,
       'status': status,
       'feedback': feedback,
+      'marks': status == 'approved' ? marks : null,
       'reviewer_id': _userId,
       'reviewed_at': DateTime.now().toIso8601String(),
     }, onConflict: 'report_id');
@@ -393,6 +431,32 @@ class SupervisorDataService {
       'average_score': averageScore,
       'comments': comments,
       'type': type,
+    });
+  }
+
+  /// A company evaluation on the university form. The database adds the marks up (60 at most), keeps the
+  /// old 1-5 average column in step and refuses an incomplete form.
+  Future<void> submitCompanyEvaluation({
+    required String studentId,
+    required Map<String, int> marks,
+    required int absentWithPermission,
+    required int absentWithoutPermission,
+    required String overallGrade,
+    String? comments,
+    required String trainingNotes,
+    required String designation,
+  }) async {
+    await _client.from('evaluations').insert({
+      'student_id': studentId,
+      'supervisor_id': _userId,
+      'type': 'workplace',
+      'scores': marks,
+      'attendance_with_permission': absentWithPermission,
+      'attendance_without_permission': absentWithoutPermission,
+      'overall_grade': overallGrade,
+      'comments': comments,
+      'training_notes': trainingNotes,
+      'designation': designation,
     });
   }
 

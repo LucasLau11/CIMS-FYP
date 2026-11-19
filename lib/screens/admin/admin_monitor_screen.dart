@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/reason_dialog.dart';
+import '../../widgets/grade_dialog.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/supervisor_data_service.dart';
@@ -6,6 +8,7 @@ import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
 import '../supervisor/supervisor_students_screen.dart' show StudentDetailScreen;
 import '../../l10n/app_localizations.dart';
+import '../../utils/error_text.dart';
 
 class AdminMonitorScreen extends StatefulWidget {
   const AdminMonitorScreen({super.key});
@@ -51,12 +54,24 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
   }
 
   Future<void> _review(Map<String, dynamic> item, {required bool approve}) async {
-    final comment = await showDialog<String>(context: context, builder: (_) => _CommentDialog(isReject: !approve));
-    if (comment == null) return;
+    final isReport = item['kind'] == 'report';
+    Map<String, int>? marks;
+    String comment;
+    if (approve && isReport) {
+      final result = await showApproveReportDialog(context,
+          isFinal: item['report_type'] == 'final', receivedAt: DateTime.tryParse('${item['submitted_at']}')?.toLocal());
+      if (result == null) return;
+      marks = result.marks;
+      comment = result.comment;
+    } else {
+      final text = await showDialog<String>(context: context, builder: (_) => _CommentDialog(isReject: !approve));
+      if (text == null) return;
+      comment = text;
+    }
     try {
       final status = approve ? 'approved' : 'rejected';
-      if (item['kind'] == 'report') {
-        await SupervisorDataService.instance.reviewReport(reportId: item['id'] as String, status: status, feedback: comment.trim().isEmpty ? null : comment.trim());
+      if (isReport) {
+        await SupervisorDataService.instance.reviewReport(reportId: item['id'] as String, status: status, feedback: comment.trim().isEmpty ? null : comment.trim(), marks: marks);
       } else {
         await SupervisorDataService.instance.reviewDocument(documentId: item['id'] as String, status: status, feedback: comment.trim().isEmpty ? null : comment.trim());
       }
@@ -64,12 +79,12 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotSaveReview(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotSaveReview(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
   Future<void> _openStudent(String studentId) async {
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => StudentDetailScreen(studentId: studentId)));
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => StudentDetailScreen(studentId: studentId, adminMode: true)));
     _load();
   }
 
@@ -88,7 +103,7 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
       ));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotOpenFile(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotOpenFile(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -102,14 +117,14 @@ class _AdminMonitorScreenState extends State<AdminMonitorScreen> with SingleTick
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(title: l10n.adminMonitorTitle),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : Column(
               children: [
                 Container(
                   color: AppColors.surface,
                   child: TabBar(
                     controller: _tabController,
-                    labelColor: AppColors.primary,
+                    labelColor: AppColors.primaryText,
                     unselectedLabelColor: AppColors.textMuted,
                     indicatorColor: AppColors.primary,
                     labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w600),
@@ -164,7 +179,7 @@ class _StudentProgressTab extends StatelessWidget {
                 CircleAvatar(
                   radius: 18,
                   backgroundColor: AppColors.surfaceVariant,
-                  child: Text(logoLetter(name), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                  child: Text(logoLetter(name), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -225,7 +240,7 @@ class _ReviewListTab extends StatelessWidget {
                     CircleAvatar(
                       radius: 16,
                       backgroundColor: AppColors.surfaceVariant,
-                      child: Text(logoLetter(item['student_name'] as String), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                      child: Text(logoLetter(item['student_name'] as String), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -280,47 +295,22 @@ class _ReviewListTab extends StatelessWidget {
   }
 }
 
-class _CommentDialog extends StatefulWidget {
+/// Rejecting needs a written reason (at least 100 characters) that the student
+/// will read; approving may carry an optional comment.
+class _CommentDialog extends StatelessWidget {
   final bool isReject;
 
   const _CommentDialog({required this.isReject});
 
   @override
-  State<_CommentDialog> createState() => _CommentDialogState();
-}
-
-class _CommentDialogState extends State<_CommentDialog> {
-  final _commentController = TextEditingController();
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      title: Text(widget.isReject ? l10n.supRejectSubmission : l10n.supApproveSubmission, style: AppTextStyles.h3),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.isReject ? l10n.supRejectFeedbackPrompt : l10n.supApproveCommentPrompt, style: AppTextStyles.bodySecondary),
-          const SizedBox(height: 12),
-          TextField(controller: _commentController, maxLines: 3, decoration: InputDecoration(hintText: l10n.supTypeYourComment)),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        ElevatedButton(
-          onPressed: () {
-            if (widget.isReject && _commentController.text.trim().isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.supPleaseAddFeedback), backgroundColor: AppColors.error));
-              return;
-            }
-            Navigator.pop(context, _commentController.text);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: widget.isReject ? AppColors.error : AppColors.primary),
-          child: Text(widget.isReject ? l10n.hrReject : l10n.supApprove),
-        ),
-      ],
+    return ReasonDialog(
+      title: isReject ? l10n.supRejectSubmission : l10n.supApproveSubmission,
+      prompt: isReject ? l10n.supRejectFeedbackPrompt : l10n.supApproveCommentPrompt,
+      confirmLabel: isReject ? l10n.hrReject : l10n.supApprove,
+      reasonRequired: isReject,
+      destructive: isReject,
     );
   }
 }

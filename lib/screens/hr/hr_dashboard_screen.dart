@@ -11,6 +11,14 @@ import '../staff_profile_screen.dart';
 import '../student/student_notifications_screen.dart';
 import 'hr_postings_screen.dart';
 import 'hr_applicants_screen.dart' show HrApplicantsScreen, ApplicantDetailScreen;
+import '../../services/interview_service.dart';
+import '../../utils/interview_format.dart';
+import 'hr_availability_screen.dart';
+import '../../theme/role_theme.dart';
+import '../../utils/responsive.dart';
+import '../../widgets/common/flex_grid.dart';
+import '../../utils/lang.dart';
+import 'hr_company_verification_screen.dart';
 
 class HrDashboardScreen extends StatefulWidget {
   const HrDashboardScreen({super.key});
@@ -26,6 +34,8 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
   String _name = '';
   String? _avatarUrl;
   String? _companyName;
+  // 'pending', 'verified' or 'rejected': an unverified company cannot post internships
+  String _companyStatus = 'verified';
   List<Map<String, dynamic>> _upcomingInterviews = [];
 
   @override
@@ -50,6 +60,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
         _name = (profile?['full_name'] as String?)?.isNotEmpty == true ? profile!['full_name'] as String : '';
         _avatarUrl = profile?['avatar_url'] as String?;
         _companyName = company?['name'] as String?;
+        _companyStatus = (company?['status'] as String?) ?? 'verified';
       });
     } catch (_) {
       // Non-fatal — keep whatever identity data was already displayed.
@@ -59,8 +70,8 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
       final counts = await HrDataService.instance.getDashboardCounts();
       final unread = await StudentDataService.instance.getUnreadNotificationCount();
       final applicants = await HrDataService.instance.getApplicants();
-      final interviews = applicants.where((a) => a['status'] == 'interview' && a['interview_at'] != null).toList()
-        ..sort((a, b) => (a['interview_at'] as String).compareTo(b['interview_at'] as String));
+      final interviews = applicants.where((a) => (a['interview'] as InterviewInfo?)?.isScheduled == true).toList()
+        ..sort((a, b) => (a['interview'] as InterviewInfo).start.compareTo((b['interview'] as InterviewInfo).start));
       if (!mounted) return;
       setState(() {
         _counts = counts;
@@ -87,15 +98,12 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              expandedHeight: 140,
+              expandedHeight: scaledExtent(context, 140),
               pinned: true,
               backgroundColor: AppColors.primary,
               automaticallyImplyLeading: false,
               flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [AppColors.primary, AppColors.primaryLight]),
-                  ),
+                background: RoleHeaderBackground(
                   child: SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -130,8 +138,8 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text(displayName, style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-                          Text(companyLabel, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white70)),
+                          Text(displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                          Text(companyLabel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: kOnBannerSoft)),
                         ],
                       ),
                     ),
@@ -140,23 +148,55 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
               ),
             ),
             if (_isLoading)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+              SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
             else
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (_companyStatus != 'verified')
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HrCompanyVerificationScreen())).then((_) => _load()),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: _companyStatus == 'rejected' ? AppColors.errorBg : AppColors.warningBg,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(_companyStatus == 'rejected' ? Icons.error_outline : Icons.hourglass_top,
+                                    color: _companyStatus == 'rejected' ? AppColors.error : AppColors.warning),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _companyStatus == 'rejected'
+                                        ? tr('Your company was not verified. Tap to see why and upload the right documents.',
+                                            ms: 'Syarikat anda tidak disahkan. Ketik untuk melihat sebab dan memuat naik dokumen yang betul.',
+                                            zh: '您的公司未通过认证。点击查看原因并上传正确的文件。')
+                                        : tr('Your company is waiting for verification, so you cannot post internships yet. Tap to see your documents.',
+                                            ms: 'Syarikat anda menunggu pengesahan, jadi anda belum boleh menyiarkan latihan industri. Ketik untuk melihat dokumen anda.',
+                                            zh: '您的公司正在等待认证，暂时无法发布实习职位。点击查看您的文件。'),
+                                    style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 12,
+                                        height: 1.4,
+                                        color: _companyStatus == 'rejected' ? AppColors.error : AppColors.warning),
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right, color: AppColors.textMuted),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     SectionHeader(title: l10n.hrRecruitmentOverview),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 1.1,
-                        children: [
+                      child: FlexGrid(columns: 2, minColumnWidth: 110, children: [
                           MetricCard(
                             label: l10n.hrActivePostings,
                             value: '${_counts['activePostings'] ?? 0}',
@@ -206,7 +246,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
                                 CircleAvatar(
                                   radius: 18,
                                   backgroundColor: AppColors.surfaceVariant,
-                                  child: Text(logoLetter(a['student_name'] as String), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                  child: Text(logoLetter(a['student_name'] as String), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -218,16 +258,32 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(6)),
-                                  child: Text(timeAgo(context, DateTime.parse(a['interview_at'] as String)),
-                                      style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(6)),
+                                    child: Text(formatInterviewDateTime((a['interview'] as InterviewInfo).start),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryText)),
+                                  ),
                                 ),
                               ],
                             ),
                           )),
                     SectionHeader(title: l10n.quickActions),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: _QuickAction(
+                          icon: Icons.event_available_outlined,
+                          label: tt('My interview availability'),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HrAvailabilityScreen())),
+                        ),
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
@@ -277,7 +333,7 @@ class _QuickAction extends StatelessWidget {
         decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.primary, size: 24),
+            Icon(icon, color: AppColors.primaryText, size: 24),
             const SizedBox(height: 8),
             Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textPrimary), textAlign: TextAlign.center),
           ],

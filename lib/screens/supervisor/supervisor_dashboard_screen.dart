@@ -6,10 +6,15 @@ import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
 import '../../services/supervisor_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../../utils/lang.dart';
+import 'supervisor_intakes_screen.dart';
 import '../staff_profile_screen.dart';
 import 'supervisor_messages_screen.dart';
 import 'supervisor_reviews_screen.dart';
 import 'supervisor_students_screen.dart' show SupervisorStudentsScreen, StudentDetailScreen;
+import '../../theme/role_theme.dart';
+import '../../utils/responsive.dart';
+import '../../widgets/common/flex_grid.dart';
 
 class SupervisorDashboardScreen extends StatefulWidget {
   const SupervisorDashboardScreen({super.key});
@@ -86,19 +91,12 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              expandedHeight: 140,
+              expandedHeight: scaledExtent(context, 140),
               pinned: true,
               backgroundColor: AppColors.primary,
               automaticallyImplyLeading: false,
               flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [AppColors.primary, AppColors.primaryLight],
-                    ),
-                  ),
+                background: RoleHeaderBackground(
                   child: SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -131,10 +129,14 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(_name?.isNotEmpty == true ? _name! : l10n.academicSupervisor,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
                           Text(
                             _faculty?.isNotEmpty == true ? '${l10n.academicSupervisor} · $_faculty' : l10n.academicSupervisor,
-                            style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white70),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: kOnBannerSoft),
                           ),
                         ],
                       ),
@@ -144,7 +146,7 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
               ),
             ),
             if (_isLoading)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+              SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
             else
               SliverToBoxAdapter(
                 child: Column(
@@ -153,14 +155,7 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
                     SectionHeader(title: l10n.overview),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 1.1,
-                        children: [
+                      child: FlexGrid(columns: 2, minColumnWidth: 110, children: [
                           MetricCard(
                             label: l10n.supAssignedStudents,
                             value: '${_counts['students'] ?? 0}',
@@ -204,6 +199,21 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
                         ],
                       ),
                     ),
+                    AccentCard(
+                      accentColor: AppColors.primary,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupervisorIntakesScreen())),
+                      child: Row(
+                        children: [
+                          Icon(Icons.groups_outlined, color: AppColors.primaryText),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(tr('Intakes and grades', ms: 'Pengambilan dan gred', zh: '实习批次与成绩'),
+                                style: TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                          ),
+                          Icon(Icons.chevron_right, color: AppColors.textMuted),
+                        ],
+                      ),
+                    ),
                     SectionHeader(
                       title: l10n.supPendingYourReview,
                       actionLabel: l10n.viewAll,
@@ -231,7 +241,7 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
                                   radius: 18,
                                   backgroundColor: AppColors.surfaceVariant,
                                   child: Text(logoLetter(item['student_name'] as String),
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -268,7 +278,7 @@ class _SupervisorDashboardScreenState extends State<SupervisorDashboardScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: SizedBox(
-                          height: 96,
+                          height: scaledExtent(context, 118),
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             children: _students
@@ -321,7 +331,7 @@ class _StudentAvatarTile extends StatelessWidget {
             CircleAvatar(
               radius: 18,
               backgroundColor: AppColors.infoBg,
-              child: Text(logoLetter(name), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              child: Text(logoLetter(name), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
             ),
             const SizedBox(height: 6),
             Text(name,

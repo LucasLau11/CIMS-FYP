@@ -1,11 +1,9 @@
 {
   "@@locale": "en",
-
   "appTitle": "CIMS",
   "tarumt": "TARUMT",
   "splashTagline": "Centralised Internship\nManagement System",
   "loading": "Loading...",
-
   "welcomeToCims": "Welcome to CIMS",
   "cimsFullName": "Centralised Internship Management System",
   "emailAddress": "Email address",
@@ -26,7 +24,6 @@
   "cancel": "Cancel",
   "sendResetLink": "Send reset link",
   "resetLinkSentMessage": "If an account exists for this email, a reset link has been sent.",
-
   "createYourAccount": "Create your CIMS account",
   "signupRoleNote": "Student/staff emails are assigned a role automatically.\nGmail, Outlook, or Hotmail addresses will be asked to pick a role below.",
   "createAPassword": "Create a password",
@@ -34,7 +31,6 @@
   "reEnterYourPassword": "Re-enter your password",
   "selectYourRole": "Select your role",
   "notInstitutionalEmailNote": "Your email is not a TARC institutional address. Please select the role that applies to you.",
-  "parentGuardian": "Parent/Guardian",
   "hrPersonnel": "HR Personnel",
   "companySupervisor": "Company Supervisor",
   "signUp": "Sign up",
@@ -43,7 +39,6 @@
   "errorPasswordsDoNotMatch": "Passwords do not match.",
   "errorSelectRole": "Please select your role to continue.",
   "signUpCheckEmailMessage": "Account created! Please check your email to confirm your account before logging in.",
-
   "dashboard": "Dashboard",
   "overview": "Overview",
   "internshipProgress": "Internship progress",
@@ -59,11 +54,15 @@
   "stepCompleted": "Completed",
   "submitCompanyReview": "Submit company review",
   "viewMyProgress": "View my progress",
+  "defaultUserName": "User",
   "goodMorning": "Good morning, {name}!",
   "@goodMorning": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
-
   "personalInformation": "Personal information",
   "academicInformation": "Academic information",
   "resume": "Resume",
@@ -109,13 +108,11 @@
   "newPassword": "New password",
   "confirmNewPassword": "Confirm new password",
   "change": "Change",
-
   "delete": "Delete",
   "add": "Add",
   "confirm": "Confirm",
   "close": "Close",
   "notSpecified": "Not specified",
-
   "hrRecruitmentOverview": "Recruitment overview",
   "hrActivePostings": "Active postings",
   "hrNewApplicants": "New applicants",
@@ -128,9 +125,21 @@
   "hrPersonnelLabel": "HR Personnel",
   "hrJobPostings": "Job postings",
   "hrPostingsCount": "{count} postings",
-  "@hrPostingsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrPostingsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrActiveCount": "{count} active",
-  "@hrActiveCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrNoPostingsYet": "No postings yet",
   "hrCreateFirstPosting": "Create your first internship posting.",
   "hrClosePosting": "Close posting",
@@ -138,9 +147,21 @@
   "hrDeletePostingTitle": "Delete posting?",
   "hrDeletePostingMessage": "This will permanently remove this job posting. Existing applications will be retained for records.",
   "hrApplicantsCount": "{count} applicants",
-  "@hrApplicantsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrApplicantsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrPostedAgo": "Posted {time}",
-  "@hrPostedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@hrPostedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrEditPosting": "Edit posting",
   "hrPostingDetails": "Posting details",
   "hrJobTitle": "Job title",
@@ -153,11 +174,23 @@
   "hrJobType": "Job type",
   "hrDuration": "Duration",
   "hrMonths": "{count} months",
-  "@hrMonths": { "placeholders": { "count": { "type": "int" } } },
+  "@hrMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrMonthlyAllowance": "Monthly allowance (RM)",
   "hrMonthlyAllowanceHint": "e.g. 1500",
   "hrDeadlineLabel": "Deadline: {date}",
-  "@hrDeadlineLabel": { "placeholders": { "date": { "type": "String" } } },
+  "@hrDeadlineLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "hrApplicationDeadlineOptional": "Application deadline (optional)",
   "hrSkillsRequired": "Skills required",
   "hrAddASkill": "Add a skill",
@@ -169,19 +202,55 @@
   "hrSkillRequired": "Add at least one required skill.",
   "hrApplicants": "Applicants",
   "hrTabNew": "New ({count})",
-  "@hrTabNew": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabInterview": "Interview ({count})",
-  "@hrTabInterview": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabInterview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabAccepted": "Accepted ({count})",
-  "@hrTabAccepted": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabAccepted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabRejected": "Rejected ({count})",
-  "@hrTabRejected": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrNoApplicantsHere": "No applicants here",
   "hrApplicantsAppearHere": "Applicants in this stage will appear here.",
   "hrInterviewColon": "Interview: {time}",
-  "@hrInterviewColon": { "placeholders": { "time": { "type": "String" } } },
+  "@hrInterviewColon": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrAppliedAgo": "Applied {time}",
-  "@hrAppliedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@hrAppliedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrApplicantProfile": "Applicant profile",
   "hrAppliedFor": "Applied for",
   "hrNoResumeUploaded": "No resume uploaded",
@@ -191,7 +260,13 @@
   "hrReject": "Reject",
   "hrScheduleInterview": "Schedule Interview",
   "hrInterviewScheduledColon": "Interview scheduled: {time}",
-  "@hrInterviewScheduledColon": { "placeholders": { "time": { "type": "String" } } },
+  "@hrInterviewScheduledColon": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrAccept": "Accept",
   "hrDate": "Date",
   "hrSelectDate": "Select date",
@@ -211,7 +286,6 @@
   "hrPostings": "Postings",
   "hrInterns": "Interns",
   "hrClosedStatus": "Closed",
-
   "supAssignedStudents": "Assigned students",
   "supPendingReviews": "Pending reviews",
   "supApprovedThisMonth": "Approved this month",
@@ -222,17 +296,35 @@
   "supNoStudentsYet": "No students yet.",
   "supUpToDate": "Up to date",
   "supPendingCount": "{count} pending",
-  "@supPendingCount": { "placeholders": { "count": { "type": "int" } } },
+  "@supPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "supMyStudentsTitle": "My students",
   "supSearchByNameOrProgramme": "Search by name or programme...",
   "supStudentsCount": "{count} students",
-  "@supStudentsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@supStudentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "supNoStudents": "No students",
   "supNoStudentsMatch": "No students match your search.",
   "supActiveInternship": "Active internship",
   "supNoActiveInternship": "No active internship",
   "supLastReportAgo": "Last report {time}",
-  "@supLastReportAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@supLastReportAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "supNoReportsYet": "No reports yet",
   "supStudentDetails": "Student details",
   "supEvaluate": "Evaluate",
@@ -240,7 +332,13 @@
   "supMessage": "Message",
   "supLatestEvaluation": "Latest evaluation",
   "supSubmittedAgo": "Submitted {time}",
-  "@supSubmittedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@supSubmittedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "supSubmissionHistory": "Submission history",
   "supNoSubmissionsYet": "No submissions yet.",
   "supReviews": "Reviews",
@@ -267,10 +365,15 @@
   "supSubmitEvaluation": "Submit evaluation",
   "supEvaluationSubmitted": "Evaluation submitted",
   "supEvaluationRecorded": "Your evaluation for {name} has been recorded.",
-  "@supEvaluationRecorded": { "placeholders": { "name": { "type": "String" } } },
+  "@supEvaluationRecorded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "supBackToStudent": "Back to student",
   "supStudents": "Students",
-
   "csCurrentInterns": "Current interns",
   "csReportsToReview": "Reports to review",
   "csApprovedThisMonth": "Approved this month",
@@ -281,9 +384,21 @@
   "csNoInternsYet": "No interns yet.",
   "csInterns": "Interns",
   "csCurrentInternsCount": "{count} current interns",
-  "@csCurrentInternsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@csCurrentInternsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "csNeedsAttention": "{count} needs attention",
-  "@csNeedsAttention": { "placeholders": { "count": { "type": "int" } } },
+  "@csNeedsAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "csNoInternsTitle": "No interns yet",
   "csNoInternsDescription": "Accepted applicants at your company will appear here.",
   "csInternDetails": "Intern details",
@@ -296,7 +411,13 @@
   "csSubmitEvaluation": "Submit evaluation",
   "csEvaluationSubmitted": "Evaluation submitted",
   "csEvaluationRecorded": "Your workplace evaluation for {name} has been recorded and shared with the university.",
-  "@csEvaluationRecorded": { "placeholders": { "name": { "type": "String" } } },
+  "@csEvaluationRecorded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "csBackToIntern": "Back to intern",
   "csReportReviews": "Report reviews",
   "csTabPending": "Pending",
@@ -314,7 +435,6 @@
   "csGradeSatisfactory": "Satisfactory",
   "csGradeNeedsImprovement": "Needs improvement",
   "csAverageScore": "Average score",
-
   "setupYourCompany": "Set up your company",
   "setupLinkCompanyNote": "Link your account to a company before you can manage postings, applicants, or interns.",
   "setupJoinExisting": "Join existing",
@@ -328,7 +448,6 @@
   "setupLocationOptional": "Location (optional) — tap to select on map",
   "setupRegisterCompany": "Register company",
   "setupCompanyNameRequired": "Company name is required.",
-
   "profileMyProfile": "My profile",
   "profilePersonalInformation": "Personal information",
   "profileFullName": "Full name",
@@ -355,27 +474,73 @@
   "profileChooseFromGallery": "Choose from gallery",
   "profileRemovePhoto": "Remove photo",
   "profilePasswordChanged": "Password changed successfully.",
-
   "justNow": "Just now",
   "minutesAgo": "{count, plural, one{1 minute ago} other{{count} minutes ago}}",
-  "@minutesAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hoursAgo": "{count, plural, one{1 hour ago} other{{count} hours ago}}",
-  "@hoursAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "daysAgo": "{count, plural, one{1 day ago} other{{count} days ago}}",
-  "@daysAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weeksAgo": "{count, plural, one{1 week ago} other{{count} weeks ago}}",
-  "@weeksAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@weeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "monthsAgo": "{count, plural, one{1 month ago} other{{count} months ago}}",
-  "@monthsAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@monthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "yearsAgo": "{count, plural, one{1 year ago} other{{count} years ago}}",
-  "@yearsAgo": { "placeholders": { "count": { "type": "int" } } },
-
+  "@yearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatConversationFallbackName": "this conversation",
   "chatDeleteConversationTitle": "Delete conversation?",
   "chatDeleteConversationMessage": "This deletes the whole conversation with {name} for both of you. This cannot be undone.",
-  "@chatDeleteConversationMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@chatDeleteConversationMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatCouldNotLoadContacts": "Could not load contacts: {error}",
-  "@chatCouldNotLoadContacts": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotLoadContacts": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatNewMessageTitle": "New message",
   "chatNoContactsToMessage": "No other accounts to message yet.",
   "chatTabTitle": "Messages",
@@ -390,19 +555,43 @@
   "chatPhotoAttachmentPreview": "📷 Photo",
   "chatArchiveAction": "Archive",
   "chatCouldNotSendMessage": "Could not send message: {error}",
-  "@chatCouldNotSendMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotSendMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatFileTooLarge": "File is too large. Maximum size is 10MB.",
   "chatCouldNotSendAttachment": "Could not send attachment: {error}",
-  "@chatCouldNotSendAttachment": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotSendAttachment": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatDeleteForMeAction": "Delete for me",
   "chatDeleteForEveryoneAction": "Delete for everyone",
   "chatDeleteForMeTitle": "Delete for me?",
   "chatDeleteForMeMessage": "This message will be removed from your view only. The other person will still see it.",
   "chatCouldNotDeleteMessage": "Could not delete message: {error}",
-  "@chatCouldNotDeleteMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotDeleteMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatEditMessageTitle": "Edit message",
   "chatCouldNotEditMessage": "Could not edit message: {error}",
-  "@chatCouldNotEditMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotEditMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatDeleteMessageTitle": "Delete message?",
   "chatCannotBeUndone": "This cannot be undone.",
   "chatSayHello": "Say hello 👋",
@@ -410,7 +599,13 @@
   "chatEditedLabel": "edited",
   "chatAttachmentFallbackName": "Attachment",
   "chatCouldNotUpdateMute": "Could not update mute: {error}",
-  "@chatCouldNotUpdateMute": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotUpdateMute": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatBlockContactTitle": "Block this contact?",
   "chatUnblockContactTitle": "Unblock this contact?",
   "chatBlockContactMessage": "They will no longer be able to send you messages in this conversation.",
@@ -418,9 +613,21 @@
   "chatBlockAction": "Block",
   "chatUnblockAction": "Unblock",
   "chatCouldNotUpdateBlock": "Could not update block: {error}",
-  "@chatCouldNotUpdateBlock": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotUpdateBlock": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatCouldNotDeleteConversation": "Could not delete conversation: {error}",
-  "@chatCouldNotDeleteConversation": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotDeleteConversation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatContactInfoTitle": "Contact info",
   "chatPhoneNotAvailable": "Not available",
   "chatSharedMediaFiles": "Shared media & files",
@@ -428,24 +635,49 @@
   "chatMuteNotifications": "Mute notifications",
   "chatBlockContactToggle": "Block contact",
   "chatDeleteConversationButton": "Delete conversation",
-
   "errorAddressSearchFailed": "Address search failed: {error}",
-  "@errorAddressSearchFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@errorAddressSearchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unknownLocationCoords": "Unknown location ({lat}, {lng})",
-  "@unknownLocationCoords": { "placeholders": { "lat": { "type": "String" }, "lng": { "type": "String" } } },
+  "@unknownLocationCoords": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotResolveAddress": "Could not resolve address for this location.",
   "selectYourAddress": "Select your address",
   "searchForYourAddressHint": "Search for your address...",
   "mapSearchOrTapHint": "Search above, or tap the map to fine-tune the pin",
   "resolvingAddress": "Resolving address...",
   "confirmThisAddress": "Confirm this address",
-
   "coverLetterLoadedFromFile": "Cover letter loaded from file — review and edit before continuing.",
   "errorCouldNotReadFile": "Could not read file: {error}",
-  "@errorCouldNotReadFile": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotReadFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "notifApplicationSubmittedTitle": "Application submitted",
   "notifApplicationSubmittedBody": "Your application to {company} has been sent.",
-  "@notifApplicationSubmittedBody": { "placeholders": { "company": { "type": "String" } } },
+  "@notifApplicationSubmittedBody": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
   "apply": "Apply",
   "coverLetter": "Cover Letter",
   "review": "Review",
@@ -473,15 +705,32 @@
   "applicationCannotBeEditedNote": "Once submitted, your application cannot be edited.",
   "applicationSubmittedExclaim": "Application submitted!",
   "applicationSubmittedDetail": "Your application to {company} has been sent. You will be notified when there is an update.",
-  "@applicationSubmittedDetail": { "placeholders": { "company": { "type": "String" } } },
+  "@applicationSubmittedDetail": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
   "backToSearch": "Back to search",
-
   "withdrawApplicationTitle": "Withdraw application?",
   "withdrawApplicationMessage": "You will be able to re-apply to {title} later if you change your mind.",
-  "@withdrawApplicationMessage": { "placeholders": { "title": { "type": "String" } } },
+  "@withdrawApplicationMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "withdraw": "Withdraw",
   "errorCouldNotWithdraw": "Could not withdraw: {error}",
-  "@errorCouldNotWithdraw": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotWithdraw": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "coverLetterLabel": "COVER LETTER",
   "skillsLabel": "SKILLS",
   "myApplications": "My applications",
@@ -493,10 +742,8 @@
   "rejected": "Rejected",
   "noApplicationsHere": "No applications here",
   "applicationsAppearHere": "Applications in this category will appear here.",
-
   "statusApproved": "Approved",
   "statusSubmitted": "Submitted",
-
   "noInterviewScheduled": "No interview scheduled",
   "interviewNotifiedOnceScheduled": "You will be notified once the company schedules your interview.",
   "onlineInterviewLabel": "Online interview",
@@ -505,7 +752,6 @@
   "directionsUnavailableNote": "Directions unavailable — see address above",
   "inPersonNoJoinLinkNote": "This is an in-person interview — no online join link is needed.",
   "errorCouldNotOpenMeetingLink": "Could not open the meeting link.",
-
   "internshipDetails": "Internship details",
   "monthlyAllowance": "Monthly allowance",
   "applicationDeadline": "Application deadline",
@@ -519,7 +765,6 @@
   "alreadyApplied": "Already applied",
   "companyPendingVerification": "Company pending verification",
   "applyNow": "Apply now",
-
   "notifications": "Notifications",
   "markAllRead": "Mark all read",
   "noNotificationsYet": "No notifications yet",
@@ -527,11 +772,15 @@
   "newLabel": "New",
   "notificationApprove": "Approve",
   "notificationReject": "Reject",
-  "errorParentAlreadyLinked": "This student already has an approved parent linked. Only one approved parent can be linked at a time.",
   "errorCouldNotRespondToRequest": "Could not respond to this request: {error}",
-  "@errorCouldNotRespondToRequest": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRespondToRequest": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "earlier": "Earlier",
-
   "docTypeOfferLetter": "Offer Letter",
   "docTypeIndemnityLetter": "Indemnity Letter",
   "docTypeCompanyAcceptanceLetter": "Company Acceptance Letter",
@@ -556,10 +805,22 @@
   "upload": "Upload",
   "errorFileTooLarge10mb": "File is too large. Maximum size is 10MB.",
   "errorUploadFailed": "Upload failed: {error}",
-  "@errorUploadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@errorUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorEnterPeriod": "Please enter a period, e.g. \"June 2026\".",
   "errorCouldNotSubmit": "Could not submit: {error}",
-  "@errorCouldNotSubmit": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "newSubmission": "New submission",
   "submissionType": "Submission type",
   "period": "Period",
@@ -568,15 +829,26 @@
   "notesForSupervisorHint": "Add any notes for your supervisor...",
   "tapToSelectFile": "Tap to select file",
   "pdfDocxUpTo10mb": "PDF, DOCX up to 10MB",
-
   "errorLoadInternships": "Could not load internships: {error}",
-  "@errorLoadInternships": { "placeholders": { "error": { "type": "String" } } },
+  "@errorLoadInternships": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "searchInternships": "Search internships",
   "titleSomethingWentWrong": "Something went wrong",
   "retry": "Retry",
   "searchByRoleCompanySkillHint": "Search by role, company, or skill...",
   "opportunitiesFoundCount": "{count, plural, one{1 opportunity found} other{{count} opportunities found}}",
-  "@opportunitiesFoundCount": { "placeholders": { "count": { "type": "int" } } },
+  "@opportunitiesFoundCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noMatches": "No matches",
   "tryAdjustingSearchFilters": "Try adjusting your search or filters.",
   "pendingVerification": "Pending verification",
@@ -587,10 +859,8 @@
   "minAllowanceLabel": "Min allowance (RM)",
   "maxAllowanceLabel": "Max allowance (RM)",
   "applyFilters": "Apply filters",
-
   "search": "Search",
   "applications": "Applications",
-
   "programmeNotSet": "Programme not set",
   "applicationsSent": "Applications sent",
   "interviewsScheduled": "Interviews scheduled",
@@ -601,9 +871,24 @@
   "errorPhotoEmpty": "The selected photo is empty (0 bytes). Try a different photo.",
   "errorPhotoNotFound": "The selected photo could not be found on disk.",
   "errorCouldNotAccessSource": "Could not access {source}: {error}",
-  "@errorCouldNotAccessSource": { "placeholders": { "source": { "type": "String" }, "error": { "type": "String" } } },
+  "@errorCouldNotAccessSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotRemovePhoto": "Could not remove photo: {error}",
-  "@errorCouldNotRemovePhoto": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemovePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "selectDateOfBirthHelpText": "Select date of birth",
   "errorFullNameBlank": "Full name cannot be blank.",
   "errorPhoneBlank": "Phone number cannot be blank.",
@@ -614,7 +899,13 @@
   "errorSelectAddress": "Please select your address on the map.",
   "personalInfoUpdated": "Personal information updated.",
   "errorCouldNotSave": "Could not save: {error}",
-  "@errorCouldNotSave": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorSelectProgramme": "Please select your programme.",
   "errorSelectFaculty": "Please select your faculty.",
   "errorSelectSemester": "Please select your semester.",
@@ -633,7 +924,13 @@
   "errorPositionCompanyRequired": "Position and company are required.",
   "removeThisEntryTitle": "Remove this entry?",
   "errorCouldNotRemove": "Could not remove: {error}",
-  "@errorCouldNotRemove": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemove": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unknownCompany": "Unknown company",
   "unknownPosition": "Unknown position",
   "errorEnterCurrentPassword": "Enter your current password.",
@@ -649,24 +946,54 @@
   "reviewAndApply": "Review & apply",
   "fieldsFilledReviewNote": "Fields filled in below — review and tap Save (or Add, for work experience) to confirm.",
   "errorCouldNotOpenResumeColon": "Could not open resume: {error}",
-  "@errorCouldNotOpenResumeColon": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotOpenResumeColon": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotRemoveResume": "Could not remove resume: {error}",
-  "@errorCouldNotRemoveResume": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemoveResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "prefApplicationUpdates": "Application updates",
   "prefReportDeadlines": "Report deadlines",
   "prefMessages": "Messages",
   "prefSupervisorFeedback": "Supervisor feedback",
   "errorCouldNotSaveLanguage": "Could not save language: {error}",
-  "@errorCouldNotSaveLanguage": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSaveLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotSaveTheme": "Could not save theme: {error}",
-  "@errorCouldNotSaveTheme": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSaveTheme": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "yourNamePlaceholder": "Your name",
   "workExperience": "Work Experience",
   "selectYourProgrammeHint": "Select your programme",
   "selectYourFacultyHint": "Select your faculty",
   "selectYourSemesterHint": "Select your semester",
   "semesterNumber": "Semester {number}",
-  "@semesterNumber": { "placeholders": { "number": { "type": "int" } } },
+  "@semesterNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "cgpaHint": "e.g. 3.62",
   "noSkillsAddedYet": "No skills added yet.",
   "addSkillHint": "e.g. HTML, CSS, Java, Public Speaking",
@@ -675,16 +1002,26 @@
   "dismiss": "Dismiss",
   "noWorkExperienceAddedYet": "No work experience added yet.",
   "updatedOnDate": "· Updated {date}",
-  "@updatedOnDate": { "placeholders": { "date": { "type": "String" } } },
-
+  "@updatedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "adminStudentsTitle": "Students",
   "adminCompaniesTitle": "Companies",
   "adminSupervisorsTitle": "Supervisors",
   "adminMoreTitle": "More",
-
   "adminBrandLabel": "CIMS Admin",
   "adminWelcomeBack": "Welcome back, {name}",
-  "@adminWelcomeBack": { "placeholders": { "name": { "type": "String" } } },
+  "@adminWelcomeBack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminFallbackName": "Admin",
   "adminSystemOverview": "System overview",
   "adminTotalStudents": "Total students",
@@ -693,35 +1030,82 @@
   "adminNeedsAttention": "Needs attention",
   "adminAllClear": "All clear — nothing needs your attention right now.",
   "adminStudentsUnassignedCount": "{count} students unassigned",
-  "@adminStudentsUnassignedCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminStudentsUnassignedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoSupervisorAssignedYet": "No academic supervisor assigned yet",
   "adminSubmissionsPendingReviewCount": "{count} submissions pending review",
-  "@adminSubmissionsPendingReviewCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminSubmissionsPendingReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminAwaitingReview": "Awaiting supervisor or admin review",
   "adminAddCompany": "Add Company",
   "adminAssignSupervisor": "Assign Supervisor",
   "adminRecentlyRegistered": "Recently registered",
   "adminStudentRegisteredActivity": "{name} registered",
-  "@adminStudentRegisteredActivity": { "placeholders": { "name": { "type": "String" } } },
+  "@adminStudentRegisteredActivity": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminUnnamedStudent": "Unnamed student",
-
   "adminSearchCompaniesHint": "Search companies...",
   "adminRegisteredCompaniesCount": "{count} registered companies",
-  "@adminRegisteredCompaniesCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminRegisteredCompaniesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminPendingVerificationCount": "{count} pending verification",
-  "@adminPendingVerificationCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminPendingVerificationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoCompaniesTitle": "No companies",
   "adminNoCompaniesDescription": "Try adjusting your search, or add one.",
   "adminLocationNotSet": "Location not set",
   "adminStatusPending": "Pending",
   "adminStatusVerified": "Verified",
   "adminCouldNotVerify": "Could not verify: {error}",
-  "@adminCouldNotVerify": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotVerify": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminRemoveCompanyTitle": "Remove company?",
   "adminRemoveCompanyMessage": "This removes {name} from the registry. This cannot be undone.",
-  "@adminRemoveCompanyMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@adminRemoveCompanyMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotRemove": "Could not remove: {error}",
-  "@adminCouldNotRemove": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotRemove": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCompanyDetailsTitle": "Company details",
   "adminCompanyInformation": "Company information",
   "adminLocationLabel": "Location",
@@ -733,7 +1117,13 @@
   "adminRemoveCompanyButton": "Remove company",
   "adminCompanyNameRequired": "Company name is required.",
   "adminCouldNotSave": "Could not save: {error}",
-  "@adminCouldNotSave": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminEditCompanyTitle": "Edit Company",
   "adminCompanyNameLabel": "Company name",
   "adminIndustryLabel": "Industry",
@@ -744,11 +1134,16 @@
   "adminHrContactNameLabel": "HR contact name",
   "adminHrEmailFieldLabel": "HR email",
   "adminHrPhoneNumberLabel": "HR phone number",
-
   "adminUnassign": "Unassign",
   "adminUnnamed": "Unnamed",
   "adminCouldNotAssign": "Could not assign: {error}",
-  "@adminCouldNotAssign": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotAssign": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSearchByNameHint": "Search by name...",
   "adminFilterAll": "All",
   "adminFilterAssigned": "Assigned",
@@ -757,31 +1152,65 @@
   "adminNoStudentsFoundDescription": "Try adjusting your search or filters.",
   "adminProgrammeNotSet": "Programme not set",
   "adminSupervisorColonName": "Supervisor: {name}",
-  "@adminSupervisorColonName": { "placeholders": { "name": { "type": "String" } } },
+  "@adminSupervisorColonName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminNoSupervisorAssigned": "No supervisor assigned",
   "adminAssign": "Assign",
-
   "adminSearchSupervisorsHint": "Search supervisors...",
   "adminAcademicSupervisorsCount": "{count} academic supervisors",
-  "@adminAcademicSupervisorsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminAcademicSupervisorsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoSupervisorsFoundTitle": "No supervisors found",
   "adminNoSupervisorsFoundDescription": "No academic supervisor accounts have signed up yet.",
   "adminFacultyNotSet": "Faculty not set",
   "adminThisSupervisorFallback": "this supervisor",
   "adminPromoteToAdminTitle": "Promote to admin?",
   "adminPromoteToAdminMessage": "{name} will immediately become a System Administrator — their account will gain full admin access on next login and they will no longer appear in the supervisors list. This cannot be undone from here.",
-  "@adminPromoteToAdminMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@adminPromoteToAdminMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminPromote": "Promote",
   "adminCouldNotPromote": "Could not promote: {error}",
-  "@adminCouldNotPromote": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotPromote": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSupervisorDetailsTitle": "Supervisor details",
   "adminPromoteToAdminButton": "Promote to admin",
   "adminNoStudentsAssignedYet": "No students assigned yet.",
-
   "adminCouldNotSaveReview": "Could not save review: {error}",
-  "@adminCouldNotSaveReview": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotSaveReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotOpenFile": "Could not open file: {error}",
-  "@adminCouldNotOpenFile": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotOpenFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminMonitorTitle": "Monitor",
   "adminTabStudentProgress": "Student progress",
   "adminTabReports": "Reports",
@@ -789,7 +1218,6 @@
   "adminNoStudentsTitle": "No students",
   "adminNoStudentsRegisteredDescription": "No students have registered yet.",
   "adminSubmissionsAppearHere": "Submissions will appear here.",
-
   "adminEnterCurrentPassword": "Enter your current password.",
   "adminNewPasswordsDoNotMatch": "New passwords do not match.",
   "adminPasswordChanged": "Password changed",
@@ -808,113 +1236,106 @@
   "adminSectionPreferences": "Preferences",
   "adminNotifPrefsSubtitle": "Choose what you get notified about",
   "adminSectionSystem": "System",
-
   "adminFullNameCannotBeBlank": "Full name cannot be blank.",
   "adminUnsupportedFileFormat": "Unsupported file format. Please upload a JPG, JPEG, or PNG image.",
   "adminPhotoEmptyError": "The selected photo is empty (0 bytes). Try a different photo.",
   "adminPhotoNotFoundError": "The selected photo could not be found on disk.",
   "adminUploadFailed": "Upload failed: {error}",
-  "@adminUploadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@adminUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSourceCamera": "camera",
   "adminSourceGallery": "gallery",
   "adminCouldNotAccessSource": "Could not access {source}: {error}",
-  "@adminCouldNotAccessSource": { "placeholders": { "source": { "type": "String" }, "error": { "type": "String" } } },
+  "@adminCouldNotAccessSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotRemovePhoto": "Could not remove photo: {error}",
-  "@adminCouldNotRemovePhoto": { "placeholders": { "error": { "type": "String" } } },
-
+  "@adminCouldNotRemovePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "cropPhotoTitle": "Position your photo",
   "cropPhotoConfirm": "Done",
   "errorCropFailed": "Could not crop the photo. Please try again.",
-
   "clear": "Clear",
-
-  "parentWelcomeName": "Welcome, {name}",
-  "@parentWelcomeName": { "placeholders": { "name": { "type": "String" } } },
-  "parentWelcomeDefault": "Welcome, Parent",
-  "parentDashboardSubtitle": "Monitor your children's internship progress",
-  "parentNoChildrenTitle": "No children linked yet",
-  "parentNoChildrenDescription": "Link your child's account to start monitoring their internship progress. They'll need to approve the request before you can see anything.",
-  "parentLinkChildButton": "Link a child",
-  "parentUnnamedStudent": "Unnamed student",
-  "parentNoApplicationYet": "No internship application yet",
-  "parentSignFormButton": "Sign form",
-  "parentProgressButton": "Progress",
-
-  "parentStudentEmailLabel": "Student email",
-  "parentStudentEmailHint": "e.g. john.doe",
-  "parentRelationshipLabel": "Relationship",
-  "parentRelationshipFather": "Father",
-  "parentRelationshipMother": "Mother",
-  "parentRelationshipGuardian": "Guardian",
-  "parentNoStudentFoundError": "No student found with that email.",
-  "parentSearchError": "Could not search: {error}",
-  "@parentSearchError": { "placeholders": { "error": { "type": "String" } } },
-  "parentSendRequestButton": "Send request",
-  "parentRequestSentMessage": "Request sent. The student needs to approve it.",
-  "parentSendRequestError": "Could not send request: {error}",
-  "@parentSendRequestError": { "placeholders": { "error": { "type": "String" } } },
-  "parentCancelRequestError": "Could not cancel: {error}",
-  "@parentCancelRequestError": { "placeholders": { "error": { "type": "String" } } },
-  "parentYourRequestsTitle": "Your requests",
-  "parentNoRequestsYet": "No requests sent yet.",
-  "parentAsRelationship": "As {relationship}",
-  "@parentAsRelationship": { "placeholders": { "relationship": { "type": "String" } } },
-  "parentUnknownStudent": "Unknown student",
-
-  "parentProgressTitle": "Internship Progress",
-  "parentApplicationStatusTitle": "Application status",
-  "parentNoApplicationSubmittedYet": "No internship application submitted yet.",
-  "parentUnknownCompany": "Unknown company",
-  "parentAtAGlanceTitle": "At a glance",
-  "parentReportsSubmittedLabel": "Reports submitted",
-  "parentDurationLabel": "Duration",
-  "parentEvaluationTitle": "Evaluation",
-  "parentNoEvaluationsYet": "No evaluations submitted yet.",
-  "parentAcademicSupervisorEvaluation": "Academic Supervisor Evaluation",
-  "parentCompanySupervisorEvaluation": "Company Supervisor Evaluation",
-  "parentRequiredDocumentsTitle": "Required documents",
-  "parentDocNotSubmitted": "Not submitted",
-  "parentMonthlyReportsTitle": "Monthly reports",
-  "parentNoMonthlyReportsYet": "No monthly reports submitted yet.",
-  "parentFinalReportTitle": "Final report",
-  "parentNoFinalReportYet": "No final report submitted yet.",
-  "parentMonthlyReportLabel": "Monthly Report — {period}",
-  "@parentMonthlyReportLabel": { "placeholders": { "period": { "type": "String" } } },
-  "parentFinalReportLabel": "Final Report — {period}",
-  "@parentFinalReportLabel": { "placeholders": { "period": { "type": "String" } } },
-  "parentSubmittedDate": "Submitted {date}",
-  "@parentSubmittedDate": { "placeholders": { "date": { "type": "String" } } },
-  "parentReadOnlyNotice": "This is a read-only view. Contact the university for queries regarding your child's internship.",
-
   "parentAcknowledgementTitle": "Acknowledgement Form",
   "parentFormNotConfiguredError": "The acknowledgement form has not been set up yet. Please contact the university.",
   "parentCouldNotLoadFormError": "Could not load the acknowledgement form: {error}",
-  "@parentCouldNotLoadFormError": { "placeholders": { "error": { "type": "String" } } },
-  "parentTapToFillInstruction": "Tap directly on the form to fill it in, then submit at the bottom.",
+  "@parentCouldNotLoadFormError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentSignAndSubmitButton": "Sign & Submit",
   "parentSignatureTimestampNote": "Your digital signature will be recorded with a timestamp.",
   "parentDrawSignatureTitle": "Draw your signature",
   "parentCouldNotSubmitError": "Could not submit form: {error}",
-  "@parentCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "@parentCouldNotSubmitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentCouldNotOpenFormError": "Could not open form: {error}",
-  "@parentCouldNotOpenFormError": { "placeholders": { "error": { "type": "String" } } },
+  "@parentCouldNotOpenFormError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentFormSubmittedTitle": "Form submitted successfully",
   "parentFormSubmittedDescription": "Your acknowledgement has been recorded.",
   "parentSignedOnDate": "Signed on {date}",
-  "@parentSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "@parentSignedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "parentViewPdfButton": "View PDF",
   "parentBackToHomeButton": "Back to home",
-
   "viewCompanyProfile": "View company profile",
   "companyProfileTitle": "Company Profile",
   "companyProfileJobPostings": "Job Postings",
   "companyProfileNoPostings": "No postings from this company yet.",
   "companyProfilePastInterns": "Past Interns",
   "companyProfileInternCount": "{count, plural, one{1 student has interned here} other{{count} students have interned here}}",
-  "@companyProfileInternCount": { "placeholders": { "count": { "type": "int" } } },
+  "@companyProfileInternCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "companyProfileReviews": "Reviews",
   "companyProfileReviewCount": "{count, plural, one{1 review} other{{count} reviews}}",
-  "@companyProfileReviewCount": { "placeholders": { "count": { "type": "int" } } },
+  "@companyProfileReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "companyProfileNoReviewsYet": "No reviews yet. Be the first to share your experience.",
   "companyProfileWriteReview": "Write a review",
   "companyProfileEditReview": "Edit your review",
@@ -922,35 +1343,1051 @@
   "companyProfileReviewHint": "Share your experience working here (optional)",
   "companyProfileReviewSubmitted": "Review submitted. Thank you!",
   "companyProfileReviewError": "Could not submit review: {error}",
-  "@companyProfileReviewError": { "placeholders": { "error": { "type": "String" } } },
+  "@companyProfileReviewError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "companyProfileMustApplyNote": "Only students who have applied to this company can leave a review.",
-
   "docFillAndSignAction": "Fill & Sign",
   "docAwaitingCompanyUpload": "Awaiting upload from company",
   "docAvailableOnceAccepted": "Available once your application is accepted",
-
   "studentLetterNotConfiguredError": "This form has not been set up yet. Please contact the university.",
   "studentLetterCouldNotLoadError": "Could not load the form: {error}",
-  "@studentLetterCouldNotLoadError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterTapToFillInstruction": "Tap directly on the form to fill it in, then submit at the bottom.",
   "studentLetterSignAndSubmitButton": "Sign & Submit",
   "studentLetterSignatureTimestampNote": "Your digital signature will be recorded with a timestamp.",
   "studentLetterDrawSignatureTitle": "Draw your signature",
   "studentLetterCouldNotSubmitError": "Could not submit form: {error}",
-  "@studentLetterCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotSubmitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterCouldNotOpenError": "Could not open form: {error}",
-  "@studentLetterCouldNotOpenError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotOpenError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterSubmittedTitle": "Form submitted successfully",
   "studentLetterSubmittedDescription": "Your signed letter has been saved.",
   "studentLetterSignedOnDate": "Signed on {date}",
-  "@studentLetterSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "@studentLetterSignedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterViewPdfButton": "View PDF",
   "studentLetterBackButton": "Back",
-
   "hrOfferLetterSectionTitle": "Offer Letter",
   "hrUploadOfferLetter": "Upload Offer Letter",
   "hrReplaceOfferLetter": "Replace",
-
   "csDocuments": "Documents",
-  "csNoDocumentsOnFile": "No documents on file yet."
+  "csNoDocumentsOnFile": "No documents on file yet.",
+  "addToCalendar": "Add to calendar",
+  "calendarCouldNotOpen": "Could not open your calendar.",
+  "calendarEventTitle": "Interview: {title}",
+  "@calendarEventTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEventDetails": "CIMS interview with {company}",
+  "@calendarEventDetails": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
+  "hrSearchApplicants": "Search by name, programme or skill",
+  "hrAllPostings": "All postings",
+  "hrShortlisted": "Shortlisted",
+  "hrShortlist": "Shortlist",
+  "hrRemoveShortlist": "Remove from shortlist",
+  "hrPrivateNotes": "Private notes",
+  "hrPrivateNotesInfo": "Only you can see this. The student never does.",
+  "hrNoteHint": "Write a note about this applicant",
+  "hrSaveNote": "Save note",
+  "hrNoteSaved": "Note saved",
+  "hrNoMatchingApplicants": "No applicants match your search.",
+  "hrTabOffered": "Offered ({count})",
+  "@hrTabOffered": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hrTabClosed": "Closed ({count})",
+  "@hrTabClosed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hrClearFilters": "Clear filters",
+  "adminAuditLogTitle": "Audit log",
+  "adminAuditLogSubtitle": "Who approved, created or changed what",
+  "auditFilterAll": "All",
+  "auditFilterAccounts": "Accounts",
+  "auditFilterCompanies": "Companies",
+  "auditFilterStudents": "Students",
+  "auditFilterSetup": "Setup",
+  "auditEmpty": "Nothing has been recorded yet.",
+  "auditSystem": "System",
+  "auditLoadMore": "Load more",
+  "adminAnalyticsTitle": "Placement analytics",
+  "adminAnalyticsSubtitle": "Placement rate, applications and students still without an internship",
+  "analyticsPlacementRate": "Placement rate",
+  "analyticsPlacedOf": "{placed} of {total} students placed",
+  "@analyticsPlacedOf": {
+    "placeholders": {
+      "placed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "analyticsStudentsApplied": "Applied",
+  "analyticsApplications": "Applications",
+  "analyticsWithoutPlacement": "No placement yet",
+  "analyticsByStatus": "Applications by status",
+  "analyticsByProgramme": "By programme",
+  "analyticsByCompany": "By company",
+  "analyticsTopPostings": "Most applied postings",
+  "analyticsUnplaced": "Students without a placement",
+  "analyticsExportCsv": "Export CSV",
+  "analyticsExportFailed": "Could not create or open the file.",
+  "analyticsRowStudentsPlaced": "{placed}/{students} placed",
+  "@analyticsRowStudentsPlaced": {
+    "placeholders": {
+      "placed": {
+        "type": "int"
+      },
+      "students": {
+        "type": "int"
+      }
+    }
+  },
+  "analyticsRowCompany": "{postings} postings · {applications} applications · {placed} placed",
+  "@analyticsRowCompany": {
+    "placeholders": {
+      "postings": {
+        "type": "int"
+      },
+      "applications": {
+        "type": "int"
+      },
+      "placed": {
+        "type": "int"
+      }
+    }
+  },
+  "analyticsRowPosting": "{company} · {applications} applications · {offered} offered",
+  "@analyticsRowPosting": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      },
+      "applications": {
+        "type": "int"
+      },
+      "offered": {
+        "type": "int"
+      }
+    }
+  },
+  "analyticsNoStudentsUnplaced": "Every student has a placement.",
+  "ivTheCompany": "The company",
+  "ivTheStudent": "The student",
+  "ivTheSystem": "The system",
+  "ivRequestSentCompany": "Request sent. The interview moves only if the company accepts.",
+  "ivDeclineNewTimeTitle": "Decline the new time",
+  "ivDeclinePromptToCompany": "Tell the company why you are declining. The interview stays on its current time.",
+  "ivDeclineHint": "e.g. I cannot attend at that time.",
+  "ivDecline": "Decline",
+  "ivAccept": "Accept",
+  "ivAcceptedMoved": "Accepted. Your interview has been moved.",
+  "ivDeclinedStays": "Declined. The interview stays as it was.",
+  "ivCancelInterview": "Cancel interview",
+  "ivCancelPromptToCompany": "Tell the company why you are cancelling the interview on {when}. They will see this reason.",
+  "@ivCancelPromptToCompany": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "ivCancelledNotified": "Interview cancelled. The company has been notified with your reason.",
+  "ivCouldNotCancel": "Could not cancel: {error}",
+  "@ivCouldNotCancel": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ivCancelButton": "Cancel",
+  "ivRescheduleButton": "Reschedule",
+  "ivChangeWindowStudent": "An interview can only be cancelled or rescheduled up to 2 hours before it starts. If you cannot attend, please message the company.",
+  "ivCompanyWillArrange": "The company will arrange a new time if your application continues.",
+  "ivChangesTitle": "Changes",
+  "ivChangeMoved": "{actor} moved the interview",
+  "@ivChangeMoved": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "ivChangeMovedFromTo": "{actor} moved the interview from {from} to {to}",
+  "@ivChangeMovedFromTo": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "ivChangeAsked": "{actor} asked to move the interview",
+  "@ivChangeAsked": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "ivChangeAskedTo": "{actor} asked to move the interview to {to}",
+  "@ivChangeAskedTo": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "ivChangeDeclined": "{actor} declined the new time",
+  "@ivChangeDeclined": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "ivChangeDeclinedFor": "{actor} declined the new time ({time})",
+  "@ivChangeDeclinedFor": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "ivAutoCancelled": "The interview was cancelled automatically",
+  "ivChangeCancelled": "{actor} cancelled the interview",
+  "@ivChangeCancelled": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "ivReasonLine": "Reason: {reason}",
+  "@ivReasonLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "ivYouAskedToReschedule": "You asked to reschedule",
+  "ivAskedToReschedule": "{who} asked to reschedule",
+  "@ivAskedToReschedule": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "ivLineNow": "Now",
+  "ivLineProposed": "Proposed",
+  "ivLineReason": "Reason",
+  "ivWaitingFor": "Waiting for {who}. The interview stays on its current time unless they accept.",
+  "@ivWaitingFor": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "ivMovesOnlyIfYouAccept": "The interview only moves if you accept. If you decline, it stays on its current time.",
+  "ivWithdrawRequest": "Withdraw request",
+  "ivTryAgain": "Try again",
+  "ivNoFreeTimes": "No free interview times in the next {days} days.",
+  "@ivNoFreeTimes": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "ivNoFreeTimesHint": "Interview times come from the interviewer's weekly availability. All their slots may be booked, or no availability has been set.",
+  "ivChooseDay": "Choose a day",
+  "ivChooseTime": "Choose a time",
+  "ivPickFirst": "Pick a new day and time first.",
+  "ivRequestNewTime": "Request a new time",
+  "ivReasonForChange": "Reason for the change",
+  "ivWillSeeReason": "{who} will see this reason. The interview only moves if they accept; until then it stays on its current time.",
+  "@ivWillSeeReason": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "ivReasonHint": "e.g. I have a university exam at that time.",
+  "ivSendRequest": "Send request",
+  "offAcceptTitle": "Accept this offer?",
+  "offAcceptBody": "{title} at {company} will become your active internship.",
+  "@offAcceptBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "company": {
+        "type": "String"
+      }
+    }
+  },
+  "offAcceptCloses": "Your {count} other open applications will be closed and cannot be reopened.",
+  "offAcceptOne": "You can only have one active internship.",
+  "offNotYet": "Not yet",
+  "offAcceptOffer": "Accept offer",
+  "offAccepted": "Offer accepted. {company} has been notified.",
+  "@offAccepted": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
+  "offCouldNotAccept": "Could not accept the offer: {error}",
+  "@offCouldNotAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "appTabOffers": "Offers ({count})",
+  "@appTabOffers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appInterviewCancelledTap": "Interview cancelled. Tap to see why.",
+  "appOfferedBody": "Congratulations, this company has offered you the internship. You can hold several offers; accepting one closes the others.",
+  "appReasonFromCompany": "Reason from the company",
+  "appNoReasonRecorded": "No reason was recorded.",
+  "appClosedAcceptedOther": "Closed because you accepted another offer.",
+  "pushOffTitle": "Alerts outside the app are off",
+  "pushOffBody": "Your phone is blocking CIMS notifications, so new interviews, offers and messages only show up here. Turn them on to be alerted straight away.",
+  "pushTurnOn": "Turn on notifications",
+  "reasonRequiredHelper": "Required, at least {min} characters.",
+  "@reasonRequiredHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "reasonOptionalHelper": "Optional.",
+  "@offAcceptCloses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ivSlotsFree": "{count} free",
+  "@ivSlotsFree": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "avHoursSaved": "Hours saved.",
+  "avRemoveTitle": "Remove these hours?",
+  "avRemoveBody": "{day} {from} to {to} will no longer be offered for new interviews. Interviews already booked in this window stay as they are.",
+  "@avRemoveBody": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "avKeep": "Keep",
+  "avRemove": "Remove",
+  "avDayOffHelp": "Day you are not available",
+  "avTitle": "Interview availability",
+  "avAddHours": "Add hours",
+  "avIntro": "Set the hours you can interview. Each window is cut into slots of the length you choose, and a slot disappears as soon as it is booked, so nobody can book the same time twice. Times are in Malaysian time.",
+  "avWeeklyHours": "Weekly hours",
+  "avNoHoursYet": "No hours set yet. Tap \"Add hours\" so interviews can be scheduled with you.",
+  "avDaysOff": "Days off",
+  "avAddDayOff": "Add day off",
+  "avNoDaysOff": "No upcoming days off. Add leave or public holidays here and no interviews will be offered on those days.",
+  "avNotAvailable": "Not available",
+  "avMinutesShort": "{minutes} min",
+  "@avMinutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "avPickOneDay": "Pick at least one day.",
+  "avEndAfterStart": "The end time must be after the start time.",
+  "avShorterThanSlot": "This window is shorter than one {minutes}-minute slot.",
+  "@avShorterThanSlot": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "avOverlap": "These hours overlap hours you have already set on one of the chosen days. Remove or change the existing hours first.",
+  "avAddAvailableHours": "Add available hours",
+  "avDays": "Days",
+  "avMonFri": "Mon–Fri",
+  "avEveryDay": "Every day",
+  "avFromTime": "From {time}",
+  "@avFromTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "avToTime": "To {time}",
+  "@avToTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "avLengthOfInterview": "Length of each interview",
+  "avSlotsSummary": "{count} slots of {minutes} minutes per selected day.",
+  "@avSlotsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "avSaveHours": "Save hours",
+  "apTitle": "Student profile",
+  "apUnnamed": "Unnamed student",
+  "apCouldNotOpenResume": "Could not open resume: {error}",
+  "@apCouldNotOpenResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "apCouldNotLoad": "Could not load the full profile: {error}",
+  "@apCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "apContact": "Contact",
+  "apEmail": "Email",
+  "apPhone": "Phone",
+  "apStudies": "Studies",
+  "apProgramme": "Programme",
+  "apFaculty": "Faculty",
+  "apSemester": "Semester",
+  "apCgpa": "CGPA",
+  "apSkills": "Skills",
+  "apNoSkills": "No skills listed.",
+  "apWorkExperience": "Work experience",
+  "apNoExperience": "No work experience listed.",
+  "apResume": "Resume",
+  "apNoResume": "No resume uploaded",
+  "apView": "View",
+  "apNotProvided": "Not provided",
+  "apPresent": "Present",
+  "hrViewFullProfile": "View full profile",
+  "hrvInterviewCancelledWas": "Interview cancelled (was {when})",
+  "@hrvInterviewCancelledWas": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvInterviewLine": "Interview: {when}",
+  "@hrvInterviewLine": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvAcceptedAnother": "The student accepted another offer.",
+  "hrvCouldNotUploadOffer": "Could not upload offer letter: {error}",
+  "@hrvCouldNotUploadOffer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvWithdrawOffer": "Withdraw offer",
+  "hrvRejectApplication": "Reject application",
+  "hrvWithdrawPrompt": "Tell {name} why the offer is being withdrawn. They will see this reason.",
+  "@hrvWithdrawPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvRejectPrompt": "Tell {name} why the application is not successful. They will see this reason.",
+  "@hrvRejectPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvReject": "Reject",
+  "hrvRejectHint": "e.g. The position has been filled by a candidate with more relevant experience.",
+  "hrvCouldNotReject": "Could not reject: {error}",
+  "@hrvCouldNotReject": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvMakeOfferTitle": "Make an offer?",
+  "hrvMakeOfferBody": "{name} will be notified and can accept the offer from their Applications screen. They may hold offers from several companies; once they accept one, the others are closed.",
+  "@hrvMakeOfferBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvMakeOffer": "Make offer",
+  "hrvCouldNotMakeOffer": "Could not make the offer: {error}",
+  "@hrvCouldNotMakeOffer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvNoResumeUploaded": "No resume uploaded.",
+  "hrvSetMyAvailability": "Set my availability",
+  "hrvDeclinePrompt": "Tell {name} why you are declining. The interview stays on its current time.",
+  "@hrvDeclinePrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvDeclineHint": "e.g. That day the interviewer is not available.",
+  "hrvAcceptedMoved": "Accepted. The interview has been moved.",
+  "hrvCancelPrompt": "Tell {name} why the interview on {when} is cancelled. They will see this reason.",
+  "@hrvCancelPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvCancelHint": "e.g. The interviewer is unavailable on that day.",
+  "hrvCancelledNotified": "Interview cancelled. {name} has been notified with your reason.",
+  "@hrvCancelledNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvChangeWindow": "An interview can only be cancelled or rescheduled up to 2 hours before it starts.",
+  "hrvNoInterviewBooked": "No interview is booked.",
+  "hrvInterviewWasCancelled": "The interview on {when} was cancelled.",
+  "@hrvInterviewWasCancelled": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvScheduleNew": "Schedule a new interview",
+  "hrvOfferSent": "Offer sent. Waiting for {name} to accept. The offer letter and acceptance letter can be added once they accept.",
+  "@hrvOfferSent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvAcceptedAnotherCompany": "{name} accepted another company's offer, so this application was closed automatically.",
+  "@hrvAcceptedAnotherCompany": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hrvPickDayTime": "Pick a day and a time first.",
+  "hrvChangeNote": "{actor} {verb}. Reason: {reason}",
+  "@hrvChangeNote": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "verb": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "ivVerbAsked": "asked to move the interview",
+  "ivVerbDeclined": "declined moving the interview",
+  "ivVerbMoved": "moved the interview",
+  "ivVerbAutoCancelled": "cancelled the interview automatically",
+  "ivVerbCancelled": "cancelled the interview",
+  "ivVerbBooked": "booked the interview",
+  "acTabOne": "One student",
+  "acTabMany": "Many (list / CSV)",
+  "acHowItWorks": "Each student gets a random password that meets the password rules. You will see it once, on the next screen, to send to the student. At their first login they must choose a new password.",
+  "acFullName": "Full name",
+  "acFullNameHint": "As on the student card",
+  "acEmail": "Email",
+  "acRegNoOptional": "Registration number (optional)",
+  "acProgrammeOptional": "Programme (optional)",
+  "acProgrammeHint": "e.g. Bachelor of Computer Science",
+  "acCreateAccount": "Create account",
+  "acFileCouldNotRead": "That file could not be read.",
+  "acFileTooLarge": "That file is too large for a student list (512 KB at most).",
+  "acOnePerLine": "One student per line:",
+  "acLineFormat": "email, full name, registration number, programme (the last two are optional). A header row is fine.",
+  "acChooseCsv": "Choose a CSV file",
+  "acFileName": "File: {name}",
+  "@acFileName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "acCreateAccounts": "Create accounts",
+  "acCreateN": "Create {count} accounts",
+  "acRowsSkipped": "Rows with a problem are skipped. Fix them and add them again.",
+  "acNoEmailApp": "No email app could be opened. Copy the details and send them another way.",
+  "acLeaveTitle": "Leave this screen?",
+  "acLeaveBody": "The temporary passwords are shown only here and cannot be seen again. Make sure you have copied or sent them.",
+  "acStay": "Stay",
+  "acLeave": "Leave",
+  "acNewAccounts": "New accounts",
+  "acSendNow": "Send each student their email and password now. The passwords are shown only on this screen. Students must choose a new password the first time they log in.",
+  "acCopiedCsv": "Copied {count} accounts as CSV.",
+  "acCopyAllCsv": "Copy all as CSV",
+  "acLoginCopied": "Login details copied.",
+  "acNotCreated": "Not created",
+  "acDone": "Done",
+  "acCopyDetails": "Copy details",
+  "acEmailStudent": "Email student",
+  "fpIntro": "You logged in with a temporary password from your administrator. Choose your own password now. You cannot use the app until you do.",
+  "fpNewPassword": "New password",
+  "fpConfirmPassword": "Confirm new password",
+  "fpSaveContinue": "Save and continue",
+  "fpLogOut": "Log out",
+  "ceNewCodeSent": "A new code was sent to {email}.",
+  "@ceNewCodeSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "ceTitle": "Confirm your email",
+  "ceIntro": "We sent a code to {email}. Type it below to confirm your account. It can take a minute and may land in your spam folder.",
+  "@ceIntro": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "ceCodeLabel": "Code from the email",
+  "ceCodeHint": "Enter the code",
+  "ceConfirm": "Confirm account",
+  "ceResendIn": "Send a new code in {seconds}s",
+  "@ceResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "ceResend": "Send a new code",
+  "ceBackToLogin": "Back to log in",
+  "@acCreateN": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@acCopiedCsv": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fgCodeRequested": "A new code was requested.",
+  "fgCheckEmail": "Check your email for the code.",
+  "fgTitle": "Reset password",
+  "fgEnterEmail": "Enter the email address of your account. We will email you a code.",
+  "fgEmailLabel": "Email address",
+  "fgEmailHint": "Enter your email",
+  "fgSendCode": "Send code",
+  "fgSentIntro": "If an account exists for {email}, we have emailed a code. It can take a minute, and may land in your spam folder. The code expires after a short time.",
+  "@fgSentIntro": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "fgVerifyCode": "Verify code",
+  "fgDifferentEmail": "Use a different email",
+  "fgCodeAccepted": "Code accepted. Choose a new password.",
+  "fgNewPasswordHint": "Create a new password",
+  "fgConfirmHint": "Re-enter your new password",
+  "fgSaveNew": "Save new password",
+  "suPrivacyRequired": "Please read and accept the privacy notice to continue.",
+  "suPendingApproval": "Account created. An administrator must approve it before you can log in.",
+  "suCreatedLoginConfirm": "Your account is created. Log in to confirm your email with a new code.",
+  "suEmailConfirmedPending": "Email confirmed. An administrator must approve your account before you can log in.",
+  "suExistsTitle": "Account already exists",
+  "suExistsBody": "An account has already been created with {email}. Log in with it, or reset the password if you have forgotten it. No new email is sent for an existing account.",
+  "@suExistsBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "suForgotPassword": "Forgot password",
+  "suStudentsCreatedByAdmin": "Student accounts are created by your administrator. Log in with the email and password you were given.",
+  "suFullNameHint": "Enter your full name",
+  "suAgreePrefix": "I have read and agree to the ",
+  "suPrivacyNotice": "privacy notice",
+  "loPasswordChanged": "Password changed. Log in with your new password.",
+  "stMyInterviewTimes": "My interview days and times",
+  "stPrivacyNotice": "Privacy notice",
+  "stDeleteMyAccount": "Delete my account",
+  "errUnsupportedImage": "Unsupported file format. Please upload a JPG, JPEG, or PNG image.",
+  "errPhotoEmpty": "The selected photo is empty (0 bytes). Try a different photo.",
+  "errPhotoNotFound": "The selected photo could not be found on disk.",
+  "errUploadFailed": "Upload failed: {error}",
+  "@errUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errCouldNotAccessCamera": "Could not access camera: {error}",
+  "@errCouldNotAccessCamera": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errCouldNotAccessGallery": "Could not access gallery: {error}",
+  "@errCouldNotAccessGallery": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errCouldNotRemovePhoto": "Could not remove photo: {error}",
+  "@errCouldNotRemovePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errCouldNotSave": "Could not save: {error}",
+  "@errCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errCouldNotSaveLanguage": "Could not save language: {error}",
+  "@errCouldNotSaveLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errCouldNotSaveTheme": "Could not save theme: {error}",
+  "@errCouldNotSaveTheme": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hpDeadlinePassed": "The deadline of this posting has passed. Edit the posting and choose a later deadline to reopen it.",
+  "hpExpired": "Expired",
+  "hpRecommended": "Recommended candidates",
+  "hpChooseLocation": "Choose the internship location on the map.",
+  "hpAddOneSkill": "Add at least one required skill.",
+  "hpCloseBeforeDeadline": "The posting cannot close before its application deadline.",
+  "hpFixFields": "Please fix the highlighted fields before publishing.",
+  "hpCouldNotSave": "Could not save posting: {error}",
+  "@hpCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hpCouldNotDelete": "Could not delete posting: {error}",
+  "@hpCouldNotDelete": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hpCustom": "Custom…",
+  "hpCustomCategory": "Custom category",
+  "hpCustomCategoryHint": "e.g. Marketing",
+  "hpAllowancePositive": "Allowance must be more than 0.",
+  "hpAutoCloseCaption": "Posting closes automatically after (optional)",
+  "hpClosesOn": "Posting closes on {date}",
+  "@hpClosesOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "hpAutoCloseOptional": "Auto-close date (optional)",
+  "acTitleStudents": "Create student accounts",
+  "acTitleSupervisors": "Create supervisor accounts",
+  "acHowItWorksSupervisor": "Each supervisor gets a random password that meets the password rules, and the account is approved straight away. You will see the password once, on the next screen, to send to them. At their first login they must choose a new password.",
+  "acLineFormatSupervisor": "email, full name. A header row is fine.",
+  "acSendNowSupervisor": "Send each supervisor their email and password now. The passwords are shown only on this screen. They must choose a new password the first time they log in.",
+  "adminAddSupervisors": "Add supervisors",
+  "adminAddStudents": "Add students",
+  "stSummaryTitle": "Statistics",
+  "stViewFull": "View full statistics",
+  "stNoCompany": "Join or register a company to see statistics here.",
+  "stNothingYet": "Nothing to show yet.",
+  "stCouldNotLoad": "Could not load the statistics: {error}",
+  "@stCouldNotLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stTitleHr": "Hiring statistics",
+  "stTitleAcademic": "Student progress",
+  "stTitleCompanySup": "Intern progress",
+  "stTitleAdmin": "Platform statistics",
+  "stPostings": "Postings",
+  "stOpenPostings": "Open postings",
+  "stApplications": "Applications",
+  "stApplicants": "Applicants",
+  "stInterviewing": "In interview",
+  "stOffered": "Offered",
+  "stAccepted": "Accepted",
+  "stRejected": "Rejected",
+  "stPending": "Waiting for review",
+  "stClosed": "Closed",
+  "stAcceptRate": "Acceptance rate",
+  "stInterviewsUpcoming": "Upcoming interviews",
+  "stInterviewsDone": "Interviews done",
+  "stByStatus": "Applications by status",
+  "stPerPosting": "Per posting",
+  "stPostingRow": "{applications} applications · {interview} interview · {offered} offered · {accepted} accepted",
+  "@stPostingRow": {
+    "placeholders": {
+      "applications": {
+        "type": "int"
+      },
+      "interview": {
+        "type": "int"
+      },
+      "offered": {
+        "type": "int"
+      },
+      "accepted": {
+        "type": "int"
+      }
+    }
+  },
+  "stWeekly": "Applications per week (last 8 weeks)",
+  "stStudents": "Students",
+  "stPlaced": "Placed",
+  "stNotPlaced": "Not placed yet",
+  "stReports": "Reports",
+  "stReportsWaiting": "Waiting for your review",
+  "stReportsApproved": "Approved",
+  "stReportsSentBack": "Sent back",
+  "stDocsWaiting": "Documents to review",
+  "stDocsApproved": "Documents approved",
+  "stEvaluationsDone": "Evaluations done",
+  "stReportProgress": "Report progress",
+  "stPerStudent": "Per student",
+  "stStudentRow": "{reports} reports · {approved} approved · {pending} waiting",
+  "@stStudentRow": {
+    "placeholders": {
+      "reports": {
+        "type": "int"
+      },
+      "approved": {
+        "type": "int"
+      },
+      "pending": {
+        "type": "int"
+      }
+    }
+  },
+  "stPlacedBadge": "Placed",
+  "stNotPlacedBadge": "Not placed",
+  "stInterns": "Interns",
+  "stEvaluatedBadge": "Evaluated",
+  "stNotEvaluatedBadge": "Not evaluated",
+  "stEvaluatedStudents": "Interns evaluated",
+  "stPeople": "People on the platform",
+  "stCompanies": "Companies",
+  "stCompaniesVerified": "Verified",
+  "stCompaniesPending": "Waiting for verification",
+  "stNewCompanies": "New companies (30 days)",
+  "stCompaniesWithPostings": "Companies with postings",
+  "stNewPeople": "New people (30 days)",
+  "stPendingApprovals": "Waiting for approval",
+  "stUsersByRole": "People by role",
+  "stCompaniesByStatus": "Companies by status",
+  "stCompaniesJoined": "Companies joined per month (last 6)",
+  "stPeopleJoined": "People joined per month (last 6)",
+  "stRoleStudent": "Students",
+  "stRoleAcademic": "Academic supervisors",
+  "stRoleHr": "Company HR",
+  "stRoleCompanySup": "Company supervisors",
+  "stRoleAdmin": "Administrators",
+  "roleLabelStudent": "Student",
+  "roleLabelAcademic": "Academic supervisor",
+  "roleLabelHr": "Company HR",
+  "roleLabelCompanySup": "Company supervisor",
+  "roleLabelAdmin": "Administrator",
+  "acTabOneSupervisor": "One supervisor",
+  "acTabManySupervisor": "Many (list / CSV)",
+  "acFullNameHintSupervisor": "As on the employee card",
+  "acEmailSupervisor": "Email supervisor",
+  "acCreateFailedReason": "The account could not be created: {reason}",
+  "@acCreateFailedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "adminNeverLoggedIn": "Not logged in yet",
+  "adminAwaitingApprovalBadge": "Awaiting approval",
+  "adminNotApprovedBadge": "Not approved",
+  "adminFilterVerified": "Verified",
+  "adminFilterNotVerified": "Not verified",
+  "adminNoCompaniesInFilter": "No companies in this group",
+  "hpClosesAfterDeadline": "The posting closes automatically after the application deadline. Without a deadline it stays open until you close it.",
+  "goodAfternoon": "Good afternoon, {name}!",
+  "@goodAfternoon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "goodEvening": "Good evening, {name}!",
+  "@goodEvening": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

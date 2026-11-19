@@ -108,9 +108,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your email is not a TARC institutional address. Please select the role that applies to you.';
 
   @override
-  String get parentGuardian => 'Parent/Guardian';
-
-  @override
   String get hrPersonnel => 'HR Personnel';
 
   @override
@@ -179,6 +176,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewMyProgress => 'View my progress';
+
+  @override
+  String get defaultUserName => 'User';
 
   @override
   String goodMorning(String name) {
@@ -1566,10 +1566,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationReject => 'Reject';
 
   @override
-  String get errorParentAlreadyLinked =>
-      'This student already has an approved parent linked. Only one approved parent can be linked at a time.';
-
-  @override
   String errorCouldNotRespondToRequest(String error) {
     return 'Could not respond to this request: $error';
   }
@@ -2424,170 +2420,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clear => 'Clear';
 
   @override
-  String parentWelcomeName(String name) {
-    return 'Welcome, $name';
-  }
-
-  @override
-  String get parentWelcomeDefault => 'Welcome, Parent';
-
-  @override
-  String get parentDashboardSubtitle =>
-      'Monitor your children\'s internship progress';
-
-  @override
-  String get parentNoChildrenTitle => 'No children linked yet';
-
-  @override
-  String get parentNoChildrenDescription =>
-      'Link your child\'s account to start monitoring their internship progress. They\'ll need to approve the request before you can see anything.';
-
-  @override
-  String get parentLinkChildButton => 'Link a child';
-
-  @override
-  String get parentUnnamedStudent => 'Unnamed student';
-
-  @override
-  String get parentNoApplicationYet => 'No internship application yet';
-
-  @override
-  String get parentSignFormButton => 'Sign form';
-
-  @override
-  String get parentProgressButton => 'Progress';
-
-  @override
-  String get parentStudentEmailLabel => 'Student email';
-
-  @override
-  String get parentStudentEmailHint => 'e.g. john.doe';
-
-  @override
-  String get parentRelationshipLabel => 'Relationship';
-
-  @override
-  String get parentRelationshipFather => 'Father';
-
-  @override
-  String get parentRelationshipMother => 'Mother';
-
-  @override
-  String get parentRelationshipGuardian => 'Guardian';
-
-  @override
-  String get parentNoStudentFoundError => 'No student found with that email.';
-
-  @override
-  String parentSearchError(String error) {
-    return 'Could not search: $error';
-  }
-
-  @override
-  String get parentSendRequestButton => 'Send request';
-
-  @override
-  String get parentRequestSentMessage =>
-      'Request sent. The student needs to approve it.';
-
-  @override
-  String parentSendRequestError(String error) {
-    return 'Could not send request: $error';
-  }
-
-  @override
-  String parentCancelRequestError(String error) {
-    return 'Could not cancel: $error';
-  }
-
-  @override
-  String get parentYourRequestsTitle => 'Your requests';
-
-  @override
-  String get parentNoRequestsYet => 'No requests sent yet.';
-
-  @override
-  String parentAsRelationship(String relationship) {
-    return 'As $relationship';
-  }
-
-  @override
-  String get parentUnknownStudent => 'Unknown student';
-
-  @override
-  String get parentProgressTitle => 'Internship Progress';
-
-  @override
-  String get parentApplicationStatusTitle => 'Application status';
-
-  @override
-  String get parentNoApplicationSubmittedYet =>
-      'No internship application submitted yet.';
-
-  @override
-  String get parentUnknownCompany => 'Unknown company';
-
-  @override
-  String get parentAtAGlanceTitle => 'At a glance';
-
-  @override
-  String get parentReportsSubmittedLabel => 'Reports submitted';
-
-  @override
-  String get parentDurationLabel => 'Duration';
-
-  @override
-  String get parentEvaluationTitle => 'Evaluation';
-
-  @override
-  String get parentNoEvaluationsYet => 'No evaluations submitted yet.';
-
-  @override
-  String get parentAcademicSupervisorEvaluation =>
-      'Academic Supervisor Evaluation';
-
-  @override
-  String get parentCompanySupervisorEvaluation =>
-      'Company Supervisor Evaluation';
-
-  @override
-  String get parentRequiredDocumentsTitle => 'Required documents';
-
-  @override
-  String get parentDocNotSubmitted => 'Not submitted';
-
-  @override
-  String get parentMonthlyReportsTitle => 'Monthly reports';
-
-  @override
-  String get parentNoMonthlyReportsYet => 'No monthly reports submitted yet.';
-
-  @override
-  String get parentFinalReportTitle => 'Final report';
-
-  @override
-  String get parentNoFinalReportYet => 'No final report submitted yet.';
-
-  @override
-  String parentMonthlyReportLabel(String period) {
-    return 'Monthly Report — $period';
-  }
-
-  @override
-  String parentFinalReportLabel(String period) {
-    return 'Final Report — $period';
-  }
-
-  @override
-  String parentSubmittedDate(String date) {
-    return 'Submitted $date';
-  }
-
-  @override
-  String get parentReadOnlyNotice =>
-      'This is a read-only view. Contact the university for queries regarding your child\'s internship.';
-
-  @override
   String get parentAcknowledgementTitle => 'Acknowledgement Form';
 
   @override
@@ -2598,10 +2430,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String parentCouldNotLoadFormError(String error) {
     return 'Could not load the acknowledgement form: $error';
   }
-
-  @override
-  String get parentTapToFillInstruction =>
-      'Tap directly on the form to fill it in, then submit at the bottom.';
 
   @override
   String get parentSignAndSubmitButton => 'Sign & Submit';
@@ -2785,4 +2613,1384 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get csNoDocumentsOnFile => 'No documents on file yet.';
+
+  @override
+  String get addToCalendar => 'Add to calendar';
+
+  @override
+  String get calendarCouldNotOpen => 'Could not open your calendar.';
+
+  @override
+  String calendarEventTitle(String title) {
+    return 'Interview: $title';
+  }
+
+  @override
+  String calendarEventDetails(String company) {
+    return 'CIMS interview with $company';
+  }
+
+  @override
+  String get hrSearchApplicants => 'Search by name, programme or skill';
+
+  @override
+  String get hrAllPostings => 'All postings';
+
+  @override
+  String get hrShortlisted => 'Shortlisted';
+
+  @override
+  String get hrShortlist => 'Shortlist';
+
+  @override
+  String get hrRemoveShortlist => 'Remove from shortlist';
+
+  @override
+  String get hrPrivateNotes => 'Private notes';
+
+  @override
+  String get hrPrivateNotesInfo =>
+      'Only you can see this. The student never does.';
+
+  @override
+  String get hrNoteHint => 'Write a note about this applicant';
+
+  @override
+  String get hrSaveNote => 'Save note';
+
+  @override
+  String get hrNoteSaved => 'Note saved';
+
+  @override
+  String get hrNoMatchingApplicants => 'No applicants match your search.';
+
+  @override
+  String hrTabOffered(int count) {
+    return 'Offered ($count)';
+  }
+
+  @override
+  String hrTabClosed(int count) {
+    return 'Closed ($count)';
+  }
+
+  @override
+  String get hrClearFilters => 'Clear filters';
+
+  @override
+  String get adminAuditLogTitle => 'Audit log';
+
+  @override
+  String get adminAuditLogSubtitle => 'Who approved, created or changed what';
+
+  @override
+  String get auditFilterAll => 'All';
+
+  @override
+  String get auditFilterAccounts => 'Accounts';
+
+  @override
+  String get auditFilterCompanies => 'Companies';
+
+  @override
+  String get auditFilterStudents => 'Students';
+
+  @override
+  String get auditFilterSetup => 'Setup';
+
+  @override
+  String get auditEmpty => 'Nothing has been recorded yet.';
+
+  @override
+  String get auditSystem => 'System';
+
+  @override
+  String get auditLoadMore => 'Load more';
+
+  @override
+  String get adminAnalyticsTitle => 'Placement analytics';
+
+  @override
+  String get adminAnalyticsSubtitle =>
+      'Placement rate, applications and students still without an internship';
+
+  @override
+  String get analyticsPlacementRate => 'Placement rate';
+
+  @override
+  String analyticsPlacedOf(int placed, int total) {
+    return '$placed of $total students placed';
+  }
+
+  @override
+  String get analyticsStudentsApplied => 'Applied';
+
+  @override
+  String get analyticsApplications => 'Applications';
+
+  @override
+  String get analyticsWithoutPlacement => 'No placement yet';
+
+  @override
+  String get analyticsByStatus => 'Applications by status';
+
+  @override
+  String get analyticsByProgramme => 'By programme';
+
+  @override
+  String get analyticsByCompany => 'By company';
+
+  @override
+  String get analyticsTopPostings => 'Most applied postings';
+
+  @override
+  String get analyticsUnplaced => 'Students without a placement';
+
+  @override
+  String get analyticsExportCsv => 'Export CSV';
+
+  @override
+  String get analyticsExportFailed => 'Could not create or open the file.';
+
+  @override
+  String analyticsRowStudentsPlaced(int placed, int students) {
+    return '$placed/$students placed';
+  }
+
+  @override
+  String analyticsRowCompany(int postings, int applications, int placed) {
+    return '$postings postings · $applications applications · $placed placed';
+  }
+
+  @override
+  String analyticsRowPosting(String company, int applications, int offered) {
+    return '$company · $applications applications · $offered offered';
+  }
+
+  @override
+  String get analyticsNoStudentsUnplaced => 'Every student has a placement.';
+
+  @override
+  String get ivTheCompany => 'The company';
+
+  @override
+  String get ivTheStudent => 'The student';
+
+  @override
+  String get ivTheSystem => 'The system';
+
+  @override
+  String get ivRequestSentCompany =>
+      'Request sent. The interview moves only if the company accepts.';
+
+  @override
+  String get ivDeclineNewTimeTitle => 'Decline the new time';
+
+  @override
+  String get ivDeclinePromptToCompany =>
+      'Tell the company why you are declining. The interview stays on its current time.';
+
+  @override
+  String get ivDeclineHint => 'e.g. I cannot attend at that time.';
+
+  @override
+  String get ivDecline => 'Decline';
+
+  @override
+  String get ivAccept => 'Accept';
+
+  @override
+  String get ivAcceptedMoved => 'Accepted. Your interview has been moved.';
+
+  @override
+  String get ivDeclinedStays => 'Declined. The interview stays as it was.';
+
+  @override
+  String get ivCancelInterview => 'Cancel interview';
+
+  @override
+  String ivCancelPromptToCompany(String when) {
+    return 'Tell the company why you are cancelling the interview on $when. They will see this reason.';
+  }
+
+  @override
+  String get ivCancelledNotified =>
+      'Interview cancelled. The company has been notified with your reason.';
+
+  @override
+  String ivCouldNotCancel(String error) {
+    return 'Could not cancel: $error';
+  }
+
+  @override
+  String get ivCancelButton => 'Cancel';
+
+  @override
+  String get ivRescheduleButton => 'Reschedule';
+
+  @override
+  String get ivChangeWindowStudent =>
+      'An interview can only be cancelled or rescheduled up to 2 hours before it starts. If you cannot attend, please message the company.';
+
+  @override
+  String get ivCompanyWillArrange =>
+      'The company will arrange a new time if your application continues.';
+
+  @override
+  String get ivChangesTitle => 'Changes';
+
+  @override
+  String ivChangeMoved(String actor) {
+    return '$actor moved the interview';
+  }
+
+  @override
+  String ivChangeMovedFromTo(String actor, String from, String to) {
+    return '$actor moved the interview from $from to $to';
+  }
+
+  @override
+  String ivChangeAsked(String actor) {
+    return '$actor asked to move the interview';
+  }
+
+  @override
+  String ivChangeAskedTo(String actor, String to) {
+    return '$actor asked to move the interview to $to';
+  }
+
+  @override
+  String ivChangeDeclined(String actor) {
+    return '$actor declined the new time';
+  }
+
+  @override
+  String ivChangeDeclinedFor(String actor, String time) {
+    return '$actor declined the new time ($time)';
+  }
+
+  @override
+  String get ivAutoCancelled => 'The interview was cancelled automatically';
+
+  @override
+  String ivChangeCancelled(String actor) {
+    return '$actor cancelled the interview';
+  }
+
+  @override
+  String ivReasonLine(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get ivYouAskedToReschedule => 'You asked to reschedule';
+
+  @override
+  String ivAskedToReschedule(String who) {
+    return '$who asked to reschedule';
+  }
+
+  @override
+  String get ivLineNow => 'Now';
+
+  @override
+  String get ivLineProposed => 'Proposed';
+
+  @override
+  String get ivLineReason => 'Reason';
+
+  @override
+  String ivWaitingFor(String who) {
+    return 'Waiting for $who. The interview stays on its current time unless they accept.';
+  }
+
+  @override
+  String get ivMovesOnlyIfYouAccept =>
+      'The interview only moves if you accept. If you decline, it stays on its current time.';
+
+  @override
+  String get ivWithdrawRequest => 'Withdraw request';
+
+  @override
+  String get ivTryAgain => 'Try again';
+
+  @override
+  String ivNoFreeTimes(int days) {
+    return 'No free interview times in the next $days days.';
+  }
+
+  @override
+  String get ivNoFreeTimesHint =>
+      'Interview times come from the interviewer\'s weekly availability. All their slots may be booked, or no availability has been set.';
+
+  @override
+  String get ivChooseDay => 'Choose a day';
+
+  @override
+  String get ivChooseTime => 'Choose a time';
+
+  @override
+  String get ivPickFirst => 'Pick a new day and time first.';
+
+  @override
+  String get ivRequestNewTime => 'Request a new time';
+
+  @override
+  String get ivReasonForChange => 'Reason for the change';
+
+  @override
+  String ivWillSeeReason(String who) {
+    return '$who will see this reason. The interview only moves if they accept; until then it stays on its current time.';
+  }
+
+  @override
+  String get ivReasonHint => 'e.g. I have a university exam at that time.';
+
+  @override
+  String get ivSendRequest => 'Send request';
+
+  @override
+  String get offAcceptTitle => 'Accept this offer?';
+
+  @override
+  String offAcceptBody(String title, String company) {
+    return '$title at $company will become your active internship.';
+  }
+
+  @override
+  String offAcceptCloses(int count) {
+    return 'Your $count other open applications will be closed and cannot be reopened.';
+  }
+
+  @override
+  String get offAcceptOne => 'You can only have one active internship.';
+
+  @override
+  String get offNotYet => 'Not yet';
+
+  @override
+  String get offAcceptOffer => 'Accept offer';
+
+  @override
+  String offAccepted(String company) {
+    return 'Offer accepted. $company has been notified.';
+  }
+
+  @override
+  String offCouldNotAccept(String error) {
+    return 'Could not accept the offer: $error';
+  }
+
+  @override
+  String appTabOffers(int count) {
+    return 'Offers ($count)';
+  }
+
+  @override
+  String get appInterviewCancelledTap => 'Interview cancelled. Tap to see why.';
+
+  @override
+  String get appOfferedBody =>
+      'Congratulations, this company has offered you the internship. You can hold several offers; accepting one closes the others.';
+
+  @override
+  String get appReasonFromCompany => 'Reason from the company';
+
+  @override
+  String get appNoReasonRecorded => 'No reason was recorded.';
+
+  @override
+  String get appClosedAcceptedOther =>
+      'Closed because you accepted another offer.';
+
+  @override
+  String get pushOffTitle => 'Alerts outside the app are off';
+
+  @override
+  String get pushOffBody =>
+      'Your phone is blocking CIMS notifications, so new interviews, offers and messages only show up here. Turn them on to be alerted straight away.';
+
+  @override
+  String get pushTurnOn => 'Turn on notifications';
+
+  @override
+  String reasonRequiredHelper(int min) {
+    return 'Required, at least $min characters.';
+  }
+
+  @override
+  String get reasonOptionalHelper => 'Optional.';
+
+  @override
+  String ivSlotsFree(int count) {
+    return '$count free';
+  }
+
+  @override
+  String get avHoursSaved => 'Hours saved.';
+
+  @override
+  String get avRemoveTitle => 'Remove these hours?';
+
+  @override
+  String avRemoveBody(String day, String from, String to) {
+    return '$day $from to $to will no longer be offered for new interviews. Interviews already booked in this window stay as they are.';
+  }
+
+  @override
+  String get avKeep => 'Keep';
+
+  @override
+  String get avRemove => 'Remove';
+
+  @override
+  String get avDayOffHelp => 'Day you are not available';
+
+  @override
+  String get avTitle => 'Interview availability';
+
+  @override
+  String get avAddHours => 'Add hours';
+
+  @override
+  String get avIntro =>
+      'Set the hours you can interview. Each window is cut into slots of the length you choose, and a slot disappears as soon as it is booked, so nobody can book the same time twice. Times are in Malaysian time.';
+
+  @override
+  String get avWeeklyHours => 'Weekly hours';
+
+  @override
+  String get avNoHoursYet =>
+      'No hours set yet. Tap \"Add hours\" so interviews can be scheduled with you.';
+
+  @override
+  String get avDaysOff => 'Days off';
+
+  @override
+  String get avAddDayOff => 'Add day off';
+
+  @override
+  String get avNoDaysOff =>
+      'No upcoming days off. Add leave or public holidays here and no interviews will be offered on those days.';
+
+  @override
+  String get avNotAvailable => 'Not available';
+
+  @override
+  String avMinutesShort(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get avPickOneDay => 'Pick at least one day.';
+
+  @override
+  String get avEndAfterStart => 'The end time must be after the start time.';
+
+  @override
+  String avShorterThanSlot(int minutes) {
+    return 'This window is shorter than one $minutes-minute slot.';
+  }
+
+  @override
+  String get avOverlap =>
+      'These hours overlap hours you have already set on one of the chosen days. Remove or change the existing hours first.';
+
+  @override
+  String get avAddAvailableHours => 'Add available hours';
+
+  @override
+  String get avDays => 'Days';
+
+  @override
+  String get avMonFri => 'Mon–Fri';
+
+  @override
+  String get avEveryDay => 'Every day';
+
+  @override
+  String avFromTime(String time) {
+    return 'From $time';
+  }
+
+  @override
+  String avToTime(String time) {
+    return 'To $time';
+  }
+
+  @override
+  String get avLengthOfInterview => 'Length of each interview';
+
+  @override
+  String avSlotsSummary(int count, int minutes) {
+    return '$count slots of $minutes minutes per selected day.';
+  }
+
+  @override
+  String get avSaveHours => 'Save hours';
+
+  @override
+  String get apTitle => 'Student profile';
+
+  @override
+  String get apUnnamed => 'Unnamed student';
+
+  @override
+  String apCouldNotOpenResume(String error) {
+    return 'Could not open resume: $error';
+  }
+
+  @override
+  String apCouldNotLoad(String error) {
+    return 'Could not load the full profile: $error';
+  }
+
+  @override
+  String get apContact => 'Contact';
+
+  @override
+  String get apEmail => 'Email';
+
+  @override
+  String get apPhone => 'Phone';
+
+  @override
+  String get apStudies => 'Studies';
+
+  @override
+  String get apProgramme => 'Programme';
+
+  @override
+  String get apFaculty => 'Faculty';
+
+  @override
+  String get apSemester => 'Semester';
+
+  @override
+  String get apCgpa => 'CGPA';
+
+  @override
+  String get apSkills => 'Skills';
+
+  @override
+  String get apNoSkills => 'No skills listed.';
+
+  @override
+  String get apWorkExperience => 'Work experience';
+
+  @override
+  String get apNoExperience => 'No work experience listed.';
+
+  @override
+  String get apResume => 'Resume';
+
+  @override
+  String get apNoResume => 'No resume uploaded';
+
+  @override
+  String get apView => 'View';
+
+  @override
+  String get apNotProvided => 'Not provided';
+
+  @override
+  String get apPresent => 'Present';
+
+  @override
+  String get hrViewFullProfile => 'View full profile';
+
+  @override
+  String hrvInterviewCancelledWas(String when) {
+    return 'Interview cancelled (was $when)';
+  }
+
+  @override
+  String hrvInterviewLine(String when) {
+    return 'Interview: $when';
+  }
+
+  @override
+  String get hrvAcceptedAnother => 'The student accepted another offer.';
+
+  @override
+  String hrvCouldNotUploadOffer(String error) {
+    return 'Could not upload offer letter: $error';
+  }
+
+  @override
+  String get hrvWithdrawOffer => 'Withdraw offer';
+
+  @override
+  String get hrvRejectApplication => 'Reject application';
+
+  @override
+  String hrvWithdrawPrompt(String name) {
+    return 'Tell $name why the offer is being withdrawn. They will see this reason.';
+  }
+
+  @override
+  String hrvRejectPrompt(String name) {
+    return 'Tell $name why the application is not successful. They will see this reason.';
+  }
+
+  @override
+  String get hrvReject => 'Reject';
+
+  @override
+  String get hrvRejectHint =>
+      'e.g. The position has been filled by a candidate with more relevant experience.';
+
+  @override
+  String hrvCouldNotReject(String error) {
+    return 'Could not reject: $error';
+  }
+
+  @override
+  String get hrvMakeOfferTitle => 'Make an offer?';
+
+  @override
+  String hrvMakeOfferBody(String name) {
+    return '$name will be notified and can accept the offer from their Applications screen. They may hold offers from several companies; once they accept one, the others are closed.';
+  }
+
+  @override
+  String get hrvMakeOffer => 'Make offer';
+
+  @override
+  String hrvCouldNotMakeOffer(String error) {
+    return 'Could not make the offer: $error';
+  }
+
+  @override
+  String get hrvNoResumeUploaded => 'No resume uploaded.';
+
+  @override
+  String get hrvSetMyAvailability => 'Set my availability';
+
+  @override
+  String hrvDeclinePrompt(String name) {
+    return 'Tell $name why you are declining. The interview stays on its current time.';
+  }
+
+  @override
+  String get hrvDeclineHint =>
+      'e.g. That day the interviewer is not available.';
+
+  @override
+  String get hrvAcceptedMoved => 'Accepted. The interview has been moved.';
+
+  @override
+  String hrvCancelPrompt(String name, String when) {
+    return 'Tell $name why the interview on $when is cancelled. They will see this reason.';
+  }
+
+  @override
+  String get hrvCancelHint =>
+      'e.g. The interviewer is unavailable on that day.';
+
+  @override
+  String hrvCancelledNotified(String name) {
+    return 'Interview cancelled. $name has been notified with your reason.';
+  }
+
+  @override
+  String get hrvChangeWindow =>
+      'An interview can only be cancelled or rescheduled up to 2 hours before it starts.';
+
+  @override
+  String get hrvNoInterviewBooked => 'No interview is booked.';
+
+  @override
+  String hrvInterviewWasCancelled(String when) {
+    return 'The interview on $when was cancelled.';
+  }
+
+  @override
+  String get hrvScheduleNew => 'Schedule a new interview';
+
+  @override
+  String hrvOfferSent(String name) {
+    return 'Offer sent. Waiting for $name to accept. The offer letter and acceptance letter can be added once they accept.';
+  }
+
+  @override
+  String hrvAcceptedAnotherCompany(String name) {
+    return '$name accepted another company\'s offer, so this application was closed automatically.';
+  }
+
+  @override
+  String get hrvPickDayTime => 'Pick a day and a time first.';
+
+  @override
+  String hrvChangeNote(String actor, String verb, String reason) {
+    return '$actor $verb. Reason: $reason';
+  }
+
+  @override
+  String get ivVerbAsked => 'asked to move the interview';
+
+  @override
+  String get ivVerbDeclined => 'declined moving the interview';
+
+  @override
+  String get ivVerbMoved => 'moved the interview';
+
+  @override
+  String get ivVerbAutoCancelled => 'cancelled the interview automatically';
+
+  @override
+  String get ivVerbCancelled => 'cancelled the interview';
+
+  @override
+  String get ivVerbBooked => 'booked the interview';
+
+  @override
+  String get acTabOne => 'One student';
+
+  @override
+  String get acTabMany => 'Many (list / CSV)';
+
+  @override
+  String get acHowItWorks =>
+      'Each student gets a random password that meets the password rules. You will see it once, on the next screen, to send to the student. At their first login they must choose a new password.';
+
+  @override
+  String get acFullName => 'Full name';
+
+  @override
+  String get acFullNameHint => 'As on the student card';
+
+  @override
+  String get acEmail => 'Email';
+
+  @override
+  String get acRegNoOptional => 'Registration number (optional)';
+
+  @override
+  String get acProgrammeOptional => 'Programme (optional)';
+
+  @override
+  String get acProgrammeHint => 'e.g. Bachelor of Computer Science';
+
+  @override
+  String get acCreateAccount => 'Create account';
+
+  @override
+  String get acFileCouldNotRead => 'That file could not be read.';
+
+  @override
+  String get acFileTooLarge =>
+      'That file is too large for a student list (512 KB at most).';
+
+  @override
+  String get acOnePerLine => 'One student per line:';
+
+  @override
+  String get acLineFormat =>
+      'email, full name, registration number, programme (the last two are optional). A header row is fine.';
+
+  @override
+  String get acChooseCsv => 'Choose a CSV file';
+
+  @override
+  String acFileName(String name) {
+    return 'File: $name';
+  }
+
+  @override
+  String get acCreateAccounts => 'Create accounts';
+
+  @override
+  String acCreateN(int count) {
+    return 'Create $count accounts';
+  }
+
+  @override
+  String get acRowsSkipped =>
+      'Rows with a problem are skipped. Fix them and add them again.';
+
+  @override
+  String get acNoEmailApp =>
+      'No email app could be opened. Copy the details and send them another way.';
+
+  @override
+  String get acLeaveTitle => 'Leave this screen?';
+
+  @override
+  String get acLeaveBody =>
+      'The temporary passwords are shown only here and cannot be seen again. Make sure you have copied or sent them.';
+
+  @override
+  String get acStay => 'Stay';
+
+  @override
+  String get acLeave => 'Leave';
+
+  @override
+  String get acNewAccounts => 'New accounts';
+
+  @override
+  String get acSendNow =>
+      'Send each student their email and password now. The passwords are shown only on this screen. Students must choose a new password the first time they log in.';
+
+  @override
+  String acCopiedCsv(int count) {
+    return 'Copied $count accounts as CSV.';
+  }
+
+  @override
+  String get acCopyAllCsv => 'Copy all as CSV';
+
+  @override
+  String get acLoginCopied => 'Login details copied.';
+
+  @override
+  String get acNotCreated => 'Not created';
+
+  @override
+  String get acDone => 'Done';
+
+  @override
+  String get acCopyDetails => 'Copy details';
+
+  @override
+  String get acEmailStudent => 'Email student';
+
+  @override
+  String get fpIntro =>
+      'You logged in with a temporary password from your administrator. Choose your own password now. You cannot use the app until you do.';
+
+  @override
+  String get fpNewPassword => 'New password';
+
+  @override
+  String get fpConfirmPassword => 'Confirm new password';
+
+  @override
+  String get fpSaveContinue => 'Save and continue';
+
+  @override
+  String get fpLogOut => 'Log out';
+
+  @override
+  String ceNewCodeSent(String email) {
+    return 'A new code was sent to $email.';
+  }
+
+  @override
+  String get ceTitle => 'Confirm your email';
+
+  @override
+  String ceIntro(String email) {
+    return 'We sent a code to $email. Type it below to confirm your account. It can take a minute and may land in your spam folder.';
+  }
+
+  @override
+  String get ceCodeLabel => 'Code from the email';
+
+  @override
+  String get ceCodeHint => 'Enter the code';
+
+  @override
+  String get ceConfirm => 'Confirm account';
+
+  @override
+  String ceResendIn(int seconds) {
+    return 'Send a new code in ${seconds}s';
+  }
+
+  @override
+  String get ceResend => 'Send a new code';
+
+  @override
+  String get ceBackToLogin => 'Back to log in';
+
+  @override
+  String get fgCodeRequested => 'A new code was requested.';
+
+  @override
+  String get fgCheckEmail => 'Check your email for the code.';
+
+  @override
+  String get fgTitle => 'Reset password';
+
+  @override
+  String get fgEnterEmail =>
+      'Enter the email address of your account. We will email you a code.';
+
+  @override
+  String get fgEmailLabel => 'Email address';
+
+  @override
+  String get fgEmailHint => 'Enter your email';
+
+  @override
+  String get fgSendCode => 'Send code';
+
+  @override
+  String fgSentIntro(String email) {
+    return 'If an account exists for $email, we have emailed a code. It can take a minute, and may land in your spam folder. The code expires after a short time.';
+  }
+
+  @override
+  String get fgVerifyCode => 'Verify code';
+
+  @override
+  String get fgDifferentEmail => 'Use a different email';
+
+  @override
+  String get fgCodeAccepted => 'Code accepted. Choose a new password.';
+
+  @override
+  String get fgNewPasswordHint => 'Create a new password';
+
+  @override
+  String get fgConfirmHint => 'Re-enter your new password';
+
+  @override
+  String get fgSaveNew => 'Save new password';
+
+  @override
+  String get suPrivacyRequired =>
+      'Please read and accept the privacy notice to continue.';
+
+  @override
+  String get suPendingApproval =>
+      'Account created. An administrator must approve it before you can log in.';
+
+  @override
+  String get suCreatedLoginConfirm =>
+      'Your account is created. Log in to confirm your email with a new code.';
+
+  @override
+  String get suEmailConfirmedPending =>
+      'Email confirmed. An administrator must approve your account before you can log in.';
+
+  @override
+  String get suExistsTitle => 'Account already exists';
+
+  @override
+  String suExistsBody(String email) {
+    return 'An account has already been created with $email. Log in with it, or reset the password if you have forgotten it. No new email is sent for an existing account.';
+  }
+
+  @override
+  String get suForgotPassword => 'Forgot password';
+
+  @override
+  String get suStudentsCreatedByAdmin =>
+      'Student accounts are created by your administrator. Log in with the email and password you were given.';
+
+  @override
+  String get suFullNameHint => 'Enter your full name';
+
+  @override
+  String get suAgreePrefix => 'I have read and agree to the ';
+
+  @override
+  String get suPrivacyNotice => 'privacy notice';
+
+  @override
+  String get loPasswordChanged =>
+      'Password changed. Log in with your new password.';
+
+  @override
+  String get stMyInterviewTimes => 'My interview days and times';
+
+  @override
+  String get stPrivacyNotice => 'Privacy notice';
+
+  @override
+  String get stDeleteMyAccount => 'Delete my account';
+
+  @override
+  String get errUnsupportedImage =>
+      'Unsupported file format. Please upload a JPG, JPEG, or PNG image.';
+
+  @override
+  String get errPhotoEmpty =>
+      'The selected photo is empty (0 bytes). Try a different photo.';
+
+  @override
+  String get errPhotoNotFound =>
+      'The selected photo could not be found on disk.';
+
+  @override
+  String errUploadFailed(String error) {
+    return 'Upload failed: $error';
+  }
+
+  @override
+  String errCouldNotAccessCamera(String error) {
+    return 'Could not access camera: $error';
+  }
+
+  @override
+  String errCouldNotAccessGallery(String error) {
+    return 'Could not access gallery: $error';
+  }
+
+  @override
+  String errCouldNotRemovePhoto(String error) {
+    return 'Could not remove photo: $error';
+  }
+
+  @override
+  String errCouldNotSave(String error) {
+    return 'Could not save: $error';
+  }
+
+  @override
+  String errCouldNotSaveLanguage(String error) {
+    return 'Could not save language: $error';
+  }
+
+  @override
+  String errCouldNotSaveTheme(String error) {
+    return 'Could not save theme: $error';
+  }
+
+  @override
+  String get hpDeadlinePassed =>
+      'The deadline of this posting has passed. Edit the posting and choose a later deadline to reopen it.';
+
+  @override
+  String get hpExpired => 'Expired';
+
+  @override
+  String get hpRecommended => 'Recommended candidates';
+
+  @override
+  String get hpChooseLocation => 'Choose the internship location on the map.';
+
+  @override
+  String get hpAddOneSkill => 'Add at least one required skill.';
+
+  @override
+  String get hpCloseBeforeDeadline =>
+      'The posting cannot close before its application deadline.';
+
+  @override
+  String get hpFixFields =>
+      'Please fix the highlighted fields before publishing.';
+
+  @override
+  String hpCouldNotSave(String error) {
+    return 'Could not save posting: $error';
+  }
+
+  @override
+  String hpCouldNotDelete(String error) {
+    return 'Could not delete posting: $error';
+  }
+
+  @override
+  String get hpCustom => 'Custom…';
+
+  @override
+  String get hpCustomCategory => 'Custom category';
+
+  @override
+  String get hpCustomCategoryHint => 'e.g. Marketing';
+
+  @override
+  String get hpAllowancePositive => 'Allowance must be more than 0.';
+
+  @override
+  String get hpAutoCloseCaption =>
+      'Posting closes automatically after (optional)';
+
+  @override
+  String hpClosesOn(String date) {
+    return 'Posting closes on $date';
+  }
+
+  @override
+  String get hpAutoCloseOptional => 'Auto-close date (optional)';
+
+  @override
+  String get acTitleStudents => 'Create student accounts';
+
+  @override
+  String get acTitleSupervisors => 'Create supervisor accounts';
+
+  @override
+  String get acHowItWorksSupervisor =>
+      'Each supervisor gets a random password that meets the password rules, and the account is approved straight away. You will see the password once, on the next screen, to send to them. At their first login they must choose a new password.';
+
+  @override
+  String get acLineFormatSupervisor =>
+      'email, full name. A header row is fine.';
+
+  @override
+  String get acSendNowSupervisor =>
+      'Send each supervisor their email and password now. The passwords are shown only on this screen. They must choose a new password the first time they log in.';
+
+  @override
+  String get adminAddSupervisors => 'Add supervisors';
+
+  @override
+  String get adminAddStudents => 'Add students';
+
+  @override
+  String get stSummaryTitle => 'Statistics';
+
+  @override
+  String get stViewFull => 'View full statistics';
+
+  @override
+  String get stNoCompany =>
+      'Join or register a company to see statistics here.';
+
+  @override
+  String get stNothingYet => 'Nothing to show yet.';
+
+  @override
+  String stCouldNotLoad(String error) {
+    return 'Could not load the statistics: $error';
+  }
+
+  @override
+  String get stTitleHr => 'Hiring statistics';
+
+  @override
+  String get stTitleAcademic => 'Student progress';
+
+  @override
+  String get stTitleCompanySup => 'Intern progress';
+
+  @override
+  String get stTitleAdmin => 'Platform statistics';
+
+  @override
+  String get stPostings => 'Postings';
+
+  @override
+  String get stOpenPostings => 'Open postings';
+
+  @override
+  String get stApplications => 'Applications';
+
+  @override
+  String get stApplicants => 'Applicants';
+
+  @override
+  String get stInterviewing => 'In interview';
+
+  @override
+  String get stOffered => 'Offered';
+
+  @override
+  String get stAccepted => 'Accepted';
+
+  @override
+  String get stRejected => 'Rejected';
+
+  @override
+  String get stPending => 'Waiting for review';
+
+  @override
+  String get stClosed => 'Closed';
+
+  @override
+  String get stAcceptRate => 'Acceptance rate';
+
+  @override
+  String get stInterviewsUpcoming => 'Upcoming interviews';
+
+  @override
+  String get stInterviewsDone => 'Interviews done';
+
+  @override
+  String get stByStatus => 'Applications by status';
+
+  @override
+  String get stPerPosting => 'Per posting';
+
+  @override
+  String stPostingRow(
+    int applications,
+    int interview,
+    int offered,
+    int accepted,
+  ) {
+    return '$applications applications · $interview interview · $offered offered · $accepted accepted';
+  }
+
+  @override
+  String get stWeekly => 'Applications per week (last 8 weeks)';
+
+  @override
+  String get stStudents => 'Students';
+
+  @override
+  String get stPlaced => 'Placed';
+
+  @override
+  String get stNotPlaced => 'Not placed yet';
+
+  @override
+  String get stReports => 'Reports';
+
+  @override
+  String get stReportsWaiting => 'Waiting for your review';
+
+  @override
+  String get stReportsApproved => 'Approved';
+
+  @override
+  String get stReportsSentBack => 'Sent back';
+
+  @override
+  String get stDocsWaiting => 'Documents to review';
+
+  @override
+  String get stDocsApproved => 'Documents approved';
+
+  @override
+  String get stEvaluationsDone => 'Evaluations done';
+
+  @override
+  String get stReportProgress => 'Report progress';
+
+  @override
+  String get stPerStudent => 'Per student';
+
+  @override
+  String stStudentRow(int reports, int approved, int pending) {
+    return '$reports reports · $approved approved · $pending waiting';
+  }
+
+  @override
+  String get stPlacedBadge => 'Placed';
+
+  @override
+  String get stNotPlacedBadge => 'Not placed';
+
+  @override
+  String get stInterns => 'Interns';
+
+  @override
+  String get stEvaluatedBadge => 'Evaluated';
+
+  @override
+  String get stNotEvaluatedBadge => 'Not evaluated';
+
+  @override
+  String get stEvaluatedStudents => 'Interns evaluated';
+
+  @override
+  String get stPeople => 'People on the platform';
+
+  @override
+  String get stCompanies => 'Companies';
+
+  @override
+  String get stCompaniesVerified => 'Verified';
+
+  @override
+  String get stCompaniesPending => 'Waiting for verification';
+
+  @override
+  String get stNewCompanies => 'New companies (30 days)';
+
+  @override
+  String get stCompaniesWithPostings => 'Companies with postings';
+
+  @override
+  String get stNewPeople => 'New people (30 days)';
+
+  @override
+  String get stPendingApprovals => 'Waiting for approval';
+
+  @override
+  String get stUsersByRole => 'People by role';
+
+  @override
+  String get stCompaniesByStatus => 'Companies by status';
+
+  @override
+  String get stCompaniesJoined => 'Companies joined per month (last 6)';
+
+  @override
+  String get stPeopleJoined => 'People joined per month (last 6)';
+
+  @override
+  String get stRoleStudent => 'Students';
+
+  @override
+  String get stRoleAcademic => 'Academic supervisors';
+
+  @override
+  String get stRoleHr => 'Company HR';
+
+  @override
+  String get stRoleCompanySup => 'Company supervisors';
+
+  @override
+  String get stRoleAdmin => 'Administrators';
+
+  @override
+  String get roleLabelStudent => 'Student';
+
+  @override
+  String get roleLabelAcademic => 'Academic supervisor';
+
+  @override
+  String get roleLabelHr => 'Company HR';
+
+  @override
+  String get roleLabelCompanySup => 'Company supervisor';
+
+  @override
+  String get roleLabelAdmin => 'Administrator';
+
+  @override
+  String get acTabOneSupervisor => 'One supervisor';
+
+  @override
+  String get acTabManySupervisor => 'Many (list / CSV)';
+
+  @override
+  String get acFullNameHintSupervisor => 'As on the employee card';
+
+  @override
+  String get acEmailSupervisor => 'Email supervisor';
+
+  @override
+  String acCreateFailedReason(String reason) {
+    return 'The account could not be created: $reason';
+  }
+
+  @override
+  String get adminNeverLoggedIn => 'Not logged in yet';
+
+  @override
+  String get adminAwaitingApprovalBadge => 'Awaiting approval';
+
+  @override
+  String get adminNotApprovedBadge => 'Not approved';
+
+  @override
+  String get adminFilterVerified => 'Verified';
+
+  @override
+  String get adminFilterNotVerified => 'Not verified';
+
+  @override
+  String get adminNoCompaniesInFilter => 'No companies in this group';
+
+  @override
+  String get hpClosesAfterDeadline =>
+      'The posting closes automatically after the application deadline. Without a deadline it stays open until you close it.';
+
+  @override
+  String goodAfternoon(String name) {
+    return 'Good afternoon, $name!';
+  }
+
+  @override
+  String goodEvening(String name) {
+    return 'Good evening, $name!';
+  }
 }

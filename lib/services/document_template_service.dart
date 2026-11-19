@@ -78,7 +78,9 @@ class DocumentTemplateService {
     final row = await _client.from('document_templates').select().eq('template_id', templateId).single();
     final storagePath = row['storage_path'] as String;
     final originalBytes = await downloadTemplatePdf(storagePath);
-    final preparedBytes = PdfTemplateService.instance.embedFields(originalBytes, fields);
+    // The stored PDF already holds the fields of the previous save: replace them, do not add to them.
+    final previousKeys = ((row['fields'] as List?) ?? const []).map((f) => (f as Map)['key'] as String).toSet();
+    final preparedBytes = PdfTemplateService.instance.embedFields(originalBytes, fields, replaceKeys: previousKeys);
     await _client.storage.from('document_templates').uploadBinary(
           storagePath,
           preparedBytes,
@@ -91,6 +93,54 @@ class DocumentTemplateService {
       'fields': fields.map((f) => f.toJson()).toList(),
       'is_active': true,
     }).eq('template_id', templateId);
+  }
+
+  /// Renames a template and/or changes what it is used for. A template that is in use keeps being the one in use
+  /// for its (new) purpose: any other active template of that purpose is switched off.
+  Future<void> updateTemplate({required String templateId, required String name, required String purpose}) async {
+    final row = await _client.from('document_templates').select('purpose, is_active').eq('template_id', templateId).single();
+    await _client.from('document_templates').update({'name': name.trim(), 'purpose': purpose}).eq('template_id', templateId);
+    if (row['is_active'] == true && row['purpose'] != purpose) {
+      await _client.from('document_templates').update({'is_active': false}).eq('purpose', purpose).eq('is_active', true).neq('template_id', templateId);
+    }
+  }
+
+  /// Makes this template the one in use for its purpose (switching the others off), or switches it off.
+  Future<void> setTemplateActive({required String templateId, required bool active}) async {
+    final row = await _client.from('document_templates').select('purpose, fields').eq('template_id', templateId).single();
+    if (active) {
+      if (((row['fields'] as List?) ?? const []).isEmpty) {
+        throw Exception('Place at least one field on this template before using it.');
+      }
+      await _client.from('document_templates').update({'is_active': false}).eq('purpose', row['purpose'] as String).eq('is_active', true);
+    }
+    await _client.from('document_templates').update({'is_active': active}).eq('template_id', templateId);
+  }
+
+  /// How many filled documents were made from this template (they keep the template as their source).
+  Future<int> countSubmissions(String templateId) async {
+    final rows = await _client.from('document_submissions').select('submission_id').eq('template_id', templateId);
+    return List.from(rows).length;
+  }
+
+  /// Deletes a template and its PDF. A template that people already filled in cannot be deleted (their
+  /// signed documents refer to it): switch it off instead.
+  Future<void> deleteTemplate(String templateId) async {
+    final used = await countSubmissions(templateId);
+    if (used > 0) {
+      throw Exception('$used filled document${used == 1 ? ' was' : 's were'} made from this template, so it cannot be deleted. Switch it off instead.');
+    }
+    final row = await _client.from('document_templates').select('storage_path').eq('template_id', templateId).single();
+    final deleted = await _client.from('document_templates').delete().eq('template_id', templateId).select('template_id');
+    if (List.from(deleted).isEmpty) throw Exception('The template could not be deleted.');
+    final path = row['storage_path'] as String?;
+    if (path != null && path.isNotEmpty) {
+      try {
+        await _client.storage.from('document_templates').remove([path]);
+      } catch (_) {
+        // Not fatal: the row is gone, an orphaned PDF only takes up space.
+      }
+    }
   }
 
   Future<Map<String, dynamic>?> getSubmission({required String templateId, required String studentId}) async {

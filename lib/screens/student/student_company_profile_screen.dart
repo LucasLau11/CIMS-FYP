@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../utils/validators.dart';
+import '../../widgets/common/validated_field.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
+import '../../utils/error_text.dart';
 
 /// A company's public profile: details, job posting history, past-intern
 /// count (no names, to protect other students' privacy), and an anonymous
@@ -70,6 +73,7 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
     int rating = (_myReview?['rating'] as int?) ?? 5;
     final reviewController = TextEditingController(text: _myReview?['review'] as String? ?? '');
     bool isSubmitting = false;
+    final reviewKey = GlobalKey<FormFieldState<String>>();
 
     final submitted = await showModalBottomSheet<bool>(
       context: context,
@@ -93,13 +97,30 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
                   _StarRating(
                     rating: rating,
                     size: 32,
-                    onChanged: (v) => setSheetState(() => rating = v),
+                    onChanged: (v) {
+                      setSheetState(() => rating = v);
+                      reviewKey.currentState?.validate();
+                    },
                   ),
                   const SizedBox(height: 16),
-                  TextField(
+                  ValidatedField(
+                    key: reviewKey,
                     controller: reviewController,
+                    // A low rating must say why, so the review is useful to other students.
+                    fieldValidator: (v) => Validators.text(
+                      v,
+                      field: 'Your review',
+                      required: rating <= 2,
+                      min: rating <= 2 ? 10 : 0,
+                      max: 1000,
+                    ),
                     maxLines: 4,
-                    decoration: InputDecoration(hintText: l10n.companyProfileReviewHint),
+                    maxLength: 1000,
+                    showSuccess: false,
+                    hintText: l10n.companyProfileReviewHint,
+                    helperText: rating <= 2
+                        ? 'Required for a rating of 2 or lower: tell other students what went wrong.'
+                        : 'Optional, up to 1000 characters.',
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
@@ -108,6 +129,7 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
                       onPressed: isSubmitting
                           ? null
                           : () async {
+                              if (!(reviewKey.currentState?.validate() ?? false)) return;
                               setSheetState(() => isSubmitting = true);
                               try {
                                 await StudentDataService.instance.submitCompanyReview(
@@ -121,7 +143,7 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
                                 setSheetState(() => isSubmitting = false);
                                 if (!sheetContext.mounted) return;
                                 ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                  SnackBar(content: Text(l10n.companyProfileReviewError(e.toString())), backgroundColor: AppColors.error),
+                                  SnackBar(content: Text(l10n.companyProfileReviewError(friendlyError(e))), backgroundColor: AppColors.error),
                                 );
                               }
                             },
@@ -159,7 +181,7 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
         title: Text(l10n.companyProfileTitle, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
@@ -173,7 +195,7 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
                         decoration: BoxDecoration(color: nameColor(companyName).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
                         child: Center(
                           child: Text(logoLetter(companyName),
-                              style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700, color: nameColor(companyName))),
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.w700, color: nameTextColor(companyName))),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -220,11 +242,11 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
                     decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(12)),
                     child: Row(
                       children: [
-                        const Icon(Icons.groups_outlined, color: AppColors.primary, size: 20),
+                        Icon(Icons.groups_outlined, color: AppColors.primaryText, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(l10n.companyProfileInternCount(_internCount),
-                              style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                              style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryText)),
                         ),
                       ],
                     ),
@@ -233,7 +255,7 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(l10n.companyProfileReviews, style: AppTextStyles.h3),
+                      Flexible(child: Text(l10n.companyProfileReviews, style: AppTextStyles.h3, overflow: TextOverflow.ellipsis)),
                       if (_canReview)
                         TextButton.icon(
                           onPressed: _openReviewSheet,
@@ -250,7 +272,7 @@ class _StudentCompanyProfileScreenState extends State<StudentCompanyProfileScree
                       Text(_reviews.isEmpty ? '—' : _averageRating.toStringAsFixed(1),
                           style: TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                       const SizedBox(width: 6),
-                      Text('· ${l10n.companyProfileReviewCount(_reviews.length)}', style: AppTextStyles.caption),
+                      Flexible(child: Text('· ${l10n.companyProfileReviewCount(_reviews.length)}', style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)),
                     ],
                   ),
                   const SizedBox(height: 14),

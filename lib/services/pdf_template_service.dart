@@ -116,9 +116,19 @@ class PdfTemplateService {
   /// field — the 'signature' type isn't a form field, just a remembered spot
   /// to stamp a drawn signature image onto at submission time. Each field is
   /// placed on its own [TemplateField.page] rather than always page 0.
-  Uint8List embedFields(Uint8List originalPdfBytes, List<TemplateField> fields) {
+  ///
+  /// [replaceKeys] are the keys of the fields an earlier save already put into this PDF: they are taken out first,
+  /// so saving a template again (after moving, renaming or removing a field) leaves exactly the new set instead of
+  /// the new fields stacked on top of the old ones.
+  Uint8List embedFields(Uint8List originalPdfBytes, List<TemplateField> fields, {Set<String> replaceKeys = const {}}) {
     final document = sf.PdfDocument(inputBytes: originalPdfBytes);
     try {
+      if (replaceKeys.isNotEmpty) {
+        final existing = document.form.fields;
+        for (var i = existing.count - 1; i >= 0; i--) {
+          if (replaceKeys.contains(existing[i].name)) existing.removeAt(i);
+        }
+      }
       final font = sf.PdfStandardFont(sf.PdfFontFamily.helvetica, 9);
       for (final field in fields) {
         if (field.type == 'signature') continue;

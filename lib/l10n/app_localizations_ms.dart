@@ -107,9 +107,6 @@ class AppLocalizationsMs extends AppLocalizations {
       'E-mel anda bukan alamat institusi TARC. Sila pilih peranan yang berkaitan dengan anda.';
 
   @override
-  String get parentGuardian => 'Ibu Bapa/Penjaga';
-
-  @override
   String get hrPersonnel => 'Kakitangan HR';
 
   @override
@@ -178,6 +175,9 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get viewMyProgress => 'Lihat kemajuan saya';
+
+  @override
+  String get defaultUserName => 'Pengguna';
 
   @override
   String goodMorning(String name) {
@@ -1567,10 +1567,6 @@ class AppLocalizationsMs extends AppLocalizations {
   String get notificationReject => 'Tolak';
 
   @override
-  String get errorParentAlreadyLinked =>
-      'Pelajar ini sudah mempunyai ibu bapa yang diluluskan dan dipautkan. Hanya satu ibu bapa yang diluluskan boleh dipautkan pada satu masa.';
-
-  @override
   String errorCouldNotRespondToRequest(String error) {
     return 'Tidak dapat memberi respons kepada permintaan ini: $error';
   }
@@ -2427,170 +2423,6 @@ class AppLocalizationsMs extends AppLocalizations {
   String get clear => 'Kosongkan';
 
   @override
-  String parentWelcomeName(String name) {
-    return 'Selamat datang, $name';
-  }
-
-  @override
-  String get parentWelcomeDefault => 'Selamat datang, Ibu Bapa';
-
-  @override
-  String get parentDashboardSubtitle =>
-      'Pantau kemajuan latihan industri anak anda';
-
-  @override
-  String get parentNoChildrenTitle => 'Belum ada anak yang dipautkan';
-
-  @override
-  String get parentNoChildrenDescription =>
-      'Pautkan akaun anak anda untuk mula memantau kemajuan latihan industri mereka. Mereka perlu meluluskan permintaan sebelum anda boleh melihat apa-apa.';
-
-  @override
-  String get parentLinkChildButton => 'Pautkan anak';
-
-  @override
-  String get parentUnnamedStudent => 'Pelajar tanpa nama';
-
-  @override
-  String get parentNoApplicationYet => 'Belum ada permohonan latihan industri';
-
-  @override
-  String get parentSignFormButton => 'Tandatangan borang';
-
-  @override
-  String get parentProgressButton => 'Kemajuan';
-
-  @override
-  String get parentStudentEmailLabel => 'E-mel pelajar';
-
-  @override
-  String get parentStudentEmailHint => 'cth. john.doe';
-
-  @override
-  String get parentRelationshipLabel => 'Hubungan';
-
-  @override
-  String get parentRelationshipFather => 'Bapa';
-
-  @override
-  String get parentRelationshipMother => 'Ibu';
-
-  @override
-  String get parentRelationshipGuardian => 'Penjaga';
-
-  @override
-  String get parentNoStudentFoundError =>
-      'Tiada pelajar dijumpai dengan e-mel tersebut.';
-
-  @override
-  String parentSearchError(String error) {
-    return 'Tidak dapat mencari: $error';
-  }
-
-  @override
-  String get parentSendRequestButton => 'Hantar permintaan';
-
-  @override
-  String get parentRequestSentMessage =>
-      'Permintaan dihantar. Pelajar perlu meluluskannya.';
-
-  @override
-  String parentSendRequestError(String error) {
-    return 'Tidak dapat menghantar permintaan: $error';
-  }
-
-  @override
-  String parentCancelRequestError(String error) {
-    return 'Tidak dapat membatalkan: $error';
-  }
-
-  @override
-  String get parentYourRequestsTitle => 'Permintaan anda';
-
-  @override
-  String get parentNoRequestsYet => 'Belum ada permintaan dihantar.';
-
-  @override
-  String parentAsRelationship(String relationship) {
-    return 'Sebagai $relationship';
-  }
-
-  @override
-  String get parentUnknownStudent => 'Pelajar tidak diketahui';
-
-  @override
-  String get parentProgressTitle => 'Kemajuan Latihan Industri';
-
-  @override
-  String get parentApplicationStatusTitle => 'Status permohonan';
-
-  @override
-  String get parentNoApplicationSubmittedYet =>
-      'Belum ada permohonan latihan industri dihantar.';
-
-  @override
-  String get parentUnknownCompany => 'Syarikat tidak diketahui';
-
-  @override
-  String get parentAtAGlanceTitle => 'Ringkasan';
-
-  @override
-  String get parentReportsSubmittedLabel => 'Laporan dihantar';
-
-  @override
-  String get parentDurationLabel => 'Tempoh';
-
-  @override
-  String get parentEvaluationTitle => 'Penilaian';
-
-  @override
-  String get parentNoEvaluationsYet => 'Belum ada penilaian dihantar.';
-
-  @override
-  String get parentAcademicSupervisorEvaluation =>
-      'Penilaian Penyelia Akademik';
-
-  @override
-  String get parentCompanySupervisorEvaluation => 'Penilaian Penyelia Syarikat';
-
-  @override
-  String get parentRequiredDocumentsTitle => 'Dokumen diperlukan';
-
-  @override
-  String get parentDocNotSubmitted => 'Belum dihantar';
-
-  @override
-  String get parentMonthlyReportsTitle => 'Laporan bulanan';
-
-  @override
-  String get parentNoMonthlyReportsYet => 'Belum ada laporan bulanan dihantar.';
-
-  @override
-  String get parentFinalReportTitle => 'Laporan akhir';
-
-  @override
-  String get parentNoFinalReportYet => 'Belum ada laporan akhir dihantar.';
-
-  @override
-  String parentMonthlyReportLabel(String period) {
-    return 'Laporan Bulanan — $period';
-  }
-
-  @override
-  String parentFinalReportLabel(String period) {
-    return 'Laporan Akhir — $period';
-  }
-
-  @override
-  String parentSubmittedDate(String date) {
-    return 'Dihantar $date';
-  }
-
-  @override
-  String get parentReadOnlyNotice =>
-      'Ini adalah paparan baca sahaja. Hubungi universiti untuk pertanyaan mengenai latihan industri anak anda.';
-
-  @override
   String get parentAcknowledgementTitle => 'Borang Pengakuan';
 
   @override
@@ -2601,10 +2433,6 @@ class AppLocalizationsMs extends AppLocalizations {
   String parentCouldNotLoadFormError(String error) {
     return 'Tidak dapat memuatkan borang pengakuan: $error';
   }
-
-  @override
-  String get parentTapToFillInstruction =>
-      'Ketik terus pada borang untuk mengisinya, kemudian hantar di bahagian bawah.';
 
   @override
   String get parentSignAndSubmitButton => 'Tandatangan & Hantar';
@@ -2789,4 +2617,1390 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get csNoDocumentsOnFile => 'Tiada dokumen direkodkan lagi.';
+
+  @override
+  String get addToCalendar => 'Tambah ke kalendar';
+
+  @override
+  String get calendarCouldNotOpen => 'Tidak dapat membuka kalendar anda.';
+
+  @override
+  String calendarEventTitle(String title) {
+    return 'Temu duga: $title';
+  }
+
+  @override
+  String calendarEventDetails(String company) {
+    return 'Temu duga CIMS dengan $company';
+  }
+
+  @override
+  String get hrSearchApplicants => 'Cari mengikut nama, program atau kemahiran';
+
+  @override
+  String get hrAllPostings => 'Semua iklan';
+
+  @override
+  String get hrShortlisted => 'Disenarai pendek';
+
+  @override
+  String get hrShortlist => 'Senarai pendek';
+
+  @override
+  String get hrRemoveShortlist => 'Buang daripada senarai pendek';
+
+  @override
+  String get hrPrivateNotes => 'Nota peribadi';
+
+  @override
+  String get hrPrivateNotesInfo =>
+      'Hanya anda boleh melihat ini. Pelajar tidak akan melihatnya.';
+
+  @override
+  String get hrNoteHint => 'Tulis nota tentang pemohon ini';
+
+  @override
+  String get hrSaveNote => 'Simpan nota';
+
+  @override
+  String get hrNoteSaved => 'Nota disimpan';
+
+  @override
+  String get hrNoMatchingApplicants =>
+      'Tiada pemohon sepadan dengan carian anda.';
+
+  @override
+  String hrTabOffered(int count) {
+    return 'Ditawarkan ($count)';
+  }
+
+  @override
+  String hrTabClosed(int count) {
+    return 'Ditutup ($count)';
+  }
+
+  @override
+  String get hrClearFilters => 'Kosongkan penapis';
+
+  @override
+  String get adminAuditLogTitle => 'Log audit';
+
+  @override
+  String get adminAuditLogSubtitle =>
+      'Siapa meluluskan, mencipta atau mengubah apa';
+
+  @override
+  String get auditFilterAll => 'Semua';
+
+  @override
+  String get auditFilterAccounts => 'Akaun';
+
+  @override
+  String get auditFilterCompanies => 'Syarikat';
+
+  @override
+  String get auditFilterStudents => 'Pelajar';
+
+  @override
+  String get auditFilterSetup => 'Persediaan';
+
+  @override
+  String get auditEmpty => 'Belum ada yang direkodkan.';
+
+  @override
+  String get auditSystem => 'Sistem';
+
+  @override
+  String get auditLoadMore => 'Muat lagi';
+
+  @override
+  String get adminAnalyticsTitle => 'Analitik penempatan';
+
+  @override
+  String get adminAnalyticsSubtitle =>
+      'Kadar penempatan, permohonan dan pelajar yang belum mendapat latihan industri';
+
+  @override
+  String get analyticsPlacementRate => 'Kadar penempatan';
+
+  @override
+  String analyticsPlacedOf(int placed, int total) {
+    return '$placed daripada $total pelajar telah ditempatkan';
+  }
+
+  @override
+  String get analyticsStudentsApplied => 'Telah memohon';
+
+  @override
+  String get analyticsApplications => 'Permohonan';
+
+  @override
+  String get analyticsWithoutPlacement => 'Belum ditempatkan';
+
+  @override
+  String get analyticsByStatus => 'Permohonan mengikut status';
+
+  @override
+  String get analyticsByProgramme => 'Mengikut program';
+
+  @override
+  String get analyticsByCompany => 'Mengikut syarikat';
+
+  @override
+  String get analyticsTopPostings => 'Iklan paling banyak dimohon';
+
+  @override
+  String get analyticsUnplaced => 'Pelajar tanpa penempatan';
+
+  @override
+  String get analyticsExportCsv => 'Eksport CSV';
+
+  @override
+  String get analyticsExportFailed => 'Tidak dapat mencipta atau membuka fail.';
+
+  @override
+  String analyticsRowStudentsPlaced(int placed, int students) {
+    return '$placed/$students ditempatkan';
+  }
+
+  @override
+  String analyticsRowCompany(int postings, int applications, int placed) {
+    return '$postings iklan · $applications permohonan · $placed ditempatkan';
+  }
+
+  @override
+  String analyticsRowPosting(String company, int applications, int offered) {
+    return '$company · $applications permohonan · $offered ditawarkan';
+  }
+
+  @override
+  String get analyticsNoStudentsUnplaced => 'Semua pelajar telah ditempatkan.';
+
+  @override
+  String get ivTheCompany => 'Syarikat';
+
+  @override
+  String get ivTheStudent => 'Pelajar';
+
+  @override
+  String get ivTheSystem => 'Sistem';
+
+  @override
+  String get ivRequestSentCompany =>
+      'Permintaan dihantar. Temu duga hanya dialihkan jika syarikat bersetuju.';
+
+  @override
+  String get ivDeclineNewTimeTitle => 'Tolak masa baharu';
+
+  @override
+  String get ivDeclinePromptToCompany =>
+      'Beritahu syarikat sebab anda menolak. Temu duga kekal pada masa semasa.';
+
+  @override
+  String get ivDeclineHint => 'cth. Saya tidak dapat hadir pada masa itu.';
+
+  @override
+  String get ivDecline => 'Tolak';
+
+  @override
+  String get ivAccept => 'Terima';
+
+  @override
+  String get ivAcceptedMoved => 'Diterima. Temu duga anda telah dialihkan.';
+
+  @override
+  String get ivDeclinedStays => 'Ditolak. Temu duga kekal seperti asal.';
+
+  @override
+  String get ivCancelInterview => 'Batalkan temu duga';
+
+  @override
+  String ivCancelPromptToCompany(String when) {
+    return 'Beritahu syarikat sebab anda membatalkan temu duga pada $when. Mereka akan melihat sebab ini.';
+  }
+
+  @override
+  String get ivCancelledNotified =>
+      'Temu duga dibatalkan. Syarikat telah dimaklumkan beserta sebab anda.';
+
+  @override
+  String ivCouldNotCancel(String error) {
+    return 'Tidak dapat membatalkan: $error';
+  }
+
+  @override
+  String get ivCancelButton => 'Batal';
+
+  @override
+  String get ivRescheduleButton => 'Jadual semula';
+
+  @override
+  String get ivChangeWindowStudent =>
+      'Temu duga hanya boleh dibatalkan atau dijadualkan semula sehingga 2 jam sebelum bermula. Jika anda tidak dapat hadir, sila hantar mesej kepada syarikat.';
+
+  @override
+  String get ivCompanyWillArrange =>
+      'Syarikat akan mengatur masa baharu jika permohonan anda diteruskan.';
+
+  @override
+  String get ivChangesTitle => 'Perubahan';
+
+  @override
+  String ivChangeMoved(String actor) {
+    return '$actor mengalihkan temu duga';
+  }
+
+  @override
+  String ivChangeMovedFromTo(String actor, String from, String to) {
+    return '$actor mengalihkan temu duga dari $from ke $to';
+  }
+
+  @override
+  String ivChangeAsked(String actor) {
+    return '$actor meminta untuk mengalihkan temu duga';
+  }
+
+  @override
+  String ivChangeAskedTo(String actor, String to) {
+    return '$actor meminta untuk mengalihkan temu duga ke $to';
+  }
+
+  @override
+  String ivChangeDeclined(String actor) {
+    return '$actor menolak masa baharu';
+  }
+
+  @override
+  String ivChangeDeclinedFor(String actor, String time) {
+    return '$actor menolak masa baharu ($time)';
+  }
+
+  @override
+  String get ivAutoCancelled => 'Temu duga dibatalkan secara automatik';
+
+  @override
+  String ivChangeCancelled(String actor) {
+    return '$actor membatalkan temu duga';
+  }
+
+  @override
+  String ivReasonLine(String reason) {
+    return 'Sebab: $reason';
+  }
+
+  @override
+  String get ivYouAskedToReschedule => 'Anda meminta untuk menjadualkan semula';
+
+  @override
+  String ivAskedToReschedule(String who) {
+    return '$who meminta untuk menjadualkan semula';
+  }
+
+  @override
+  String get ivLineNow => 'Sekarang';
+
+  @override
+  String get ivLineProposed => 'Dicadangkan';
+
+  @override
+  String get ivLineReason => 'Sebab';
+
+  @override
+  String ivWaitingFor(String who) {
+    return 'Menunggu $who. Temu duga kekal pada masa semasa kecuali mereka bersetuju.';
+  }
+
+  @override
+  String get ivMovesOnlyIfYouAccept =>
+      'Temu duga hanya dialihkan jika anda bersetuju. Jika anda menolak, ia kekal pada masa semasa.';
+
+  @override
+  String get ivWithdrawRequest => 'Tarik balik permintaan';
+
+  @override
+  String get ivTryAgain => 'Cuba lagi';
+
+  @override
+  String ivNoFreeTimes(int days) {
+    return 'Tiada masa temu duga kosong dalam $days hari akan datang.';
+  }
+
+  @override
+  String get ivNoFreeTimesHint =>
+      'Masa temu duga datang daripada ketersediaan mingguan penemu duga. Semua slot mungkin telah ditempah, atau tiada ketersediaan ditetapkan.';
+
+  @override
+  String get ivChooseDay => 'Pilih hari';
+
+  @override
+  String get ivChooseTime => 'Pilih masa';
+
+  @override
+  String get ivPickFirst => 'Pilih hari dan masa baharu dahulu.';
+
+  @override
+  String get ivRequestNewTime => 'Minta masa baharu';
+
+  @override
+  String get ivReasonForChange => 'Sebab perubahan';
+
+  @override
+  String ivWillSeeReason(String who) {
+    return '$who akan melihat sebab ini. Temu duga hanya dialihkan jika mereka bersetuju; sehingga itu ia kekal pada masa semasa.';
+  }
+
+  @override
+  String get ivReasonHint =>
+      'cth. Saya ada peperiksaan universiti pada masa itu.';
+
+  @override
+  String get ivSendRequest => 'Hantar permintaan';
+
+  @override
+  String get offAcceptTitle => 'Terima tawaran ini?';
+
+  @override
+  String offAcceptBody(String title, String company) {
+    return '$title di $company akan menjadi latihan industri aktif anda.';
+  }
+
+  @override
+  String offAcceptCloses(int count) {
+    return '$count permohonan terbuka anda yang lain akan ditutup dan tidak boleh dibuka semula.';
+  }
+
+  @override
+  String get offAcceptOne =>
+      'Anda hanya boleh mempunyai satu latihan industri aktif.';
+
+  @override
+  String get offNotYet => 'Belum lagi';
+
+  @override
+  String get offAcceptOffer => 'Terima tawaran';
+
+  @override
+  String offAccepted(String company) {
+    return 'Tawaran diterima. $company telah dimaklumkan.';
+  }
+
+  @override
+  String offCouldNotAccept(String error) {
+    return 'Tidak dapat menerima tawaran: $error';
+  }
+
+  @override
+  String appTabOffers(int count) {
+    return 'Tawaran ($count)';
+  }
+
+  @override
+  String get appInterviewCancelledTap =>
+      'Temu duga dibatalkan. Ketik untuk melihat sebabnya.';
+
+  @override
+  String get appOfferedBody =>
+      'Tahniah, syarikat ini telah menawarkan latihan industri kepada anda. Anda boleh memegang beberapa tawaran; menerima satu akan menutup yang lain.';
+
+  @override
+  String get appReasonFromCompany => 'Sebab daripada syarikat';
+
+  @override
+  String get appNoReasonRecorded => 'Tiada sebab direkodkan.';
+
+  @override
+  String get appClosedAcceptedOther =>
+      'Ditutup kerana anda telah menerima tawaran lain.';
+
+  @override
+  String get pushOffTitle => 'Makluman di luar aplikasi dimatikan';
+
+  @override
+  String get pushOffBody =>
+      'Telefon anda menyekat pemberitahuan CIMS, jadi temu duga, tawaran dan mesej baharu hanya dipaparkan di sini. Hidupkannya untuk dimaklumkan serta-merta.';
+
+  @override
+  String get pushTurnOn => 'Hidupkan pemberitahuan';
+
+  @override
+  String reasonRequiredHelper(int min) {
+    return 'Wajib, sekurang-kurangnya $min aksara.';
+  }
+
+  @override
+  String get reasonOptionalHelper => 'Pilihan.';
+
+  @override
+  String ivSlotsFree(int count) {
+    return '$count kosong';
+  }
+
+  @override
+  String get avHoursSaved => 'Waktu disimpan.';
+
+  @override
+  String get avRemoveTitle => 'Buang waktu ini?';
+
+  @override
+  String avRemoveBody(String day, String from, String to) {
+    return '$day $from hingga $to tidak lagi ditawarkan untuk temu duga baharu. Temu duga yang sudah ditempah dalam tempoh ini kekal seperti sedia ada.';
+  }
+
+  @override
+  String get avKeep => 'Kekalkan';
+
+  @override
+  String get avRemove => 'Buang';
+
+  @override
+  String get avDayOffHelp => 'Hari anda tidak dapat hadir';
+
+  @override
+  String get avTitle => 'Ketersediaan temu duga';
+
+  @override
+  String get avAddHours => 'Tambah waktu';
+
+  @override
+  String get avIntro =>
+      'Tetapkan waktu anda boleh menjalankan temu duga. Setiap tempoh dipecahkan kepada slot mengikut tempoh yang anda pilih, dan slot akan hilang sebaik sahaja ditempah, jadi tiada siapa boleh menempah masa yang sama dua kali. Waktu adalah dalam waktu Malaysia.';
+
+  @override
+  String get avWeeklyHours => 'Waktu mingguan';
+
+  @override
+  String get avNoHoursYet =>
+      'Belum ada waktu ditetapkan. Ketik \"Tambah waktu\" supaya temu duga boleh dijadualkan dengan anda.';
+
+  @override
+  String get avDaysOff => 'Hari cuti';
+
+  @override
+  String get avAddDayOff => 'Tambah hari cuti';
+
+  @override
+  String get avNoDaysOff =>
+      'Tiada hari cuti akan datang. Tambah cuti atau cuti umum di sini dan tiada temu duga akan ditawarkan pada hari tersebut.';
+
+  @override
+  String get avNotAvailable => 'Tidak tersedia';
+
+  @override
+  String avMinutesShort(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get avPickOneDay => 'Pilih sekurang-kurangnya satu hari.';
+
+  @override
+  String get avEndAfterStart => 'Masa tamat mesti selepas masa mula.';
+
+  @override
+  String avShorterThanSlot(int minutes) {
+    return 'Tempoh ini lebih pendek daripada satu slot $minutes minit.';
+  }
+
+  @override
+  String get avOverlap =>
+      'Waktu ini bertindih dengan waktu yang telah anda tetapkan pada salah satu hari yang dipilih. Buang atau ubah waktu sedia ada dahulu.';
+
+  @override
+  String get avAddAvailableHours => 'Tambah waktu tersedia';
+
+  @override
+  String get avDays => 'Hari';
+
+  @override
+  String get avMonFri => 'Isn–Jum';
+
+  @override
+  String get avEveryDay => 'Setiap hari';
+
+  @override
+  String avFromTime(String time) {
+    return 'Dari $time';
+  }
+
+  @override
+  String avToTime(String time) {
+    return 'Hingga $time';
+  }
+
+  @override
+  String get avLengthOfInterview => 'Tempoh setiap temu duga';
+
+  @override
+  String avSlotsSummary(int count, int minutes) {
+    return '$count slot, setiap satu $minutes minit, bagi setiap hari yang dipilih.';
+  }
+
+  @override
+  String get avSaveHours => 'Simpan waktu';
+
+  @override
+  String get apTitle => 'Profil pelajar';
+
+  @override
+  String get apUnnamed => 'Pelajar tanpa nama';
+
+  @override
+  String apCouldNotOpenResume(String error) {
+    return 'Tidak dapat membuka resume: $error';
+  }
+
+  @override
+  String apCouldNotLoad(String error) {
+    return 'Tidak dapat memuatkan profil penuh: $error';
+  }
+
+  @override
+  String get apContact => 'Hubungan';
+
+  @override
+  String get apEmail => 'E-mel';
+
+  @override
+  String get apPhone => 'Telefon';
+
+  @override
+  String get apStudies => 'Pengajian';
+
+  @override
+  String get apProgramme => 'Program';
+
+  @override
+  String get apFaculty => 'Fakulti';
+
+  @override
+  String get apSemester => 'Semester';
+
+  @override
+  String get apCgpa => 'CGPA';
+
+  @override
+  String get apSkills => 'Kemahiran';
+
+  @override
+  String get apNoSkills => 'Tiada kemahiran disenaraikan.';
+
+  @override
+  String get apWorkExperience => 'Pengalaman kerja';
+
+  @override
+  String get apNoExperience => 'Tiada pengalaman kerja disenaraikan.';
+
+  @override
+  String get apResume => 'Resume';
+
+  @override
+  String get apNoResume => 'Tiada resume dimuat naik';
+
+  @override
+  String get apView => 'Lihat';
+
+  @override
+  String get apNotProvided => 'Tidak diberikan';
+
+  @override
+  String get apPresent => 'Kini';
+
+  @override
+  String get hrViewFullProfile => 'Lihat profil penuh';
+
+  @override
+  String hrvInterviewCancelledWas(String when) {
+    return 'Temu duga dibatalkan (asalnya $when)';
+  }
+
+  @override
+  String hrvInterviewLine(String when) {
+    return 'Temu duga: $when';
+  }
+
+  @override
+  String get hrvAcceptedAnother => 'Pelajar menerima tawaran lain.';
+
+  @override
+  String hrvCouldNotUploadOffer(String error) {
+    return 'Tidak dapat memuat naik surat tawaran: $error';
+  }
+
+  @override
+  String get hrvWithdrawOffer => 'Tarik balik tawaran';
+
+  @override
+  String get hrvRejectApplication => 'Tolak permohonan';
+
+  @override
+  String hrvWithdrawPrompt(String name) {
+    return 'Beritahu $name sebab tawaran ditarik balik. Mereka akan melihat sebab ini.';
+  }
+
+  @override
+  String hrvRejectPrompt(String name) {
+    return 'Beritahu $name sebab permohonan tidak berjaya. Mereka akan melihat sebab ini.';
+  }
+
+  @override
+  String get hrvReject => 'Tolak';
+
+  @override
+  String get hrvRejectHint =>
+      'cth. Jawatan ini telah diisi oleh calon yang mempunyai pengalaman lebih relevan.';
+
+  @override
+  String hrvCouldNotReject(String error) {
+    return 'Tidak dapat menolak: $error';
+  }
+
+  @override
+  String get hrvMakeOfferTitle => 'Buat tawaran?';
+
+  @override
+  String hrvMakeOfferBody(String name) {
+    return '$name akan dimaklumkan dan boleh menerima tawaran daripada skrin Permohonan mereka. Mereka mungkin memegang tawaran daripada beberapa syarikat; sebaik sahaja mereka menerima satu, yang lain akan ditutup.';
+  }
+
+  @override
+  String get hrvMakeOffer => 'Buat tawaran';
+
+  @override
+  String hrvCouldNotMakeOffer(String error) {
+    return 'Tidak dapat membuat tawaran: $error';
+  }
+
+  @override
+  String get hrvNoResumeUploaded => 'Tiada resume dimuat naik.';
+
+  @override
+  String get hrvSetMyAvailability => 'Tetapkan ketersediaan saya';
+
+  @override
+  String hrvDeclinePrompt(String name) {
+    return 'Beritahu $name sebab anda menolak. Temu duga kekal pada masa semasa.';
+  }
+
+  @override
+  String get hrvDeclineHint =>
+      'cth. Pada hari itu penemu duga tidak dapat hadir.';
+
+  @override
+  String get hrvAcceptedMoved => 'Diterima. Temu duga telah dialihkan.';
+
+  @override
+  String hrvCancelPrompt(String name, String when) {
+    return 'Beritahu $name sebab temu duga pada $when dibatalkan. Mereka akan melihat sebab ini.';
+  }
+
+  @override
+  String get hrvCancelHint =>
+      'cth. Penemu duga tidak dapat hadir pada hari itu.';
+
+  @override
+  String hrvCancelledNotified(String name) {
+    return 'Temu duga dibatalkan. $name telah dimaklumkan beserta sebab anda.';
+  }
+
+  @override
+  String get hrvChangeWindow =>
+      'Temu duga hanya boleh dibatalkan atau dijadualkan semula sehingga 2 jam sebelum bermula.';
+
+  @override
+  String get hrvNoInterviewBooked => 'Tiada temu duga ditempah.';
+
+  @override
+  String hrvInterviewWasCancelled(String when) {
+    return 'Temu duga pada $when telah dibatalkan.';
+  }
+
+  @override
+  String get hrvScheduleNew => 'Jadualkan temu duga baharu';
+
+  @override
+  String hrvOfferSent(String name) {
+    return 'Tawaran dihantar. Menunggu $name menerima. Surat tawaran dan surat penerimaan boleh ditambah selepas mereka menerima.';
+  }
+
+  @override
+  String hrvAcceptedAnotherCompany(String name) {
+    return '$name menerima tawaran syarikat lain, jadi permohonan ini ditutup secara automatik.';
+  }
+
+  @override
+  String get hrvPickDayTime => 'Pilih hari dan masa dahulu.';
+
+  @override
+  String hrvChangeNote(String actor, String verb, String reason) {
+    return '$actor $verb. Sebab: $reason';
+  }
+
+  @override
+  String get ivVerbAsked => 'meminta untuk mengalihkan temu duga';
+
+  @override
+  String get ivVerbDeclined => 'menolak pengalihan temu duga';
+
+  @override
+  String get ivVerbMoved => 'mengalihkan temu duga';
+
+  @override
+  String get ivVerbAutoCancelled => 'membatalkan temu duga secara automatik';
+
+  @override
+  String get ivVerbCancelled => 'membatalkan temu duga';
+
+  @override
+  String get ivVerbBooked => 'menempah temu duga';
+
+  @override
+  String get acTabOne => 'Seorang pelajar';
+
+  @override
+  String get acTabMany => 'Ramai (senarai / CSV)';
+
+  @override
+  String get acHowItWorks =>
+      'Setiap pelajar mendapat kata laluan rawak yang memenuhi peraturan kata laluan. Anda akan melihatnya sekali sahaja, pada skrin seterusnya, untuk dihantar kepada pelajar. Pada log masuk pertama mereka mesti memilih kata laluan baharu.';
+
+  @override
+  String get acFullName => 'Nama penuh';
+
+  @override
+  String get acFullNameHint => 'Seperti pada kad pelajar';
+
+  @override
+  String get acEmail => 'E-mel';
+
+  @override
+  String get acRegNoOptional => 'Nombor pendaftaran (pilihan)';
+
+  @override
+  String get acProgrammeOptional => 'Program (pilihan)';
+
+  @override
+  String get acProgrammeHint => 'cth. Ijazah Sarjana Muda Sains Komputer';
+
+  @override
+  String get acCreateAccount => 'Cipta akaun';
+
+  @override
+  String get acFileCouldNotRead => 'Fail itu tidak dapat dibaca.';
+
+  @override
+  String get acFileTooLarge =>
+      'Fail itu terlalu besar untuk senarai pelajar (maksimum 512 KB).';
+
+  @override
+  String get acOnePerLine => 'Seorang pelajar setiap baris:';
+
+  @override
+  String get acLineFormat =>
+      'e-mel, nama penuh, nombor pendaftaran, program (dua yang terakhir adalah pilihan). Baris tajuk dibenarkan.';
+
+  @override
+  String get acChooseCsv => 'Pilih fail CSV';
+
+  @override
+  String acFileName(String name) {
+    return 'Fail: $name';
+  }
+
+  @override
+  String get acCreateAccounts => 'Cipta akaun';
+
+  @override
+  String acCreateN(int count) {
+    return 'Cipta $count akaun';
+  }
+
+  @override
+  String get acRowsSkipped =>
+      'Baris yang bermasalah dilangkau. Betulkan dan tambah semula.';
+
+  @override
+  String get acNoEmailApp =>
+      'Tiada aplikasi e-mel dapat dibuka. Salin butiran dan hantar dengan cara lain.';
+
+  @override
+  String get acLeaveTitle => 'Tinggalkan skrin ini?';
+
+  @override
+  String get acLeaveBody =>
+      'Kata laluan sementara hanya dipaparkan di sini dan tidak boleh dilihat semula. Pastikan anda telah menyalin atau menghantarnya.';
+
+  @override
+  String get acStay => 'Kekal';
+
+  @override
+  String get acLeave => 'Tinggalkan';
+
+  @override
+  String get acNewAccounts => 'Akaun baharu';
+
+  @override
+  String get acSendNow =>
+      'Hantar e-mel dan kata laluan kepada setiap pelajar sekarang. Kata laluan hanya dipaparkan pada skrin ini. Pelajar mesti memilih kata laluan baharu pada log masuk pertama.';
+
+  @override
+  String acCopiedCsv(int count) {
+    return '$count akaun disalin sebagai CSV.';
+  }
+
+  @override
+  String get acCopyAllCsv => 'Salin semua sebagai CSV';
+
+  @override
+  String get acLoginCopied => 'Butiran log masuk disalin.';
+
+  @override
+  String get acNotCreated => 'Tidak dicipta';
+
+  @override
+  String get acDone => 'Selesai';
+
+  @override
+  String get acCopyDetails => 'Salin butiran';
+
+  @override
+  String get acEmailStudent => 'E-mel pelajar';
+
+  @override
+  String get fpIntro =>
+      'Anda log masuk dengan kata laluan sementara daripada pentadbir anda. Pilih kata laluan anda sendiri sekarang. Anda tidak boleh menggunakan aplikasi ini sehingga anda berbuat demikian.';
+
+  @override
+  String get fpNewPassword => 'Kata laluan baharu';
+
+  @override
+  String get fpConfirmPassword => 'Sahkan kata laluan baharu';
+
+  @override
+  String get fpSaveContinue => 'Simpan dan teruskan';
+
+  @override
+  String get fpLogOut => 'Log keluar';
+
+  @override
+  String ceNewCodeSent(String email) {
+    return 'Kod baharu telah dihantar ke $email.';
+  }
+
+  @override
+  String get ceTitle => 'Sahkan e-mel anda';
+
+  @override
+  String ceIntro(String email) {
+    return 'Kami telah menghantar kod ke $email. Taip di bawah untuk mengesahkan akaun anda. Ia mungkin mengambil masa seminit dan mungkin masuk ke folder spam anda.';
+  }
+
+  @override
+  String get ceCodeLabel => 'Kod daripada e-mel';
+
+  @override
+  String get ceCodeHint => 'Masukkan kod';
+
+  @override
+  String get ceConfirm => 'Sahkan akaun';
+
+  @override
+  String ceResendIn(int seconds) {
+    return 'Hantar kod baharu dalam ${seconds}s';
+  }
+
+  @override
+  String get ceResend => 'Hantar kod baharu';
+
+  @override
+  String get ceBackToLogin => 'Kembali ke log masuk';
+
+  @override
+  String get fgCodeRequested => 'Kod baharu telah diminta.';
+
+  @override
+  String get fgCheckEmail => 'Semak e-mel anda untuk kod tersebut.';
+
+  @override
+  String get fgTitle => 'Tetap semula kata laluan';
+
+  @override
+  String get fgEnterEmail =>
+      'Masukkan alamat e-mel akaun anda. Kami akan menghantar kod melalui e-mel.';
+
+  @override
+  String get fgEmailLabel => 'Alamat e-mel';
+
+  @override
+  String get fgEmailHint => 'Masukkan e-mel anda';
+
+  @override
+  String get fgSendCode => 'Hantar kod';
+
+  @override
+  String fgSentIntro(String email) {
+    return 'Jika akaun wujud untuk $email, kami telah menghantar kod melalui e-mel. Ia mungkin mengambil masa seminit dan mungkin masuk ke folder spam. Kod akan tamat tempoh selepas seketika.';
+  }
+
+  @override
+  String get fgVerifyCode => 'Sahkan kod';
+
+  @override
+  String get fgDifferentEmail => 'Gunakan e-mel lain';
+
+  @override
+  String get fgCodeAccepted => 'Kod diterima. Pilih kata laluan baharu.';
+
+  @override
+  String get fgNewPasswordHint => 'Cipta kata laluan baharu';
+
+  @override
+  String get fgConfirmHint => 'Masukkan semula kata laluan baharu anda';
+
+  @override
+  String get fgSaveNew => 'Simpan kata laluan baharu';
+
+  @override
+  String get suPrivacyRequired =>
+      'Sila baca dan terima notis privasi untuk meneruskan.';
+
+  @override
+  String get suPendingApproval =>
+      'Akaun dicipta. Pentadbir mesti meluluskannya sebelum anda boleh log masuk.';
+
+  @override
+  String get suCreatedLoginConfirm =>
+      'Akaun anda telah dicipta. Log masuk untuk mengesahkan e-mel anda dengan kod baharu.';
+
+  @override
+  String get suEmailConfirmedPending =>
+      'E-mel disahkan. Pentadbir mesti meluluskan akaun anda sebelum anda boleh log masuk.';
+
+  @override
+  String get suExistsTitle => 'Akaun sudah wujud';
+
+  @override
+  String suExistsBody(String email) {
+    return 'Akaun sudah dicipta dengan $email. Log masuk dengannya, atau tetapkan semula kata laluan jika anda terlupa. Tiada e-mel baharu dihantar untuk akaun yang sudah wujud.';
+  }
+
+  @override
+  String get suForgotPassword => 'Lupa kata laluan';
+
+  @override
+  String get suStudentsCreatedByAdmin =>
+      'Akaun pelajar dicipta oleh pentadbir anda. Log masuk dengan e-mel dan kata laluan yang diberikan kepada anda.';
+
+  @override
+  String get suFullNameHint => 'Masukkan nama penuh anda';
+
+  @override
+  String get suAgreePrefix => 'Saya telah membaca dan bersetuju dengan ';
+
+  @override
+  String get suPrivacyNotice => 'notis privasi';
+
+  @override
+  String get loPasswordChanged =>
+      'Kata laluan ditukar. Log masuk dengan kata laluan baharu anda.';
+
+  @override
+  String get stMyInterviewTimes => 'Hari dan masa temu duga saya';
+
+  @override
+  String get stPrivacyNotice => 'Notis privasi';
+
+  @override
+  String get stDeleteMyAccount => 'Padam akaun saya';
+
+  @override
+  String get errUnsupportedImage =>
+      'Format fail tidak disokong. Sila muat naik imej JPG, JPEG atau PNG.';
+
+  @override
+  String get errPhotoEmpty =>
+      'Foto yang dipilih kosong (0 bait). Cuba foto lain.';
+
+  @override
+  String get errPhotoNotFound =>
+      'Foto yang dipilih tidak dijumpai pada peranti.';
+
+  @override
+  String errUploadFailed(String error) {
+    return 'Muat naik gagal: $error';
+  }
+
+  @override
+  String errCouldNotAccessCamera(String error) {
+    return 'Tidak dapat mengakses kamera: $error';
+  }
+
+  @override
+  String errCouldNotAccessGallery(String error) {
+    return 'Tidak dapat mengakses galeri: $error';
+  }
+
+  @override
+  String errCouldNotRemovePhoto(String error) {
+    return 'Tidak dapat membuang foto: $error';
+  }
+
+  @override
+  String errCouldNotSave(String error) {
+    return 'Tidak dapat menyimpan: $error';
+  }
+
+  @override
+  String errCouldNotSaveLanguage(String error) {
+    return 'Tidak dapat menyimpan bahasa: $error';
+  }
+
+  @override
+  String errCouldNotSaveTheme(String error) {
+    return 'Tidak dapat menyimpan tema: $error';
+  }
+
+  @override
+  String get hpDeadlinePassed =>
+      'Tarikh akhir iklan ini telah berlalu. Edit iklan dan pilih tarikh akhir yang lebih lewat untuk membukanya semula.';
+
+  @override
+  String get hpExpired => 'Tamat tempoh';
+
+  @override
+  String get hpRecommended => 'Calon yang disyorkan';
+
+  @override
+  String get hpChooseLocation => 'Pilih lokasi latihan industri pada peta.';
+
+  @override
+  String get hpAddOneSkill =>
+      'Tambah sekurang-kurangnya satu kemahiran yang diperlukan.';
+
+  @override
+  String get hpCloseBeforeDeadline =>
+      'Iklan tidak boleh ditutup sebelum tarikh akhir permohonan.';
+
+  @override
+  String get hpFixFields =>
+      'Sila betulkan medan yang diserlahkan sebelum menerbitkan.';
+
+  @override
+  String hpCouldNotSave(String error) {
+    return 'Tidak dapat menyimpan iklan: $error';
+  }
+
+  @override
+  String hpCouldNotDelete(String error) {
+    return 'Tidak dapat memadam iklan: $error';
+  }
+
+  @override
+  String get hpCustom => 'Tersuai…';
+
+  @override
+  String get hpCustomCategory => 'Kategori tersuai';
+
+  @override
+  String get hpCustomCategoryHint => 'cth. Pemasaran';
+
+  @override
+  String get hpAllowancePositive => 'Elaun mesti lebih daripada 0.';
+
+  @override
+  String get hpAutoCloseCaption =>
+      'Iklan ditutup secara automatik selepas (pilihan)';
+
+  @override
+  String hpClosesOn(String date) {
+    return 'Iklan ditutup pada $date';
+  }
+
+  @override
+  String get hpAutoCloseOptional => 'Tarikh tutup automatik (pilihan)';
+
+  @override
+  String get acTitleStudents => 'Cipta akaun pelajar';
+
+  @override
+  String get acTitleSupervisors => 'Cipta akaun penyelia';
+
+  @override
+  String get acHowItWorksSupervisor =>
+      'Setiap penyelia mendapat kata laluan rawak yang memenuhi peraturan kata laluan, dan akaun diluluskan serta-merta. Anda akan melihat kata laluan sekali sahaja, pada skrin seterusnya, untuk dihantar kepada mereka. Pada log masuk pertama mereka mesti memilih kata laluan baharu.';
+
+  @override
+  String get acLineFormatSupervisor =>
+      'e-mel, nama penuh. Baris tajuk dibenarkan.';
+
+  @override
+  String get acSendNowSupervisor =>
+      'Hantar e-mel dan kata laluan kepada setiap penyelia sekarang. Kata laluan hanya dipaparkan pada skrin ini. Mereka mesti memilih kata laluan baharu pada log masuk pertama.';
+
+  @override
+  String get adminAddSupervisors => 'Tambah penyelia';
+
+  @override
+  String get adminAddStudents => 'Tambah pelajar';
+
+  @override
+  String get stSummaryTitle => 'Statistik';
+
+  @override
+  String get stViewFull => 'Lihat statistik penuh';
+
+  @override
+  String get stNoCompany =>
+      'Sertai atau daftarkan syarikat untuk melihat statistik di sini.';
+
+  @override
+  String get stNothingYet => 'Belum ada apa-apa untuk dipaparkan.';
+
+  @override
+  String stCouldNotLoad(String error) {
+    return 'Tidak dapat memuatkan statistik: $error';
+  }
+
+  @override
+  String get stTitleHr => 'Statistik pengambilan';
+
+  @override
+  String get stTitleAcademic => 'Kemajuan pelajar';
+
+  @override
+  String get stTitleCompanySup => 'Kemajuan pelatih';
+
+  @override
+  String get stTitleAdmin => 'Statistik platform';
+
+  @override
+  String get stPostings => 'Iklan';
+
+  @override
+  String get stOpenPostings => 'Iklan dibuka';
+
+  @override
+  String get stApplications => 'Permohonan';
+
+  @override
+  String get stApplicants => 'Pemohon';
+
+  @override
+  String get stInterviewing => 'Dalam temu duga';
+
+  @override
+  String get stOffered => 'Ditawarkan';
+
+  @override
+  String get stAccepted => 'Diterima';
+
+  @override
+  String get stRejected => 'Ditolak';
+
+  @override
+  String get stPending => 'Menunggu semakan';
+
+  @override
+  String get stClosed => 'Ditutup';
+
+  @override
+  String get stAcceptRate => 'Kadar penerimaan';
+
+  @override
+  String get stInterviewsUpcoming => 'Temu duga akan datang';
+
+  @override
+  String get stInterviewsDone => 'Temu duga selesai';
+
+  @override
+  String get stByStatus => 'Permohonan mengikut status';
+
+  @override
+  String get stPerPosting => 'Setiap iklan';
+
+  @override
+  String stPostingRow(
+    int applications,
+    int interview,
+    int offered,
+    int accepted,
+  ) {
+    return '$applications permohonan · $interview temu duga · $offered ditawarkan · $accepted diterima';
+  }
+
+  @override
+  String get stWeekly => 'Permohonan seminggu (8 minggu lepas)';
+
+  @override
+  String get stStudents => 'Pelajar';
+
+  @override
+  String get stPlaced => 'Ditempatkan';
+
+  @override
+  String get stNotPlaced => 'Belum ditempatkan';
+
+  @override
+  String get stReports => 'Laporan';
+
+  @override
+  String get stReportsWaiting => 'Menunggu semakan anda';
+
+  @override
+  String get stReportsApproved => 'Diluluskan';
+
+  @override
+  String get stReportsSentBack => 'Dikembalikan';
+
+  @override
+  String get stDocsWaiting => 'Dokumen untuk disemak';
+
+  @override
+  String get stDocsApproved => 'Dokumen diluluskan';
+
+  @override
+  String get stEvaluationsDone => 'Penilaian selesai';
+
+  @override
+  String get stReportProgress => 'Kemajuan laporan';
+
+  @override
+  String get stPerStudent => 'Setiap pelajar';
+
+  @override
+  String stStudentRow(int reports, int approved, int pending) {
+    return '$reports laporan · $approved diluluskan · $pending menunggu';
+  }
+
+  @override
+  String get stPlacedBadge => 'Ditempatkan';
+
+  @override
+  String get stNotPlacedBadge => 'Belum ditempatkan';
+
+  @override
+  String get stInterns => 'Pelatih';
+
+  @override
+  String get stEvaluatedBadge => 'Dinilai';
+
+  @override
+  String get stNotEvaluatedBadge => 'Belum dinilai';
+
+  @override
+  String get stEvaluatedStudents => 'Pelatih dinilai';
+
+  @override
+  String get stPeople => 'Pengguna dalam platform';
+
+  @override
+  String get stCompanies => 'Syarikat';
+
+  @override
+  String get stCompaniesVerified => 'Disahkan';
+
+  @override
+  String get stCompaniesPending => 'Menunggu pengesahan';
+
+  @override
+  String get stNewCompanies => 'Syarikat baharu (30 hari)';
+
+  @override
+  String get stCompaniesWithPostings => 'Syarikat dengan iklan';
+
+  @override
+  String get stNewPeople => 'Pengguna baharu (30 hari)';
+
+  @override
+  String get stPendingApprovals => 'Menunggu kelulusan';
+
+  @override
+  String get stUsersByRole => 'Pengguna mengikut peranan';
+
+  @override
+  String get stCompaniesByStatus => 'Syarikat mengikut status';
+
+  @override
+  String get stCompaniesJoined => 'Syarikat menyertai sebulan (6 bulan lepas)';
+
+  @override
+  String get stPeopleJoined => 'Pengguna menyertai sebulan (6 bulan lepas)';
+
+  @override
+  String get stRoleStudent => 'Pelajar';
+
+  @override
+  String get stRoleAcademic => 'Penyelia akademik';
+
+  @override
+  String get stRoleHr => 'HR syarikat';
+
+  @override
+  String get stRoleCompanySup => 'Penyelia syarikat';
+
+  @override
+  String get stRoleAdmin => 'Pentadbir';
+
+  @override
+  String get roleLabelStudent => 'Pelajar';
+
+  @override
+  String get roleLabelAcademic => 'Penyelia akademik';
+
+  @override
+  String get roleLabelHr => 'HR syarikat';
+
+  @override
+  String get roleLabelCompanySup => 'Penyelia syarikat';
+
+  @override
+  String get roleLabelAdmin => 'Pentadbir';
+
+  @override
+  String get acTabOneSupervisor => 'Seorang penyelia';
+
+  @override
+  String get acTabManySupervisor => 'Ramai (senarai / CSV)';
+
+  @override
+  String get acFullNameHintSupervisor => 'Seperti pada kad pekerja';
+
+  @override
+  String get acEmailSupervisor => 'E-mel penyelia';
+
+  @override
+  String acCreateFailedReason(String reason) {
+    return 'Akaun tidak dapat dicipta: $reason';
+  }
+
+  @override
+  String get adminNeverLoggedIn => 'Belum log masuk';
+
+  @override
+  String get adminAwaitingApprovalBadge => 'Menunggu kelulusan';
+
+  @override
+  String get adminNotApprovedBadge => 'Tidak diluluskan';
+
+  @override
+  String get adminFilterVerified => 'Disahkan';
+
+  @override
+  String get adminFilterNotVerified => 'Belum disahkan';
+
+  @override
+  String get adminNoCompaniesInFilter => 'Tiada syarikat dalam kumpulan ini';
+
+  @override
+  String get hpClosesAfterDeadline =>
+      'Iklan ditutup secara automatik selepas tarikh akhir permohonan. Tanpa tarikh akhir, ia kekal terbuka sehingga anda menutupnya.';
+
+  @override
+  String goodAfternoon(String name) {
+    return 'Selamat petang, $name!';
+  }
+
+  @override
+  String goodEvening(String name) {
+    return 'Selamat malam, $name!';
+  }
 }

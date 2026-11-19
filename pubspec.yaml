@@ -51,6 +51,8 @@ dependencies:
   onesignal_flutter: ^5.2.6
   crop_your_image: ^2.0.0
   signature: ^6.3.0
+  # runs the on-device skill model (nlp_service/tf_model); needs Android 8.0+
+  tflite_flutter: ^0.12.1
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +83,8 @@ flutter:
 
   assets:
     - assets/images/cims_logo.png
+    - assets/models/skill_tagger.tflite
+    - assets/models/skill_vocab.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

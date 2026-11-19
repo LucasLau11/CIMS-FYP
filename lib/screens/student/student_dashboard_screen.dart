@@ -10,6 +10,9 @@ import 'student_reports_screen.dart';
 import 'student_messages_screen.dart';
 import 'student_notifications_screen.dart';
 import 'student_profile_screen.dart';
+import '../../theme/role_theme.dart';
+import '../../utils/responsive.dart';
+import '../../widgets/common/flex_grid.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -90,6 +93,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
   }
 
+  /// Morning until 11:59, afternoon until 16:59, evening after that (the phone's own clock).
+  String _greeting(AppLocalizations l10n, String name) {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return l10n.goodMorning(name);
+    if (hour < 17) return l10n.goodAfternoon(name);
+    return l10n.goodEvening(name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -101,7 +112,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           slivers: [
             // Gradient header with wave
             SliverAppBar(
-              expandedHeight: 180,
+              expandedHeight: scaledExtent(context, 180),
               pinned: true,
               backgroundColor: AppColors.primary,
               flexibleSpace: FlexibleSpaceBar(
@@ -109,14 +120,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 // custom header content below instead of fading in behind
                 // it, which read as "Dashboard" and "Programme · Sem"
                 // being jammed together with no gap.
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [AppColors.primary, AppColors.primaryLight],
-                    ),
-                  ),
+                background: RoleHeaderBackground(
                   child: SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -158,7 +162,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            l10n.goodMorning(_name?.isNotEmpty == true ? _name! : ''),
+                            _greeting(l10n, _name?.trim().isNotEmpty == true ? _name!.trim() : l10n.defaultUserName),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 20,
@@ -169,10 +175,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _programmeSemesterLine(l10n),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 13,
-                              color: Colors.white70,
+                              color: kOnBannerSoft,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -186,7 +194,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             ),
 
             if (_isLoading)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
               )
             else
@@ -198,14 +206,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     SectionHeader(title: l10n.overview),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 1.1,
-                        children: [
+                      child: FlexGrid(columns: 2, minColumnWidth: 110, children: [
                           MetricCard(
                             label: l10n.applicationsSent,
                             value: '${_counts['applications'] ?? 0}',

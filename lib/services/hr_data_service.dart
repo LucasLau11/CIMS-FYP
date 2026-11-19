@@ -1,7 +1,10 @@
+import '../utils/validators.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
+import 'interview_service.dart';
+import '../utils/posting_dates.dart';
 
 /// Real data access for the HR screens. Same singleton + "throw Exception
 /// with a user-facing message" style as the other *_data_service classes.
@@ -15,6 +18,12 @@ class HrDataService {
   static final HrDataService instance = HrDataService._();
 
   final SupabaseClient _client = Supabase.instance.client;
+
+  /// Applications, interviews and offers for this company (migration 00039); the app writes the labels.
+  Future<Map<String, dynamic>> getStats() async {
+    final result = await _client.rpc('hr_stats');
+    return Map<String, dynamic>.from(result as Map);
+  }
 
   String get _userId {
     final id = AuthService.instance.currentUserId;
@@ -34,6 +43,10 @@ class HrDataService {
   Future<List<Map<String, dynamic>>> getPostings() async {
     final companyId = await _companyId;
     if (companyId == null) return [];
+    // Close postings whose deadline has passed before listing them.
+    try {
+      await _client.rpc('close_expired_postings');
+    } catch (_) {}
     final rows = await _client
         .from('job_postings')
         .select('*, categories(category_name)')
@@ -52,6 +65,7 @@ class HrDataService {
       result['id'] = p['job_posting_id'];
       result['category'] = categoryRow?['category_name'];
       result['applicant_count'] = appList.where((a) => a['job_posting_id'] == p['job_posting_id']).length;
+      result['expired'] = postingIsExpired(deadline: p['application_deadline'] as String?, closesAt: p['posting_closes_at'] as String?);
       return result;
     }).toList();
   }
@@ -124,7 +138,17 @@ class HrDataService {
     DateTime? postingClosesAt,
   }) async {
     final categoryId = await _resolveCategoryId(category);
+    // A posting that closed because its dates passed comes back to life when
+    // the dates are extended; one the HR closed by hand stays closed.
+    final before = await _client.from('job_postings').select('status, application_deadline, posting_closes_at').eq('job_posting_id', id).maybeSingle();
+    final wasExpired = before != null &&
+        before['status'] == 'closed' &&
+        postingIsExpired(deadline: before['application_deadline'] as String?, closesAt: before['posting_closes_at'] as String?);
+    final newDeadline = applicationDeadline?.toIso8601String().split('T').first;
+    final newCloses = postingClosesAt?.toIso8601String();
+    final reopen = wasExpired && !postingIsExpired(deadline: newDeadline, closesAt: newCloses);
     await _client.from('job_postings').update({
+      if (reopen) 'status': 'open',
       'category_id': categoryId,
       'title': title.trim(),
       'description': description.trim(),
@@ -156,11 +180,18 @@ class HrDataService {
 
     final rows = await _client
         .from('applications')
-        .select('*, job_postings!inner(job_posting_id, title, company_id, companies(name)), interviews(scheduled_at, mode, location)')
+        .select('*, job_postings!inner(job_posting_id, title, company_id, companies(name)), interviews(${InterviewInfo.embed})')
         .eq('job_postings.company_id', companyId)
         .order('applied_at', ascending: false);
     final apps = List<Map<String, dynamic>>.from(rows);
     if (apps.isEmpty) return [];
+
+    // HR's private shortlist flag and note per application (HR of this company only).
+    final noteRows = await _client
+        .from('application_notes')
+        .select('application_id, shortlisted, note')
+        .inFilter('application_id', apps.map((a) => a['application_id'] as String).toList());
+    final notes = {for (final n in List<Map<String, dynamic>>.from(noteRows)) n['application_id'] as String: n};
 
     final studentIds = apps.map((a) => a['student_id'] as String).toSet().toList();
     // `profiles!students_profile_id_fkey` disambiguates the embed: `students`
@@ -169,18 +200,27 @@ class HrDataService {
     // "more than one relationship was found" and this whole query throws.
     final studentRows = await _client
         .from('students')
-        .select('profile_id, programme, student_reg_no, resume_path, resume_filename, profiles!students_profile_id_fkey(full_name)')
+        .select('profile_id, programme, faculty, semester, cgpa, skills, student_reg_no, resume_path, resume_filename, profiles!students_profile_id_fkey(full_name, avatar_url, email, phone)')
         .inFilter('profile_id', studentIds);
     final studentMap = {for (final s in List<Map<String, dynamic>>.from(studentRows)) s['profile_id'] as String: s};
 
     return apps.map((a) {
       final result = Map<String, dynamic>.from(a);
       result['id'] = a['application_id'];
+      result['shortlisted'] = notes[a['application_id']]?['shortlisted'] == true;
+      result['hr_note'] = notes[a['application_id']]?['note'];
 
       final student = studentMap[a['student_id']];
       final profile = student?['profiles'] as Map<String, dynamic>?;
       final fullName = profile?['full_name'] as String?;
       result['student_name'] = fullName?.isNotEmpty == true ? fullName! : 'Unnamed student';
+      result['avatar_url'] = profile?['avatar_url'];
+      result['email'] = profile?['email'];
+      result['phone'] = profile?['phone'];
+      result['faculty'] = student?['faculty'];
+      result['semester'] = student?['semester'];
+      result['cgpa'] = student?['cgpa'];
+      result['skills'] = student?['skills'];
       result['programme'] = student?['programme'];
       result['student_reg_no'] = student?['student_reg_no'];
       result['resume_path'] = student?['resume_path'];
@@ -196,15 +236,47 @@ class HrDataService {
       // threw for every applicant who actually had an interview scheduled,
       // silently emptying this whole screen (and the dashboard's upcoming-
       // interviews section, which reuses this method) via the caller's
-      // try/catch.
-      final interview = result.remove('interviews') as Map<String, dynamic>?;
-      if (interview != null) {
-        result['interview_at'] = interview['scheduled_at'];
-        result['interview_mode'] = interview['mode'];
-        result['interview_location'] = interview['location'];
-      }
+      // try/catch. InterviewInfo.fromEmbed handles that shape.
+      result['interview'] = InterviewInfo.fromEmbed(result.remove('interviews'));
       return result;
     }).toList();
+  }
+
+  /// Stars or un-stars an applicant. The flag and the note are private to HR.
+  Future<void> setShortlisted(String applicationId, bool shortlisted) async {
+    await _client.from('application_notes').upsert({'application_id': applicationId, 'shortlisted': shortlisted});
+  }
+
+  /// Saves HR's private note on an application (empty text clears it).
+  Future<void> saveApplicantNote(String applicationId, String note) async {
+    final trimmed = note.trim();
+    await _client.from('application_notes').upsert({'application_id': applicationId, 'note': trimmed.isEmpty ? null : trimmed});
+  }
+
+  /// The full profile of one student who applied to this company: photo,
+  /// contact details, studies, skills and resume. The database only lets HR
+  /// read students who applied to their own company.
+  Future<Map<String, dynamic>> getStudentProfile(String studentId) async {
+    final row = await _client
+        .from('students')
+        .select('profile_id, programme, faculty, semester, cgpa, skills, student_reg_no, resume_path, resume_filename, '
+            'profiles!students_profile_id_fkey(full_name, avatar_url, email, phone)')
+        .eq('profile_id', studentId)
+        .maybeSingle();
+    if (row == null) throw Exception('This student profile is not available.');
+    final result = Map<String, dynamic>.from(row);
+    final profile = result.remove('profiles') as Map<String, dynamic>?;
+    result['full_name'] = profile?['full_name'];
+    result['avatar_url'] = profile?['avatar_url'];
+    final email = profile?['email'] as String?;
+    result['email'] = (email != null && email.endsWith('@deleted.invalid')) ? null : email;
+    result['phone'] = profile?['phone'];
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getStudentExperience(String studentId) async {
+    final rows = await _client.from('work_experiences').select().eq('student_id', studentId).order('start_year', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
   }
 
   // ---------------------------------------------------------------------
@@ -269,7 +341,10 @@ class HrDataService {
     final ext = fileName.contains('.') ? fileName.split('.').last.toLowerCase() : 'dat';
     final storagePath = '$studentId/documents/$documentId.$ext';
     await _client.storage.from('student_files').upload(storagePath, file);
-    await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId);
+    final saved = await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId).select('document_id');
+    if (List.from(saved).isEmpty) {
+      throw Exception('The letter was uploaded but could not be saved on file. Please try again.');
+    }
 
     try {
       await _client.from('notifications').insert({
@@ -278,10 +353,69 @@ class HrDataService {
         'body': '$fileName has been uploaded by your company.',
         'type': 'document',
         'related_id': documentId,
+        'msg_key': 'offer_letter_uploaded',
+        'msg_args': {'file': fileName},
       });
     } catch (_) {
       // Non-fatal — the upload itself already succeeded.
     }
+  }
+
+  /// Uploads an offer letter for ONE application (several companies can offer the same student, so the
+  /// letter belongs to the application, not to the student). Returns the storage path; the caller saves it
+  /// on the application together with the offer ([updateApplicationStatus]) or with [setApplicationOfferLetter].
+  Future<String> uploadApplicationOfferLetter({
+    required String applicationId,
+    required String studentId,
+    required File file,
+    required String fileName,
+  }) async {
+    final ext = fileName.contains('.') ? fileName.split('.').last.toLowerCase() : 'dat';
+    final path = '$studentId/offers/$applicationId/${DateTime.now().millisecondsSinceEpoch}.$ext';
+    await _client.storage.from('student_files').upload(path, file);
+    return path;
+  }
+
+  /// Removes an uploaded letter that ended up unused (a failed offer, or the letter that was replaced).
+  Future<void> removeStoredFile(String? path) async {
+    if (path == null || path.isEmpty) return;
+    try {
+      await _client.storage.from('student_files').remove([path]);
+    } catch (_) {
+      // Not fatal: an orphaned file only takes up space.
+    }
+  }
+
+  /// Attaches (or replaces) the letter of an offer that was already sent, before the student accepts.
+  Future<void> setApplicationOfferLetter({
+    required String applicationId,
+    required String path,
+    required String fileName,
+    required int fileSizeBytes,
+  }) async {
+    await _client.from('applications').update({
+      'offer_letter_path': path,
+      'offer_letter_name': fileName,
+      'offer_letter_size': fileSizeBytes,
+    }).eq('application_id', applicationId);
+  }
+
+  /// Everything a letter can fill in by itself for an intern who accepted an offer from this company (migration 00055).
+  Future<Map<String, dynamic>> getLetterContext(String applicationId) async {
+    final result = await _client.rpc('letter_context', params: {'p_application': applicationId});
+    return Map<String, dynamic>.from(result as Map);
+  }
+
+  /// The approved company supervisors of this HR's company (with how many interns each has), for assigning interns.
+  Future<List<Map<String, dynamic>>> getCompanySupervisors() async {
+    final rows = await _client.rpc('hr_company_supervisors');
+    return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  /// Assigns an intern (an accepted application) to a company supervisor of this company. Allowed until the intern
+  /// has been evaluated; the database checks all of it.
+  Future<void> assignCompanySupervisor({required String applicationId, required String supervisorId}) async {
+    await _client.rpc('hr_assign_company_supervisor', params: {'p_application': applicationId, 'p_supervisor': supervisorId});
   }
 
   Future<String> getOfferLetterSignedUrl(String storagePath) async {
@@ -334,7 +468,10 @@ class HrDataService {
           pdfBytes,
           fileOptions: const FileOptions(contentType: 'application/pdf'),
         );
-    await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId);
+    final saved = await _client.from('documents').update({'storage_path': storagePath}).eq('document_id', documentId).select('document_id');
+    if (List.from(saved).isEmpty) {
+      throw Exception('The letter was uploaded but could not be saved on file. Please try again.');
+    }
 
     try {
       await _client.from('notifications').insert({
@@ -343,6 +480,8 @@ class HrDataService {
         'body': '$fileName has been signed by your company.',
         'type': 'document',
         'related_id': documentId,
+        'msg_key': 'document_signed_company',
+        'msg_args': {'file': fileName},
       });
     } catch (_) {
       // Non-fatal — the upload itself already succeeded.
@@ -353,47 +492,55 @@ class HrDataService {
     required String applicationId,
     required String studentId,
     required String status,
-    DateTime? interviewAt,
-    String? interviewMode,
-    String? interviewLocation,
     String? internshipTitle,
+    String? rejectionReason,
+    String? offerLetterPath,
+    String? offerLetterName,
+    int? offerLetterSize,
   }) async {
+    // The database refuses a rejection without a reason (applications_guard),
+    // so this is a second line of defence, not the only one.
+    if (status == 'rejected' && (rejectionReason == null || rejectionReason.trim().length < kMinReasonLength)) {
+      throw Exception('Please give a reason of at least $kMinReasonLength characters when rejecting an application.');
+    }
+    // An offer carries its offer letter (the database refuses an offer without one).
+    if (status == 'offered' && (offerLetterPath == null || offerLetterPath.isEmpty)) {
+      throw Exception('Upload the offer letter before making the offer.');
+    }
     await _client.from('applications').update({
       'status': status,
+      if (status == 'rejected') 'rejection_reason': rejectionReason!.trim(),
+      if (status == 'offered') ...{
+        'offer_letter_path': offerLetterPath,
+        'offer_letter_name': offerLetterName,
+        'offer_letter_size': offerLetterSize,
+      },
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('application_id', applicationId);
 
-    // Interview scheduling now lives on its own table, not on `applications`.
-    // `interviews.application_id` has a unique constraint (migration 00011),
-    // so a single upsert handles both first-time scheduling and rescheduling
-    // atomically -- no read-then-branch race between concurrent callers.
-    if (interviewAt != null) {
-      final payload = {
-        'application_id': applicationId,
-        'scheduled_at': interviewAt.toIso8601String(),
-        'mode': interviewMode,
-        'location': interviewLocation,
-      };
-      await _client.from('interviews').upsert(payload, onConflict: 'application_id');
-    }
+    // Interviews are booked, moved and cancelled through InterviewService
+    // (database functions), never by writing the interviews table directly.
 
     final roleLabel = internshipTitle ?? 'your application';
     String title;
     String body;
+    String msgKey;
+    final msgArgs = <String, String>{'role': roleLabel};
     switch (status) {
-      case 'interview':
-        title = 'Interview scheduled';
-        body = 'You have an interview scheduled for $roleLabel.';
-        break;
-      case 'active':
-        title = 'Application accepted';
-        body = 'Congratulations! Your application for $roleLabel has been accepted. Please sign your Company Acceptance Letter in the Documents tab.';
+      case 'offered':
+        msgKey = 'offer_received';
+        title = 'You have an internship offer';
+        body = 'Congratulations! You have been offered $roleLabel. Open My Applications to accept it. '
+            'You can hold several offers, but once you accept one the others are closed.';
         break;
       case 'rejected':
+        msgKey = 'application_rejected';
+        msgArgs['reason'] = rejectionReason!.trim();
         title = 'Application update';
-        body = 'Your application for $roleLabel was not successful this time.';
+        body = 'Your application for $roleLabel was not successful this time. Reason: ${rejectionReason.trim()}';
         break;
       default:
+        msgKey = 'application_update';
         title = 'Application update';
         body = 'There is an update on $roleLabel.';
     }
@@ -404,6 +551,8 @@ class HrDataService {
         'body': body,
         'type': 'application',
         'related_id': applicationId,
+        'msg_key': msgKey,
+        'msg_args': msgArgs,
       });
     } catch (_) {
       // Non-fatal — the status update itself already succeeded.
@@ -418,15 +567,14 @@ class HrDataService {
   /// the RLS policy on `storage.objects` grants access (the student's
   /// skills currently overlap an open posting at this HR's company, via
   /// `can_view_resume`) — returns null otherwise, treated as "no resume" by
-  /// callers, not an error. `students_select_authenticated` is permissive
-  /// (`true`), so the `students` row lookup itself always succeeds; the
-  /// real gate is at the storage layer when the signed URL is used.
+  /// callers, not an error. A matched-but-not-applied student's `students`
+  /// row is not readable by HR (profile visibility, migration 00023), so the
+  /// path comes from the `get_candidate_resume` RPC (00025), which applies the
+  /// same `can_view_resume` rule as the storage layer and returns nothing else.
   Future<Map<String, String>?> getCandidateResume(String candidateId) async {
-    final row = await _client
-        .from('students')
-        .select('resume_path, resume_filename')
-        .eq('profile_id', candidateId)
-        .maybeSingle();
+    final rows = await _client.rpc('get_candidate_resume', params: {'p_student_id': candidateId});
+    final list = List<Map<String, dynamic>>.from(rows as List);
+    final row = list.isEmpty ? null : list.first;
     final path = row?['resume_path'] as String?;
     if (path == null) return null;
     final url = await _client.storage.from('resumes').createSignedUrl(path, 300);

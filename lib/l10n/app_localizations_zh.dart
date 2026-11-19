@@ -103,9 +103,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notInstitutionalEmailNote => '您的邮箱不是 TARC 机构邮箱，请选择适用于您的角色。';
 
   @override
-  String get parentGuardian => '家长/监护人';
-
-  @override
   String get hrPersonnel => '人力资源人员';
 
   @override
@@ -173,6 +170,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get viewMyProgress => '查看我的进度';
+
+  @override
+  String get defaultUserName => '用户';
 
   @override
   String goodMorning(String name) {
@@ -1511,9 +1511,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationReject => '拒绝';
 
   @override
-  String get errorParentAlreadyLinked => '该学生已有一位已批准并关联的家长。同一时间只能关联一位已批准的家长。';
-
-  @override
   String errorCouldNotRespondToRequest(String error) {
     return '无法回应此请求：$error';
   }
@@ -2340,164 +2337,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get clear => '清除';
 
   @override
-  String parentWelcomeName(String name) {
-    return '欢迎，$name';
-  }
-
-  @override
-  String get parentWelcomeDefault => '欢迎，家长';
-
-  @override
-  String get parentDashboardSubtitle => '监督您孩子的实习进度';
-
-  @override
-  String get parentNoChildrenTitle => '尚未关联任何孩子';
-
-  @override
-  String get parentNoChildrenDescription =>
-      '关联您孩子的账户以开始监督其实习进度。他们需要先批准请求，您才能查看任何信息。';
-
-  @override
-  String get parentLinkChildButton => '关联孩子';
-
-  @override
-  String get parentUnnamedStudent => '未命名学生';
-
-  @override
-  String get parentNoApplicationYet => '尚无实习申请';
-
-  @override
-  String get parentSignFormButton => '签署表格';
-
-  @override
-  String get parentProgressButton => '进度';
-
-  @override
-  String get parentStudentEmailLabel => '学生电子邮件';
-
-  @override
-  String get parentStudentEmailHint => '例如 john.doe';
-
-  @override
-  String get parentRelationshipLabel => '关系';
-
-  @override
-  String get parentRelationshipFather => '父亲';
-
-  @override
-  String get parentRelationshipMother => '母亲';
-
-  @override
-  String get parentRelationshipGuardian => '监护人';
-
-  @override
-  String get parentNoStudentFoundError => '找不到该电子邮件对应的学生。';
-
-  @override
-  String parentSearchError(String error) {
-    return '无法搜索：$error';
-  }
-
-  @override
-  String get parentSendRequestButton => '发送请求';
-
-  @override
-  String get parentRequestSentMessage => '请求已发送。学生需要批准该请求。';
-
-  @override
-  String parentSendRequestError(String error) {
-    return '无法发送请求：$error';
-  }
-
-  @override
-  String parentCancelRequestError(String error) {
-    return '无法取消：$error';
-  }
-
-  @override
-  String get parentYourRequestsTitle => '您的请求';
-
-  @override
-  String get parentNoRequestsYet => '尚未发送任何请求。';
-
-  @override
-  String parentAsRelationship(String relationship) {
-    return '身份：$relationship';
-  }
-
-  @override
-  String get parentUnknownStudent => '未知学生';
-
-  @override
-  String get parentProgressTitle => '实习进度';
-
-  @override
-  String get parentApplicationStatusTitle => '申请状态';
-
-  @override
-  String get parentNoApplicationSubmittedYet => '尚未提交实习申请。';
-
-  @override
-  String get parentUnknownCompany => '未知公司';
-
-  @override
-  String get parentAtAGlanceTitle => '概览';
-
-  @override
-  String get parentReportsSubmittedLabel => '已提交报告';
-
-  @override
-  String get parentDurationLabel => '时长';
-
-  @override
-  String get parentEvaluationTitle => '评估';
-
-  @override
-  String get parentNoEvaluationsYet => '尚未提交任何评估。';
-
-  @override
-  String get parentAcademicSupervisorEvaluation => '学术导师评估';
-
-  @override
-  String get parentCompanySupervisorEvaluation => '公司主管评估';
-
-  @override
-  String get parentRequiredDocumentsTitle => '所需文件';
-
-  @override
-  String get parentDocNotSubmitted => '尚未提交';
-
-  @override
-  String get parentMonthlyReportsTitle => '月度报告';
-
-  @override
-  String get parentNoMonthlyReportsYet => '尚未提交任何月度报告。';
-
-  @override
-  String get parentFinalReportTitle => '最终报告';
-
-  @override
-  String get parentNoFinalReportYet => '尚未提交最终报告。';
-
-  @override
-  String parentMonthlyReportLabel(String period) {
-    return '月度报告 — $period';
-  }
-
-  @override
-  String parentFinalReportLabel(String period) {
-    return '最终报告 — $period';
-  }
-
-  @override
-  String parentSubmittedDate(String date) {
-    return '提交于 $date';
-  }
-
-  @override
-  String get parentReadOnlyNotice => '这是只读视图。如有关于您孩子实习的疑问，请联系大学。';
-
-  @override
   String get parentAcknowledgementTitle => '确认书';
 
   @override
@@ -2507,9 +2346,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String parentCouldNotLoadFormError(String error) {
     return '无法加载确认表格：$error';
   }
-
-  @override
-  String get parentTapToFillInstruction => '直接点击表格进行填写，然后在底部提交。';
 
   @override
   String get parentSignAndSubmitButton => '签署并提交';
@@ -2681,4 +2517,1344 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get csNoDocumentsOnFile => '暂无已存档的文件。';
+
+  @override
+  String get addToCalendar => '添加到日历';
+
+  @override
+  String get calendarCouldNotOpen => '无法打开您的日历。';
+
+  @override
+  String calendarEventTitle(String title) {
+    return '面试：$title';
+  }
+
+  @override
+  String calendarEventDetails(String company) {
+    return '与 $company 的 CIMS 面试';
+  }
+
+  @override
+  String get hrSearchApplicants => '按姓名、专业或技能搜索';
+
+  @override
+  String get hrAllPostings => '所有职位';
+
+  @override
+  String get hrShortlisted => '已入围';
+
+  @override
+  String get hrShortlist => '加入入围名单';
+
+  @override
+  String get hrRemoveShortlist => '移出入围名单';
+
+  @override
+  String get hrPrivateNotes => '私人备注';
+
+  @override
+  String get hrPrivateNotesInfo => '只有您可以看到，学生看不到。';
+
+  @override
+  String get hrNoteHint => '写下关于该申请人的备注';
+
+  @override
+  String get hrSaveNote => '保存备注';
+
+  @override
+  String get hrNoteSaved => '备注已保存';
+
+  @override
+  String get hrNoMatchingApplicants => '没有符合搜索条件的申请人。';
+
+  @override
+  String hrTabOffered(int count) {
+    return '已发Offer（$count）';
+  }
+
+  @override
+  String hrTabClosed(int count) {
+    return '已关闭（$count）';
+  }
+
+  @override
+  String get hrClearFilters => '清除筛选';
+
+  @override
+  String get adminAuditLogTitle => '审计日志';
+
+  @override
+  String get adminAuditLogSubtitle => '谁批准、创建或修改了什么';
+
+  @override
+  String get auditFilterAll => '全部';
+
+  @override
+  String get auditFilterAccounts => '账户';
+
+  @override
+  String get auditFilterCompanies => '公司';
+
+  @override
+  String get auditFilterStudents => '学生';
+
+  @override
+  String get auditFilterSetup => '设置';
+
+  @override
+  String get auditEmpty => '目前还没有记录。';
+
+  @override
+  String get auditSystem => '系统';
+
+  @override
+  String get auditLoadMore => '加载更多';
+
+  @override
+  String get adminAnalyticsTitle => '实习安置分析';
+
+  @override
+  String get adminAnalyticsSubtitle => '安置率、申请数量以及尚未获得实习的学生';
+
+  @override
+  String get analyticsPlacementRate => '安置率';
+
+  @override
+  String analyticsPlacedOf(int placed, int total) {
+    return '$total 名学生中有 $placed 名已安置';
+  }
+
+  @override
+  String get analyticsStudentsApplied => '已申请';
+
+  @override
+  String get analyticsApplications => '申请';
+
+  @override
+  String get analyticsWithoutPlacement => '尚未安置';
+
+  @override
+  String get analyticsByStatus => '按状态统计申请';
+
+  @override
+  String get analyticsByProgramme => '按专业';
+
+  @override
+  String get analyticsByCompany => '按公司';
+
+  @override
+  String get analyticsTopPostings => '申请最多的职位';
+
+  @override
+  String get analyticsUnplaced => '尚未安置的学生';
+
+  @override
+  String get analyticsExportCsv => '导出 CSV';
+
+  @override
+  String get analyticsExportFailed => '无法创建或打开文件。';
+
+  @override
+  String analyticsRowStudentsPlaced(int placed, int students) {
+    return '已安置 $placed/$students';
+  }
+
+  @override
+  String analyticsRowCompany(int postings, int applications, int placed) {
+    return '$postings 个职位 · $applications 份申请 · $placed 人已安置';
+  }
+
+  @override
+  String analyticsRowPosting(String company, int applications, int offered) {
+    return '$company · $applications 份申请 · $offered 个 Offer';
+  }
+
+  @override
+  String get analyticsNoStudentsUnplaced => '所有学生都已安置。';
+
+  @override
+  String get ivTheCompany => '公司';
+
+  @override
+  String get ivTheStudent => '学生';
+
+  @override
+  String get ivTheSystem => '系统';
+
+  @override
+  String get ivRequestSentCompany => '请求已发送。只有公司同意后面试才会改期。';
+
+  @override
+  String get ivDeclineNewTimeTitle => '拒绝新的时间';
+
+  @override
+  String get ivDeclinePromptToCompany => '请告诉公司您拒绝的原因。面试时间保持不变。';
+
+  @override
+  String get ivDeclineHint => '例如：我那个时间无法参加。';
+
+  @override
+  String get ivDecline => '拒绝';
+
+  @override
+  String get ivAccept => '接受';
+
+  @override
+  String get ivAcceptedMoved => '已接受。您的面试已改期。';
+
+  @override
+  String get ivDeclinedStays => '已拒绝。面试保持原样。';
+
+  @override
+  String get ivCancelInterview => '取消面试';
+
+  @override
+  String ivCancelPromptToCompany(String when) {
+    return '请告诉公司您取消 $when 面试的原因。对方会看到此原因。';
+  }
+
+  @override
+  String get ivCancelledNotified => '面试已取消。公司已收到您的原因通知。';
+
+  @override
+  String ivCouldNotCancel(String error) {
+    return '无法取消：$error';
+  }
+
+  @override
+  String get ivCancelButton => '取消';
+
+  @override
+  String get ivRescheduleButton => '改期';
+
+  @override
+  String get ivChangeWindowStudent => '面试只能在开始前 2 小时之前取消或改期。如果您无法参加，请给公司发消息。';
+
+  @override
+  String get ivCompanyWillArrange => '如果您的申请继续，公司会安排新的时间。';
+
+  @override
+  String get ivChangesTitle => '变更记录';
+
+  @override
+  String ivChangeMoved(String actor) {
+    return '$actor已将面试改期';
+  }
+
+  @override
+  String ivChangeMovedFromTo(String actor, String from, String to) {
+    return '$actor已将面试从 $from 改到 $to';
+  }
+
+  @override
+  String ivChangeAsked(String actor) {
+    return '$actor申请将面试改期';
+  }
+
+  @override
+  String ivChangeAskedTo(String actor, String to) {
+    return '$actor申请将面试改到 $to';
+  }
+
+  @override
+  String ivChangeDeclined(String actor) {
+    return '$actor拒绝了新的时间';
+  }
+
+  @override
+  String ivChangeDeclinedFor(String actor, String time) {
+    return '$actor拒绝了新的时间（$time）';
+  }
+
+  @override
+  String get ivAutoCancelled => '面试已被自动取消';
+
+  @override
+  String ivChangeCancelled(String actor) {
+    return '$actor取消了面试';
+  }
+
+  @override
+  String ivReasonLine(String reason) {
+    return '原因：$reason';
+  }
+
+  @override
+  String get ivYouAskedToReschedule => '您申请了改期';
+
+  @override
+  String ivAskedToReschedule(String who) {
+    return '$who申请改期';
+  }
+
+  @override
+  String get ivLineNow => '当前';
+
+  @override
+  String get ivLineProposed => '建议时间';
+
+  @override
+  String get ivLineReason => '原因';
+
+  @override
+  String ivWaitingFor(String who) {
+    return '正在等待$who回复。除非对方同意，否则面试时间保持不变。';
+  }
+
+  @override
+  String get ivMovesOnlyIfYouAccept => '只有您接受，面试才会改期。如果您拒绝，面试时间保持不变。';
+
+  @override
+  String get ivWithdrawRequest => '撤回请求';
+
+  @override
+  String get ivTryAgain => '重试';
+
+  @override
+  String ivNoFreeTimes(int days) {
+    return '未来 $days 天内没有空闲的面试时间。';
+  }
+
+  @override
+  String get ivNoFreeTimesHint => '面试时间来自面试官每周的空闲时间。可能所有时段都已被预订，或尚未设置空闲时间。';
+
+  @override
+  String get ivChooseDay => '选择日期';
+
+  @override
+  String get ivChooseTime => '选择时间';
+
+  @override
+  String get ivPickFirst => '请先选择新的日期和时间。';
+
+  @override
+  String get ivRequestNewTime => '申请新的时间';
+
+  @override
+  String get ivReasonForChange => '改期原因';
+
+  @override
+  String ivWillSeeReason(String who) {
+    return '$who会看到此原因。只有对方同意后面试才会改期；在此之前时间保持不变。';
+  }
+
+  @override
+  String get ivReasonHint => '例如：我那个时间有大学考试。';
+
+  @override
+  String get ivSendRequest => '发送请求';
+
+  @override
+  String get offAcceptTitle => '接受此 Offer 吗？';
+
+  @override
+  String offAcceptBody(String title, String company) {
+    return '$company 的 $title 将成为您当前的实习。';
+  }
+
+  @override
+  String offAcceptCloses(int count) {
+    return '您其他 $count 个未结束的申请将被关闭，且无法重新打开。';
+  }
+
+  @override
+  String get offAcceptOne => '您只能有一个进行中的实习。';
+
+  @override
+  String get offNotYet => '暂不';
+
+  @override
+  String get offAcceptOffer => '接受 Offer';
+
+  @override
+  String offAccepted(String company) {
+    return '已接受 Offer。$company 已收到通知。';
+  }
+
+  @override
+  String offCouldNotAccept(String error) {
+    return '无法接受 Offer：$error';
+  }
+
+  @override
+  String appTabOffers(int count) {
+    return 'Offer（$count）';
+  }
+
+  @override
+  String get appInterviewCancelledTap => '面试已取消。点击查看原因。';
+
+  @override
+  String get appOfferedBody =>
+      '恭喜，这家公司向您发出了实习 Offer。您可以同时持有多个 Offer；接受其中一个后其余将被关闭。';
+
+  @override
+  String get appReasonFromCompany => '公司给出的原因';
+
+  @override
+  String get appNoReasonRecorded => '未记录原因。';
+
+  @override
+  String get appClosedAcceptedOther => '因您已接受其他 Offer 而关闭。';
+
+  @override
+  String get pushOffTitle => '应用外的提醒已关闭';
+
+  @override
+  String get pushOffBody =>
+      '您的手机屏蔽了 CIMS 通知，因此新的面试、Offer 和消息只会显示在这里。请开启通知以便即时收到提醒。';
+
+  @override
+  String get pushTurnOn => '开启通知';
+
+  @override
+  String reasonRequiredHelper(int min) {
+    return '必填，至少 $min 个字符。';
+  }
+
+  @override
+  String get reasonOptionalHelper => '选填。';
+
+  @override
+  String ivSlotsFree(int count) {
+    return '空闲 $count';
+  }
+
+  @override
+  String get avHoursSaved => '时间已保存。';
+
+  @override
+  String get avRemoveTitle => '删除这些时间段吗？';
+
+  @override
+  String avRemoveBody(String day, String from, String to) {
+    return '$day $from 至 $to 将不再开放给新的面试预约。该时间段内已预订的面试保持不变。';
+  }
+
+  @override
+  String get avKeep => '保留';
+
+  @override
+  String get avRemove => '删除';
+
+  @override
+  String get avDayOffHelp => '您不方便的日期';
+
+  @override
+  String get avTitle => '面试空闲时间';
+
+  @override
+  String get avAddHours => '添加时间';
+
+  @override
+  String get avIntro =>
+      '设置您可以面试的时间。每个时间段会按您选择的时长切分成时段，时段一旦被预订就会消失，因此不会出现重复预订。时间为马来西亚时间。';
+
+  @override
+  String get avWeeklyHours => '每周时间';
+
+  @override
+  String get avNoHoursYet => '尚未设置时间。点击“添加时间”后才能为您安排面试。';
+
+  @override
+  String get avDaysOff => '休息日';
+
+  @override
+  String get avAddDayOff => '添加休息日';
+
+  @override
+  String get avNoDaysOff => '暂无即将到来的休息日。在此添加休假或公共假期，这些日子将不会开放面试。';
+
+  @override
+  String get avNotAvailable => '不可用';
+
+  @override
+  String avMinutesShort(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String get avPickOneDay => '请至少选择一天。';
+
+  @override
+  String get avEndAfterStart => '结束时间必须晚于开始时间。';
+
+  @override
+  String avShorterThanSlot(int minutes) {
+    return '该时间段短于一个 $minutes 分钟的时段。';
+  }
+
+  @override
+  String get avOverlap => '这些时间与您在所选某一天已设置的时间重叠。请先删除或修改已有的时间。';
+
+  @override
+  String get avAddAvailableHours => '添加空闲时间';
+
+  @override
+  String get avDays => '日期';
+
+  @override
+  String get avMonFri => '周一至周五';
+
+  @override
+  String get avEveryDay => '每天';
+
+  @override
+  String avFromTime(String time) {
+    return '从 $time';
+  }
+
+  @override
+  String avToTime(String time) {
+    return '到 $time';
+  }
+
+  @override
+  String get avLengthOfInterview => '每场面试时长';
+
+  @override
+  String avSlotsSummary(int count, int minutes) {
+    return '每个所选日期有 $count 个 $minutes 分钟的时段。';
+  }
+
+  @override
+  String get avSaveHours => '保存时间';
+
+  @override
+  String get apTitle => '学生资料';
+
+  @override
+  String get apUnnamed => '未命名学生';
+
+  @override
+  String apCouldNotOpenResume(String error) {
+    return '无法打开简历：$error';
+  }
+
+  @override
+  String apCouldNotLoad(String error) {
+    return '无法加载完整资料：$error';
+  }
+
+  @override
+  String get apContact => '联系方式';
+
+  @override
+  String get apEmail => '电子邮件';
+
+  @override
+  String get apPhone => '电话';
+
+  @override
+  String get apStudies => '学业';
+
+  @override
+  String get apProgramme => '专业';
+
+  @override
+  String get apFaculty => '学院';
+
+  @override
+  String get apSemester => '学期';
+
+  @override
+  String get apCgpa => 'CGPA';
+
+  @override
+  String get apSkills => '技能';
+
+  @override
+  String get apNoSkills => '未列出技能。';
+
+  @override
+  String get apWorkExperience => '工作经历';
+
+  @override
+  String get apNoExperience => '未列出工作经历。';
+
+  @override
+  String get apResume => '简历';
+
+  @override
+  String get apNoResume => '未上传简历';
+
+  @override
+  String get apView => '查看';
+
+  @override
+  String get apNotProvided => '未提供';
+
+  @override
+  String get apPresent => '至今';
+
+  @override
+  String get hrViewFullProfile => '查看完整资料';
+
+  @override
+  String hrvInterviewCancelledWas(String when) {
+    return '面试已取消（原定 $when）';
+  }
+
+  @override
+  String hrvInterviewLine(String when) {
+    return '面试：$when';
+  }
+
+  @override
+  String get hrvAcceptedAnother => '该学生已接受其他 Offer。';
+
+  @override
+  String hrvCouldNotUploadOffer(String error) {
+    return '无法上传 Offer 信：$error';
+  }
+
+  @override
+  String get hrvWithdrawOffer => '撤回 Offer';
+
+  @override
+  String get hrvRejectApplication => '拒绝申请';
+
+  @override
+  String hrvWithdrawPrompt(String name) {
+    return '请告诉 $name 撤回 Offer 的原因。对方会看到此原因。';
+  }
+
+  @override
+  String hrvRejectPrompt(String name) {
+    return '请告诉 $name 申请未通过的原因。对方会看到此原因。';
+  }
+
+  @override
+  String get hrvReject => '拒绝';
+
+  @override
+  String get hrvRejectHint => '例如：该职位已由经验更相关的候选人担任。';
+
+  @override
+  String hrvCouldNotReject(String error) {
+    return '无法拒绝：$error';
+  }
+
+  @override
+  String get hrvMakeOfferTitle => '发出 Offer 吗？';
+
+  @override
+  String hrvMakeOfferBody(String name) {
+    return '$name 会收到通知，并可在“申请”页面接受 Offer。他们可能同时持有多家公司的 Offer；一旦接受其中一个，其余将被关闭。';
+  }
+
+  @override
+  String get hrvMakeOffer => '发出 Offer';
+
+  @override
+  String hrvCouldNotMakeOffer(String error) {
+    return '无法发出 Offer：$error';
+  }
+
+  @override
+  String get hrvNoResumeUploaded => '未上传简历。';
+
+  @override
+  String get hrvSetMyAvailability => '设置我的空闲时间';
+
+  @override
+  String hrvDeclinePrompt(String name) {
+    return '请告诉 $name 您拒绝的原因。面试时间保持不变。';
+  }
+
+  @override
+  String get hrvDeclineHint => '例如：那天面试官没有空。';
+
+  @override
+  String get hrvAcceptedMoved => '已接受。面试已改期。';
+
+  @override
+  String hrvCancelPrompt(String name, String when) {
+    return '请告诉 $name 取消 $when 面试的原因。对方会看到此原因。';
+  }
+
+  @override
+  String get hrvCancelHint => '例如：面试官那天无法参加。';
+
+  @override
+  String hrvCancelledNotified(String name) {
+    return '面试已取消。$name 已收到您的原因通知。';
+  }
+
+  @override
+  String get hrvChangeWindow => '面试只能在开始前 2 小时之前取消或改期。';
+
+  @override
+  String get hrvNoInterviewBooked => '尚未预订面试。';
+
+  @override
+  String hrvInterviewWasCancelled(String when) {
+    return '$when 的面试已被取消。';
+  }
+
+  @override
+  String get hrvScheduleNew => '安排新的面试';
+
+  @override
+  String hrvOfferSent(String name) {
+    return 'Offer 已发送，正在等待 $name 接受。对方接受后即可添加 Offer 信和接受函。';
+  }
+
+  @override
+  String hrvAcceptedAnotherCompany(String name) {
+    return '$name 已接受其他公司的 Offer，因此该申请已被自动关闭。';
+  }
+
+  @override
+  String get hrvPickDayTime => '请先选择日期和时间。';
+
+  @override
+  String hrvChangeNote(String actor, String verb, String reason) {
+    return '$actor$verb。原因：$reason';
+  }
+
+  @override
+  String get ivVerbAsked => '申请将面试改期';
+
+  @override
+  String get ivVerbDeclined => '拒绝了面试改期';
+
+  @override
+  String get ivVerbMoved => '将面试改期';
+
+  @override
+  String get ivVerbAutoCancelled => '自动取消了面试';
+
+  @override
+  String get ivVerbCancelled => '取消了面试';
+
+  @override
+  String get ivVerbBooked => '预订了面试';
+
+  @override
+  String get acTabOne => '单个学生';
+
+  @override
+  String get acTabMany => '批量（列表 / CSV）';
+
+  @override
+  String get acHowItWorks =>
+      '每位学生会获得一个符合密码规则的随机密码。您只会在下一个页面看到一次，请发送给学生。学生首次登录时必须设置新密码。';
+
+  @override
+  String get acFullName => '姓名';
+
+  @override
+  String get acFullNameHint => '与学生证一致';
+
+  @override
+  String get acEmail => '电子邮件';
+
+  @override
+  String get acRegNoOptional => '学号（选填）';
+
+  @override
+  String get acProgrammeOptional => '专业（选填）';
+
+  @override
+  String get acProgrammeHint => '例如：计算机科学学士';
+
+  @override
+  String get acCreateAccount => '创建账户';
+
+  @override
+  String get acFileCouldNotRead => '无法读取该文件。';
+
+  @override
+  String get acFileTooLarge => '该文件对学生名单来说太大了（最大 512 KB）。';
+
+  @override
+  String get acOnePerLine => '每行一名学生：';
+
+  @override
+  String get acLineFormat => '电子邮件、姓名、学号、专业（后两项选填）。可以包含标题行。';
+
+  @override
+  String get acChooseCsv => '选择 CSV 文件';
+
+  @override
+  String acFileName(String name) {
+    return '文件：$name';
+  }
+
+  @override
+  String get acCreateAccounts => '创建账户';
+
+  @override
+  String acCreateN(int count) {
+    return '创建 $count 个账户';
+  }
+
+  @override
+  String get acRowsSkipped => '有问题的行将被跳过。请修正后重新添加。';
+
+  @override
+  String get acNoEmailApp => '无法打开邮件应用。请复制信息并用其他方式发送。';
+
+  @override
+  String get acLeaveTitle => '离开此页面吗？';
+
+  @override
+  String get acLeaveBody => '临时密码只会在这里显示，之后无法再次查看。请确认您已复制或发送。';
+
+  @override
+  String get acStay => '留下';
+
+  @override
+  String get acLeave => '离开';
+
+  @override
+  String get acNewAccounts => '新账户';
+
+  @override
+  String get acSendNow => '请现在把邮箱和密码发送给每位学生。密码只会在此页面显示。学生首次登录时必须设置新密码。';
+
+  @override
+  String acCopiedCsv(int count) {
+    return '已将 $count 个账户复制为 CSV。';
+  }
+
+  @override
+  String get acCopyAllCsv => '全部复制为 CSV';
+
+  @override
+  String get acLoginCopied => '登录信息已复制。';
+
+  @override
+  String get acNotCreated => '未创建';
+
+  @override
+  String get acDone => '完成';
+
+  @override
+  String get acCopyDetails => '复制信息';
+
+  @override
+  String get acEmailStudent => '给学生发邮件';
+
+  @override
+  String get fpIntro => '您使用的是管理员提供的临时密码登录。请现在设置您自己的密码，设置之前无法使用本应用。';
+
+  @override
+  String get fpNewPassword => '新密码';
+
+  @override
+  String get fpConfirmPassword => '确认新密码';
+
+  @override
+  String get fpSaveContinue => '保存并继续';
+
+  @override
+  String get fpLogOut => '退出登录';
+
+  @override
+  String ceNewCodeSent(String email) {
+    return '新的验证码已发送到 $email。';
+  }
+
+  @override
+  String get ceTitle => '验证您的邮箱';
+
+  @override
+  String ceIntro(String email) {
+    return '我们已向 $email 发送了验证码。请在下方输入以验证您的账户。可能需要一分钟，也可能进入垃圾邮件文件夹。';
+  }
+
+  @override
+  String get ceCodeLabel => '邮件中的验证码';
+
+  @override
+  String get ceCodeHint => '输入验证码';
+
+  @override
+  String get ceConfirm => '验证账户';
+
+  @override
+  String ceResendIn(int seconds) {
+    return '$seconds 秒后可重新发送验证码';
+  }
+
+  @override
+  String get ceResend => '重新发送验证码';
+
+  @override
+  String get ceBackToLogin => '返回登录';
+
+  @override
+  String get fgCodeRequested => '已请求新的验证码。';
+
+  @override
+  String get fgCheckEmail => '请查看邮箱中的验证码。';
+
+  @override
+  String get fgTitle => '重置密码';
+
+  @override
+  String get fgEnterEmail => '请输入您账户的邮箱地址，我们会给您发送验证码。';
+
+  @override
+  String get fgEmailLabel => '邮箱地址';
+
+  @override
+  String get fgEmailHint => '输入您的邮箱';
+
+  @override
+  String get fgSendCode => '发送验证码';
+
+  @override
+  String fgSentIntro(String email) {
+    return '如果 $email 对应的账户存在，我们已向其发送验证码。可能需要一分钟，也可能进入垃圾邮件文件夹。验证码会在短时间后失效。';
+  }
+
+  @override
+  String get fgVerifyCode => '验证验证码';
+
+  @override
+  String get fgDifferentEmail => '使用其他邮箱';
+
+  @override
+  String get fgCodeAccepted => '验证码正确。请设置新密码。';
+
+  @override
+  String get fgNewPasswordHint => '创建新密码';
+
+  @override
+  String get fgConfirmHint => '再次输入新密码';
+
+  @override
+  String get fgSaveNew => '保存新密码';
+
+  @override
+  String get suPrivacyRequired => '请阅读并接受隐私声明后继续。';
+
+  @override
+  String get suPendingApproval => '账户已创建。管理员批准后您才能登录。';
+
+  @override
+  String get suCreatedLoginConfirm => '您的账户已创建。请登录并使用新的验证码验证邮箱。';
+
+  @override
+  String get suEmailConfirmedPending => '邮箱已验证。管理员批准您的账户后您才能登录。';
+
+  @override
+  String get suExistsTitle => '账户已存在';
+
+  @override
+  String suExistsBody(String email) {
+    return '已存在使用 $email 创建的账户。请直接登录，如忘记密码可重置密码。已存在的账户不会再收到新邮件。';
+  }
+
+  @override
+  String get suForgotPassword => '忘记密码';
+
+  @override
+  String get suStudentsCreatedByAdmin => '学生账户由管理员创建。请使用提供给您的邮箱和密码登录。';
+
+  @override
+  String get suFullNameHint => '输入您的姓名';
+
+  @override
+  String get suAgreePrefix => '我已阅读并同意';
+
+  @override
+  String get suPrivacyNotice => '隐私声明';
+
+  @override
+  String get loPasswordChanged => '密码已修改。请使用新密码登录。';
+
+  @override
+  String get stMyInterviewTimes => '我的面试日期和时间';
+
+  @override
+  String get stPrivacyNotice => '隐私声明';
+
+  @override
+  String get stDeleteMyAccount => '删除我的账户';
+
+  @override
+  String get errUnsupportedImage => '不支持的文件格式。请上传 JPG、JPEG 或 PNG 图片。';
+
+  @override
+  String get errPhotoEmpty => '所选照片为空（0 字节）。请换一张照片。';
+
+  @override
+  String get errPhotoNotFound => '在设备上找不到所选照片。';
+
+  @override
+  String errUploadFailed(String error) {
+    return '上传失败：$error';
+  }
+
+  @override
+  String errCouldNotAccessCamera(String error) {
+    return '无法使用相机：$error';
+  }
+
+  @override
+  String errCouldNotAccessGallery(String error) {
+    return '无法访问相册：$error';
+  }
+
+  @override
+  String errCouldNotRemovePhoto(String error) {
+    return '无法删除照片：$error';
+  }
+
+  @override
+  String errCouldNotSave(String error) {
+    return '无法保存：$error';
+  }
+
+  @override
+  String errCouldNotSaveLanguage(String error) {
+    return '无法保存语言：$error';
+  }
+
+  @override
+  String errCouldNotSaveTheme(String error) {
+    return '无法保存主题：$error';
+  }
+
+  @override
+  String get hpDeadlinePassed => '该职位的截止日期已过。请编辑职位并选择更晚的截止日期以重新开放。';
+
+  @override
+  String get hpExpired => '已过期';
+
+  @override
+  String get hpRecommended => '推荐候选人';
+
+  @override
+  String get hpChooseLocation => '请在地图上选择实习地点。';
+
+  @override
+  String get hpAddOneSkill => '请至少添加一项所需技能。';
+
+  @override
+  String get hpCloseBeforeDeadline => '职位不能早于申请截止日期关闭。';
+
+  @override
+  String get hpFixFields => '发布前请修正标红的字段。';
+
+  @override
+  String hpCouldNotSave(String error) {
+    return '无法保存职位：$error';
+  }
+
+  @override
+  String hpCouldNotDelete(String error) {
+    return '无法删除职位：$error';
+  }
+
+  @override
+  String get hpCustom => '自定义…';
+
+  @override
+  String get hpCustomCategory => '自定义类别';
+
+  @override
+  String get hpCustomCategoryHint => '例如：市场营销';
+
+  @override
+  String get hpAllowancePositive => '津贴必须大于 0。';
+
+  @override
+  String get hpAutoCloseCaption => '职位在此日期后自动关闭（选填）';
+
+  @override
+  String hpClosesOn(String date) {
+    return '职位将于 $date 关闭';
+  }
+
+  @override
+  String get hpAutoCloseOptional => '自动关闭日期（选填）';
+
+  @override
+  String get acTitleStudents => '创建学生账户';
+
+  @override
+  String get acTitleSupervisors => '创建导师账户';
+
+  @override
+  String get acHowItWorksSupervisor =>
+      '每位导师会获得一个符合密码规则的随机密码，账户会立即获批。您只会在下一个页面看到一次密码，请发送给导师。导师首次登录时必须设置新密码。';
+
+  @override
+  String get acLineFormatSupervisor => '电子邮件、姓名。可以包含标题行。';
+
+  @override
+  String get acSendNowSupervisor =>
+      '请现在把邮箱和密码发送给每位导师。密码只会在此页面显示。导师首次登录时必须设置新密码。';
+
+  @override
+  String get adminAddSupervisors => '添加导师';
+
+  @override
+  String get adminAddStudents => '添加学生';
+
+  @override
+  String get stSummaryTitle => '统计';
+
+  @override
+  String get stViewFull => '查看完整统计';
+
+  @override
+  String get stNoCompany => '加入或注册公司后即可在此查看统计。';
+
+  @override
+  String get stNothingYet => '暂无内容可显示。';
+
+  @override
+  String stCouldNotLoad(String error) {
+    return '无法加载统计：$error';
+  }
+
+  @override
+  String get stTitleHr => '招聘统计';
+
+  @override
+  String get stTitleAcademic => '学生进度';
+
+  @override
+  String get stTitleCompanySup => '实习生进度';
+
+  @override
+  String get stTitleAdmin => '平台统计';
+
+  @override
+  String get stPostings => '职位';
+
+  @override
+  String get stOpenPostings => '开放职位';
+
+  @override
+  String get stApplications => '申请';
+
+  @override
+  String get stApplicants => '申请人';
+
+  @override
+  String get stInterviewing => '面试中';
+
+  @override
+  String get stOffered => '已发 Offer';
+
+  @override
+  String get stAccepted => '已接受';
+
+  @override
+  String get stRejected => '已拒绝';
+
+  @override
+  String get stPending => '待审核';
+
+  @override
+  String get stClosed => '已关闭';
+
+  @override
+  String get stAcceptRate => '接受率';
+
+  @override
+  String get stInterviewsUpcoming => '即将进行的面试';
+
+  @override
+  String get stInterviewsDone => '已完成的面试';
+
+  @override
+  String get stByStatus => '按状态统计申请';
+
+  @override
+  String get stPerPosting => '各职位情况';
+
+  @override
+  String stPostingRow(
+    int applications,
+    int interview,
+    int offered,
+    int accepted,
+  ) {
+    return '$applications 份申请 · $interview 人面试 · $offered 个 Offer · $accepted 人接受';
+  }
+
+  @override
+  String get stWeekly => '每周申请数（最近 8 周）';
+
+  @override
+  String get stStudents => '学生';
+
+  @override
+  String get stPlaced => '已安置';
+
+  @override
+  String get stNotPlaced => '尚未安置';
+
+  @override
+  String get stReports => '报告';
+
+  @override
+  String get stReportsWaiting => '等待您审核';
+
+  @override
+  String get stReportsApproved => '已批准';
+
+  @override
+  String get stReportsSentBack => '已退回';
+
+  @override
+  String get stDocsWaiting => '待审核文件';
+
+  @override
+  String get stDocsApproved => '已批准的文件';
+
+  @override
+  String get stEvaluationsDone => '已完成的评估';
+
+  @override
+  String get stReportProgress => '报告进度';
+
+  @override
+  String get stPerStudent => '各学生情况';
+
+  @override
+  String stStudentRow(int reports, int approved, int pending) {
+    return '$reports 份报告 · $approved 份已批准 · $pending 份待审';
+  }
+
+  @override
+  String get stPlacedBadge => '已安置';
+
+  @override
+  String get stNotPlacedBadge => '未安置';
+
+  @override
+  String get stInterns => '实习生';
+
+  @override
+  String get stEvaluatedBadge => '已评估';
+
+  @override
+  String get stNotEvaluatedBadge => '未评估';
+
+  @override
+  String get stEvaluatedStudents => '已评估的实习生';
+
+  @override
+  String get stPeople => '平台用户';
+
+  @override
+  String get stCompanies => '公司';
+
+  @override
+  String get stCompaniesVerified => '已验证';
+
+  @override
+  String get stCompaniesPending => '待验证';
+
+  @override
+  String get stNewCompanies => '新公司（30 天）';
+
+  @override
+  String get stCompaniesWithPostings => '已发布职位的公司';
+
+  @override
+  String get stNewPeople => '新用户（30 天）';
+
+  @override
+  String get stPendingApprovals => '待批准';
+
+  @override
+  String get stUsersByRole => '按角色统计用户';
+
+  @override
+  String get stCompaniesByStatus => '按状态统计公司';
+
+  @override
+  String get stCompaniesJoined => '每月新增公司（最近 6 个月）';
+
+  @override
+  String get stPeopleJoined => '每月新增用户（最近 6 个月）';
+
+  @override
+  String get stRoleStudent => '学生';
+
+  @override
+  String get stRoleAcademic => '学术导师';
+
+  @override
+  String get stRoleHr => '公司人事';
+
+  @override
+  String get stRoleCompanySup => '公司导师';
+
+  @override
+  String get stRoleAdmin => '管理员';
+
+  @override
+  String get roleLabelStudent => '学生';
+
+  @override
+  String get roleLabelAcademic => '学术导师';
+
+  @override
+  String get roleLabelHr => '公司人事';
+
+  @override
+  String get roleLabelCompanySup => '公司导师';
+
+  @override
+  String get roleLabelAdmin => '管理员';
+
+  @override
+  String get acTabOneSupervisor => '单个导师';
+
+  @override
+  String get acTabManySupervisor => '批量（列表 / CSV）';
+
+  @override
+  String get acFullNameHintSupervisor => '与员工证一致';
+
+  @override
+  String get acEmailSupervisor => '给导师发邮件';
+
+  @override
+  String acCreateFailedReason(String reason) {
+    return '无法创建账户：$reason';
+  }
+
+  @override
+  String get adminNeverLoggedIn => '尚未登录';
+
+  @override
+  String get adminAwaitingApprovalBadge => '等待批准';
+
+  @override
+  String get adminNotApprovedBadge => '未获批准';
+
+  @override
+  String get adminFilterVerified => '已认证';
+
+  @override
+  String get adminFilterNotVerified => '未认证';
+
+  @override
+  String get adminNoCompaniesInFilter => '此分组中没有公司';
+
+  @override
+  String get hpClosesAfterDeadline =>
+      '职位会在申请截止日期之后自动关闭。未设置截止日期时，职位会一直开放，直到您手动关闭。';
+
+  @override
+  String goodAfternoon(String name) {
+    return '下午好，$name！';
+  }
+
+  @override
+  String goodEvening(String name) {
+    return '晚上好，$name！';
+  }
 }

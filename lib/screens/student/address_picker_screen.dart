@@ -7,6 +7,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import '../../theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/error_text.dart';
 
 /// Result returned when the user confirms a location.
 class PickedAddress {
@@ -122,7 +123,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
         _isSearching = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorAddressSearchFailed(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorAddressSearchFailed(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -297,7 +298,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                         final result = _searchResults[index];
                         return ListTile(
                           dense: true,
-                          leading: const Icon(Icons.location_on_outlined, size: 20, color: AppColors.primary),
+                          leading: Icon(Icons.location_on_outlined, size: 20, color: AppColors.primaryText),
                           title: Text(
                             result.displayName,
                             style: const TextStyle(fontFamily: 'Inter', fontSize: 13),
@@ -334,7 +335,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 18, color: AppColors.primary),
+                      Icon(Icons.location_on, size: 18, color: AppColors.primaryText),
                       const SizedBox(width: 8),
                       Expanded(
                         child: _isResolvingAddress

@@ -286,12 +286,6 @@ abstract class AppLocalizations {
   /// **'Your email is not a TARC institutional address. Please select the role that applies to you.'**
   String get notInstitutionalEmailNote;
 
-  /// No description provided for @parentGuardian.
-  ///
-  /// In en, this message translates to:
-  /// **'Parent/Guardian'**
-  String get parentGuardian;
-
   /// No description provided for @hrPersonnel.
   ///
   /// In en, this message translates to:
@@ -429,6 +423,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View my progress'**
   String get viewMyProgress;
+
+  /// No description provided for @defaultUserName.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get defaultUserName;
 
   /// No description provided for @goodMorning.
   ///
@@ -2866,12 +2866,6 @@ abstract class AppLocalizations {
   /// **'Reject'**
   String get notificationReject;
 
-  /// No description provided for @errorParentAlreadyLinked.
-  ///
-  /// In en, this message translates to:
-  /// **'This student already has an approved parent linked. Only one approved parent can be linked at a time.'**
-  String get errorParentAlreadyLinked;
-
   /// No description provided for @errorCouldNotRespondToRequest.
   ///
   /// In en, this message translates to:
@@ -4372,288 +4366,6 @@ abstract class AppLocalizations {
   /// **'Clear'**
   String get clear;
 
-  /// No description provided for @parentWelcomeName.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome, {name}'**
-  String parentWelcomeName(String name);
-
-  /// No description provided for @parentWelcomeDefault.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome, Parent'**
-  String get parentWelcomeDefault;
-
-  /// No description provided for @parentDashboardSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Monitor your children\'s internship progress'**
-  String get parentDashboardSubtitle;
-
-  /// No description provided for @parentNoChildrenTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No children linked yet'**
-  String get parentNoChildrenTitle;
-
-  /// No description provided for @parentNoChildrenDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Link your child\'s account to start monitoring their internship progress. They\'ll need to approve the request before you can see anything.'**
-  String get parentNoChildrenDescription;
-
-  /// No description provided for @parentLinkChildButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Link a child'**
-  String get parentLinkChildButton;
-
-  /// No description provided for @parentUnnamedStudent.
-  ///
-  /// In en, this message translates to:
-  /// **'Unnamed student'**
-  String get parentUnnamedStudent;
-
-  /// No description provided for @parentNoApplicationYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No internship application yet'**
-  String get parentNoApplicationYet;
-
-  /// No description provided for @parentSignFormButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign form'**
-  String get parentSignFormButton;
-
-  /// No description provided for @parentProgressButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Progress'**
-  String get parentProgressButton;
-
-  /// No description provided for @parentStudentEmailLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Student email'**
-  String get parentStudentEmailLabel;
-
-  /// No description provided for @parentStudentEmailHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. john.doe'**
-  String get parentStudentEmailHint;
-
-  /// No description provided for @parentRelationshipLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Relationship'**
-  String get parentRelationshipLabel;
-
-  /// No description provided for @parentRelationshipFather.
-  ///
-  /// In en, this message translates to:
-  /// **'Father'**
-  String get parentRelationshipFather;
-
-  /// No description provided for @parentRelationshipMother.
-  ///
-  /// In en, this message translates to:
-  /// **'Mother'**
-  String get parentRelationshipMother;
-
-  /// No description provided for @parentRelationshipGuardian.
-  ///
-  /// In en, this message translates to:
-  /// **'Guardian'**
-  String get parentRelationshipGuardian;
-
-  /// No description provided for @parentNoStudentFoundError.
-  ///
-  /// In en, this message translates to:
-  /// **'No student found with that email.'**
-  String get parentNoStudentFoundError;
-
-  /// No description provided for @parentSearchError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not search: {error}'**
-  String parentSearchError(String error);
-
-  /// No description provided for @parentSendRequestButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Send request'**
-  String get parentSendRequestButton;
-
-  /// No description provided for @parentRequestSentMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Request sent. The student needs to approve it.'**
-  String get parentRequestSentMessage;
-
-  /// No description provided for @parentSendRequestError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not send request: {error}'**
-  String parentSendRequestError(String error);
-
-  /// No description provided for @parentCancelRequestError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not cancel: {error}'**
-  String parentCancelRequestError(String error);
-
-  /// No description provided for @parentYourRequestsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your requests'**
-  String get parentYourRequestsTitle;
-
-  /// No description provided for @parentNoRequestsYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No requests sent yet.'**
-  String get parentNoRequestsYet;
-
-  /// No description provided for @parentAsRelationship.
-  ///
-  /// In en, this message translates to:
-  /// **'As {relationship}'**
-  String parentAsRelationship(String relationship);
-
-  /// No description provided for @parentUnknownStudent.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown student'**
-  String get parentUnknownStudent;
-
-  /// No description provided for @parentProgressTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Internship Progress'**
-  String get parentProgressTitle;
-
-  /// No description provided for @parentApplicationStatusTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Application status'**
-  String get parentApplicationStatusTitle;
-
-  /// No description provided for @parentNoApplicationSubmittedYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No internship application submitted yet.'**
-  String get parentNoApplicationSubmittedYet;
-
-  /// No description provided for @parentUnknownCompany.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown company'**
-  String get parentUnknownCompany;
-
-  /// No description provided for @parentAtAGlanceTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'At a glance'**
-  String get parentAtAGlanceTitle;
-
-  /// No description provided for @parentReportsSubmittedLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Reports submitted'**
-  String get parentReportsSubmittedLabel;
-
-  /// No description provided for @parentDurationLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Duration'**
-  String get parentDurationLabel;
-
-  /// No description provided for @parentEvaluationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Evaluation'**
-  String get parentEvaluationTitle;
-
-  /// No description provided for @parentNoEvaluationsYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No evaluations submitted yet.'**
-  String get parentNoEvaluationsYet;
-
-  /// No description provided for @parentAcademicSupervisorEvaluation.
-  ///
-  /// In en, this message translates to:
-  /// **'Academic Supervisor Evaluation'**
-  String get parentAcademicSupervisorEvaluation;
-
-  /// No description provided for @parentCompanySupervisorEvaluation.
-  ///
-  /// In en, this message translates to:
-  /// **'Company Supervisor Evaluation'**
-  String get parentCompanySupervisorEvaluation;
-
-  /// No description provided for @parentRequiredDocumentsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Required documents'**
-  String get parentRequiredDocumentsTitle;
-
-  /// No description provided for @parentDocNotSubmitted.
-  ///
-  /// In en, this message translates to:
-  /// **'Not submitted'**
-  String get parentDocNotSubmitted;
-
-  /// No description provided for @parentMonthlyReportsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly reports'**
-  String get parentMonthlyReportsTitle;
-
-  /// No description provided for @parentNoMonthlyReportsYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No monthly reports submitted yet.'**
-  String get parentNoMonthlyReportsYet;
-
-  /// No description provided for @parentFinalReportTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Final report'**
-  String get parentFinalReportTitle;
-
-  /// No description provided for @parentNoFinalReportYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No final report submitted yet.'**
-  String get parentNoFinalReportYet;
-
-  /// No description provided for @parentMonthlyReportLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly Report — {period}'**
-  String parentMonthlyReportLabel(String period);
-
-  /// No description provided for @parentFinalReportLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Final Report — {period}'**
-  String parentFinalReportLabel(String period);
-
-  /// No description provided for @parentSubmittedDate.
-  ///
-  /// In en, this message translates to:
-  /// **'Submitted {date}'**
-  String parentSubmittedDate(String date);
-
-  /// No description provided for @parentReadOnlyNotice.
-  ///
-  /// In en, this message translates to:
-  /// **'This is a read-only view. Contact the university for queries regarding your child\'s internship.'**
-  String get parentReadOnlyNotice;
-
   /// No description provided for @parentAcknowledgementTitle.
   ///
   /// In en, this message translates to:
@@ -4671,12 +4383,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load the acknowledgement form: {error}'**
   String parentCouldNotLoadFormError(String error);
-
-  /// No description provided for @parentTapToFillInstruction.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap directly on the form to fill it in, then submit at the bottom.'**
-  String get parentTapToFillInstruction;
 
   /// No description provided for @parentSignAndSubmitButton.
   ///
@@ -4959,6 +4665,2363 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No documents on file yet.'**
   String get csNoDocumentsOnFile;
+
+  /// No description provided for @addToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to calendar'**
+  String get addToCalendar;
+
+  /// No description provided for @calendarCouldNotOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open your calendar.'**
+  String get calendarCouldNotOpen;
+
+  /// No description provided for @calendarEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview: {title}'**
+  String calendarEventTitle(String title);
+
+  /// No description provided for @calendarEventDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'CIMS interview with {company}'**
+  String calendarEventDetails(String company);
+
+  /// No description provided for @hrSearchApplicants.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, programme or skill'**
+  String get hrSearchApplicants;
+
+  /// No description provided for @hrAllPostings.
+  ///
+  /// In en, this message translates to:
+  /// **'All postings'**
+  String get hrAllPostings;
+
+  /// No description provided for @hrShortlisted.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortlisted'**
+  String get hrShortlisted;
+
+  /// No description provided for @hrShortlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortlist'**
+  String get hrShortlist;
+
+  /// No description provided for @hrRemoveShortlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from shortlist'**
+  String get hrRemoveShortlist;
+
+  /// No description provided for @hrPrivateNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Private notes'**
+  String get hrPrivateNotes;
+
+  /// No description provided for @hrPrivateNotesInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you can see this. The student never does.'**
+  String get hrPrivateNotesInfo;
+
+  /// No description provided for @hrNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a note about this applicant'**
+  String get hrNoteHint;
+
+  /// No description provided for @hrSaveNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Save note'**
+  String get hrSaveNote;
+
+  /// No description provided for @hrNoteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note saved'**
+  String get hrNoteSaved;
+
+  /// No description provided for @hrNoMatchingApplicants.
+  ///
+  /// In en, this message translates to:
+  /// **'No applicants match your search.'**
+  String get hrNoMatchingApplicants;
+
+  /// No description provided for @hrTabOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'Offered ({count})'**
+  String hrTabOffered(int count);
+
+  /// No description provided for @hrTabClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed ({count})'**
+  String hrTabClosed(int count);
+
+  /// No description provided for @hrClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get hrClearFilters;
+
+  /// No description provided for @adminAuditLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get adminAuditLogTitle;
+
+  /// No description provided for @adminAuditLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who approved, created or changed what'**
+  String get adminAuditLogSubtitle;
+
+  /// No description provided for @auditFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get auditFilterAll;
+
+  /// No description provided for @auditFilterAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get auditFilterAccounts;
+
+  /// No description provided for @auditFilterCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies'**
+  String get auditFilterCompanies;
+
+  /// No description provided for @auditFilterStudents.
+  ///
+  /// In en, this message translates to:
+  /// **'Students'**
+  String get auditFilterStudents;
+
+  /// No description provided for @auditFilterSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup'**
+  String get auditFilterSetup;
+
+  /// No description provided for @auditEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been recorded yet.'**
+  String get auditEmpty;
+
+  /// No description provided for @auditSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get auditSystem;
+
+  /// No description provided for @auditLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get auditLoadMore;
+
+  /// No description provided for @adminAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Placement analytics'**
+  String get adminAnalyticsTitle;
+
+  /// No description provided for @adminAnalyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Placement rate, applications and students still without an internship'**
+  String get adminAnalyticsSubtitle;
+
+  /// No description provided for @analyticsPlacementRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Placement rate'**
+  String get analyticsPlacementRate;
+
+  /// No description provided for @analyticsPlacedOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{placed} of {total} students placed'**
+  String analyticsPlacedOf(int placed, int total);
+
+  /// No description provided for @analyticsStudentsApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied'**
+  String get analyticsStudentsApplied;
+
+  /// No description provided for @analyticsApplications.
+  ///
+  /// In en, this message translates to:
+  /// **'Applications'**
+  String get analyticsApplications;
+
+  /// No description provided for @analyticsWithoutPlacement.
+  ///
+  /// In en, this message translates to:
+  /// **'No placement yet'**
+  String get analyticsWithoutPlacement;
+
+  /// No description provided for @analyticsByStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Applications by status'**
+  String get analyticsByStatus;
+
+  /// No description provided for @analyticsByProgramme.
+  ///
+  /// In en, this message translates to:
+  /// **'By programme'**
+  String get analyticsByProgramme;
+
+  /// No description provided for @analyticsByCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'By company'**
+  String get analyticsByCompany;
+
+  /// No description provided for @analyticsTopPostings.
+  ///
+  /// In en, this message translates to:
+  /// **'Most applied postings'**
+  String get analyticsTopPostings;
+
+  /// No description provided for @analyticsUnplaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Students without a placement'**
+  String get analyticsUnplaced;
+
+  /// No description provided for @analyticsExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get analyticsExportCsv;
+
+  /// No description provided for @analyticsExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create or open the file.'**
+  String get analyticsExportFailed;
+
+  /// No description provided for @analyticsRowStudentsPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'{placed}/{students} placed'**
+  String analyticsRowStudentsPlaced(int placed, int students);
+
+  /// No description provided for @analyticsRowCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'{postings} postings · {applications} applications · {placed} placed'**
+  String analyticsRowCompany(int postings, int applications, int placed);
+
+  /// No description provided for @analyticsRowPosting.
+  ///
+  /// In en, this message translates to:
+  /// **'{company} · {applications} applications · {offered} offered'**
+  String analyticsRowPosting(String company, int applications, int offered);
+
+  /// No description provided for @analyticsNoStudentsUnplaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Every student has a placement.'**
+  String get analyticsNoStudentsUnplaced;
+
+  /// No description provided for @ivTheCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'The company'**
+  String get ivTheCompany;
+
+  /// No description provided for @ivTheStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'The student'**
+  String get ivTheStudent;
+
+  /// No description provided for @ivTheSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'The system'**
+  String get ivTheSystem;
+
+  /// No description provided for @ivRequestSentCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. The interview moves only if the company accepts.'**
+  String get ivRequestSentCompany;
+
+  /// No description provided for @ivDeclineNewTimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline the new time'**
+  String get ivDeclineNewTimeTitle;
+
+  /// No description provided for @ivDeclinePromptToCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell the company why you are declining. The interview stays on its current time.'**
+  String get ivDeclinePromptToCompany;
+
+  /// No description provided for @ivDeclineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. I cannot attend at that time.'**
+  String get ivDeclineHint;
+
+  /// No description provided for @ivDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get ivDecline;
+
+  /// No description provided for @ivAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get ivAccept;
+
+  /// No description provided for @ivAcceptedMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted. Your interview has been moved.'**
+  String get ivAcceptedMoved;
+
+  /// No description provided for @ivDeclinedStays.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined. The interview stays as it was.'**
+  String get ivDeclinedStays;
+
+  /// No description provided for @ivCancelInterview.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel interview'**
+  String get ivCancelInterview;
+
+  /// No description provided for @ivCancelPromptToCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell the company why you are cancelling the interview on {when}. They will see this reason.'**
+  String ivCancelPromptToCompany(String when);
+
+  /// No description provided for @ivCancelledNotified.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview cancelled. The company has been notified with your reason.'**
+  String get ivCancelledNotified;
+
+  /// No description provided for @ivCouldNotCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not cancel: {error}'**
+  String ivCouldNotCancel(String error);
+
+  /// No description provided for @ivCancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get ivCancelButton;
+
+  /// No description provided for @ivRescheduleButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reschedule'**
+  String get ivRescheduleButton;
+
+  /// No description provided for @ivChangeWindowStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'An interview can only be cancelled or rescheduled up to 2 hours before it starts. If you cannot attend, please message the company.'**
+  String get ivChangeWindowStudent;
+
+  /// No description provided for @ivCompanyWillArrange.
+  ///
+  /// In en, this message translates to:
+  /// **'The company will arrange a new time if your application continues.'**
+  String get ivCompanyWillArrange;
+
+  /// No description provided for @ivChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get ivChangesTitle;
+
+  /// No description provided for @ivChangeMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} moved the interview'**
+  String ivChangeMoved(String actor);
+
+  /// No description provided for @ivChangeMovedFromTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} moved the interview from {from} to {to}'**
+  String ivChangeMovedFromTo(String actor, String from, String to);
+
+  /// No description provided for @ivChangeAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} asked to move the interview'**
+  String ivChangeAsked(String actor);
+
+  /// No description provided for @ivChangeAskedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} asked to move the interview to {to}'**
+  String ivChangeAskedTo(String actor, String to);
+
+  /// No description provided for @ivChangeDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} declined the new time'**
+  String ivChangeDeclined(String actor);
+
+  /// No description provided for @ivChangeDeclinedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} declined the new time ({time})'**
+  String ivChangeDeclinedFor(String actor, String time);
+
+  /// No description provided for @ivAutoCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The interview was cancelled automatically'**
+  String get ivAutoCancelled;
+
+  /// No description provided for @ivChangeCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} cancelled the interview'**
+  String ivChangeCancelled(String actor);
+
+  /// No description provided for @ivReasonLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason: {reason}'**
+  String ivReasonLine(String reason);
+
+  /// No description provided for @ivYouAskedToReschedule.
+  ///
+  /// In en, this message translates to:
+  /// **'You asked to reschedule'**
+  String get ivYouAskedToReschedule;
+
+  /// No description provided for @ivAskedToReschedule.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} asked to reschedule'**
+  String ivAskedToReschedule(String who);
+
+  /// No description provided for @ivLineNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get ivLineNow;
+
+  /// No description provided for @ivLineProposed.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed'**
+  String get ivLineProposed;
+
+  /// No description provided for @ivLineReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get ivLineReason;
+
+  /// No description provided for @ivWaitingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {who}. The interview stays on its current time unless they accept.'**
+  String ivWaitingFor(String who);
+
+  /// No description provided for @ivMovesOnlyIfYouAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'The interview only moves if you accept. If you decline, it stays on its current time.'**
+  String get ivMovesOnlyIfYouAccept;
+
+  /// No description provided for @ivWithdrawRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw request'**
+  String get ivWithdrawRequest;
+
+  /// No description provided for @ivTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get ivTryAgain;
+
+  /// No description provided for @ivNoFreeTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'No free interview times in the next {days} days.'**
+  String ivNoFreeTimes(int days);
+
+  /// No description provided for @ivNoFreeTimesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview times come from the interviewer\'s weekly availability. All their slots may be booked, or no availability has been set.'**
+  String get ivNoFreeTimesHint;
+
+  /// No description provided for @ivChooseDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a day'**
+  String get ivChooseDay;
+
+  /// No description provided for @ivChooseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a time'**
+  String get ivChooseTime;
+
+  /// No description provided for @ivPickFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a new day and time first.'**
+  String get ivPickFirst;
+
+  /// No description provided for @ivRequestNewTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a new time'**
+  String get ivRequestNewTime;
+
+  /// No description provided for @ivReasonForChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for the change'**
+  String get ivReasonForChange;
+
+  /// No description provided for @ivWillSeeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} will see this reason. The interview only moves if they accept; until then it stays on its current time.'**
+  String ivWillSeeReason(String who);
+
+  /// No description provided for @ivReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. I have a university exam at that time.'**
+  String get ivReasonHint;
+
+  /// No description provided for @ivSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get ivSendRequest;
+
+  /// No description provided for @offAcceptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept this offer?'**
+  String get offAcceptTitle;
+
+  /// No description provided for @offAcceptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} at {company} will become your active internship.'**
+  String offAcceptBody(String title, String company);
+
+  /// No description provided for @offAcceptCloses.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {count} other open applications will be closed and cannot be reopened.'**
+  String offAcceptCloses(int count);
+
+  /// No description provided for @offAcceptOne.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only have one active internship.'**
+  String get offAcceptOne;
+
+  /// No description provided for @offNotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get offNotYet;
+
+  /// No description provided for @offAcceptOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept offer'**
+  String get offAcceptOffer;
+
+  /// No description provided for @offAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer accepted. {company} has been notified.'**
+  String offAccepted(String company);
+
+  /// No description provided for @offCouldNotAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not accept the offer: {error}'**
+  String offCouldNotAccept(String error);
+
+  /// No description provided for @appTabOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers ({count})'**
+  String appTabOffers(int count);
+
+  /// No description provided for @appInterviewCancelledTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview cancelled. Tap to see why.'**
+  String get appInterviewCancelledTap;
+
+  /// No description provided for @appOfferedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations, this company has offered you the internship. You can hold several offers; accepting one closes the others.'**
+  String get appOfferedBody;
+
+  /// No description provided for @appReasonFromCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason from the company'**
+  String get appReasonFromCompany;
+
+  /// No description provided for @appNoReasonRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No reason was recorded.'**
+  String get appNoReasonRecorded;
+
+  /// No description provided for @appClosedAcceptedOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed because you accepted another offer.'**
+  String get appClosedAcceptedOther;
+
+  /// No description provided for @pushOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts outside the app are off'**
+  String get pushOffTitle;
+
+  /// No description provided for @pushOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone is blocking CIMS notifications, so new interviews, offers and messages only show up here. Turn them on to be alerted straight away.'**
+  String get pushOffBody;
+
+  /// No description provided for @pushTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on notifications'**
+  String get pushTurnOn;
+
+  /// No description provided for @reasonRequiredHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Required, at least {min} characters.'**
+  String reasonRequiredHelper(int min);
+
+  /// No description provided for @reasonOptionalHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional.'**
+  String get reasonOptionalHelper;
+
+  /// No description provided for @ivSlotsFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} free'**
+  String ivSlotsFree(int count);
+
+  /// No description provided for @avHoursSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours saved.'**
+  String get avHoursSaved;
+
+  /// No description provided for @avRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove these hours?'**
+  String get avRemoveTitle;
+
+  /// No description provided for @avRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} {from} to {to} will no longer be offered for new interviews. Interviews already booked in this window stay as they are.'**
+  String avRemoveBody(String day, String from, String to);
+
+  /// No description provided for @avKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get avKeep;
+
+  /// No description provided for @avRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get avRemove;
+
+  /// No description provided for @avDayOffHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Day you are not available'**
+  String get avDayOffHelp;
+
+  /// No description provided for @avTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview availability'**
+  String get avTitle;
+
+  /// No description provided for @avAddHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Add hours'**
+  String get avAddHours;
+
+  /// No description provided for @avIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the hours you can interview. Each window is cut into slots of the length you choose, and a slot disappears as soon as it is booked, so nobody can book the same time twice. Times are in Malaysian time.'**
+  String get avIntro;
+
+  /// No description provided for @avWeeklyHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly hours'**
+  String get avWeeklyHours;
+
+  /// No description provided for @avNoHoursYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No hours set yet. Tap \"Add hours\" so interviews can be scheduled with you.'**
+  String get avNoHoursYet;
+
+  /// No description provided for @avDaysOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Days off'**
+  String get avDaysOff;
+
+  /// No description provided for @avAddDayOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Add day off'**
+  String get avAddDayOff;
+
+  /// No description provided for @avNoDaysOff.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming days off. Add leave or public holidays here and no interviews will be offered on those days.'**
+  String get avNoDaysOff;
+
+  /// No description provided for @avNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get avNotAvailable;
+
+  /// No description provided for @avMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String avMinutesShort(int minutes);
+
+  /// No description provided for @avPickOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one day.'**
+  String get avPickOneDay;
+
+  /// No description provided for @avEndAfterStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The end time must be after the start time.'**
+  String get avEndAfterStart;
+
+  /// No description provided for @avShorterThanSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'This window is shorter than one {minutes}-minute slot.'**
+  String avShorterThanSlot(int minutes);
+
+  /// No description provided for @avOverlap.
+  ///
+  /// In en, this message translates to:
+  /// **'These hours overlap hours you have already set on one of the chosen days. Remove or change the existing hours first.'**
+  String get avOverlap;
+
+  /// No description provided for @avAddAvailableHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Add available hours'**
+  String get avAddAvailableHours;
+
+  /// No description provided for @avDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get avDays;
+
+  /// No description provided for @avMonFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon–Fri'**
+  String get avMonFri;
+
+  /// No description provided for @avEveryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day'**
+  String get avEveryDay;
+
+  /// No description provided for @avFromTime.
+  ///
+  /// In en, this message translates to:
+  /// **'From {time}'**
+  String avFromTime(String time);
+
+  /// No description provided for @avToTime.
+  ///
+  /// In en, this message translates to:
+  /// **'To {time}'**
+  String avToTime(String time);
+
+  /// No description provided for @avLengthOfInterview.
+  ///
+  /// In en, this message translates to:
+  /// **'Length of each interview'**
+  String get avLengthOfInterview;
+
+  /// No description provided for @avSlotsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} slots of {minutes} minutes per selected day.'**
+  String avSlotsSummary(int count, int minutes);
+
+  /// No description provided for @avSaveHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Save hours'**
+  String get avSaveHours;
+
+  /// No description provided for @apTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Student profile'**
+  String get apTitle;
+
+  /// No description provided for @apUnnamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed student'**
+  String get apUnnamed;
+
+  /// No description provided for @apCouldNotOpenResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open resume: {error}'**
+  String apCouldNotOpenResume(String error);
+
+  /// No description provided for @apCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the full profile: {error}'**
+  String apCouldNotLoad(String error);
+
+  /// No description provided for @apContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get apContact;
+
+  /// No description provided for @apEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get apEmail;
+
+  /// No description provided for @apPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get apPhone;
+
+  /// No description provided for @apStudies.
+  ///
+  /// In en, this message translates to:
+  /// **'Studies'**
+  String get apStudies;
+
+  /// No description provided for @apProgramme.
+  ///
+  /// In en, this message translates to:
+  /// **'Programme'**
+  String get apProgramme;
+
+  /// No description provided for @apFaculty.
+  ///
+  /// In en, this message translates to:
+  /// **'Faculty'**
+  String get apFaculty;
+
+  /// No description provided for @apSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester'**
+  String get apSemester;
+
+  /// No description provided for @apCgpa.
+  ///
+  /// In en, this message translates to:
+  /// **'CGPA'**
+  String get apCgpa;
+
+  /// No description provided for @apSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get apSkills;
+
+  /// No description provided for @apNoSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'No skills listed.'**
+  String get apNoSkills;
+
+  /// No description provided for @apWorkExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Work experience'**
+  String get apWorkExperience;
+
+  /// No description provided for @apNoExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'No work experience listed.'**
+  String get apNoExperience;
+
+  /// No description provided for @apResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get apResume;
+
+  /// No description provided for @apNoResume.
+  ///
+  /// In en, this message translates to:
+  /// **'No resume uploaded'**
+  String get apNoResume;
+
+  /// No description provided for @apView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get apView;
+
+  /// No description provided for @apNotProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'Not provided'**
+  String get apNotProvided;
+
+  /// No description provided for @apPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get apPresent;
+
+  /// No description provided for @hrViewFullProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View full profile'**
+  String get hrViewFullProfile;
+
+  /// No description provided for @hrvInterviewCancelledWas.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview cancelled (was {when})'**
+  String hrvInterviewCancelledWas(String when);
+
+  /// No description provided for @hrvInterviewLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview: {when}'**
+  String hrvInterviewLine(String when);
+
+  /// No description provided for @hrvAcceptedAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'The student accepted another offer.'**
+  String get hrvAcceptedAnother;
+
+  /// No description provided for @hrvCouldNotUploadOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload offer letter: {error}'**
+  String hrvCouldNotUploadOffer(String error);
+
+  /// No description provided for @hrvWithdrawOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw offer'**
+  String get hrvWithdrawOffer;
+
+  /// No description provided for @hrvRejectApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject application'**
+  String get hrvRejectApplication;
+
+  /// No description provided for @hrvWithdrawPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell {name} why the offer is being withdrawn. They will see this reason.'**
+  String hrvWithdrawPrompt(String name);
+
+  /// No description provided for @hrvRejectPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell {name} why the application is not successful. They will see this reason.'**
+  String hrvRejectPrompt(String name);
+
+  /// No description provided for @hrvReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get hrvReject;
+
+  /// No description provided for @hrvRejectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. The position has been filled by a candidate with more relevant experience.'**
+  String get hrvRejectHint;
+
+  /// No description provided for @hrvCouldNotReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reject: {error}'**
+  String hrvCouldNotReject(String error);
+
+  /// No description provided for @hrvMakeOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make an offer?'**
+  String get hrvMakeOfferTitle;
+
+  /// No description provided for @hrvMakeOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be notified and can accept the offer from their Applications screen. They may hold offers from several companies; once they accept one, the others are closed.'**
+  String hrvMakeOfferBody(String name);
+
+  /// No description provided for @hrvMakeOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Make offer'**
+  String get hrvMakeOffer;
+
+  /// No description provided for @hrvCouldNotMakeOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not make the offer: {error}'**
+  String hrvCouldNotMakeOffer(String error);
+
+  /// No description provided for @hrvNoResumeUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'No resume uploaded.'**
+  String get hrvNoResumeUploaded;
+
+  /// No description provided for @hrvSetMyAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Set my availability'**
+  String get hrvSetMyAvailability;
+
+  /// No description provided for @hrvDeclinePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell {name} why you are declining. The interview stays on its current time.'**
+  String hrvDeclinePrompt(String name);
+
+  /// No description provided for @hrvDeclineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. That day the interviewer is not available.'**
+  String get hrvDeclineHint;
+
+  /// No description provided for @hrvAcceptedMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted. The interview has been moved.'**
+  String get hrvAcceptedMoved;
+
+  /// No description provided for @hrvCancelPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell {name} why the interview on {when} is cancelled. They will see this reason.'**
+  String hrvCancelPrompt(String name, String when);
+
+  /// No description provided for @hrvCancelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. The interviewer is unavailable on that day.'**
+  String get hrvCancelHint;
+
+  /// No description provided for @hrvCancelledNotified.
+  ///
+  /// In en, this message translates to:
+  /// **'Interview cancelled. {name} has been notified with your reason.'**
+  String hrvCancelledNotified(String name);
+
+  /// No description provided for @hrvChangeWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'An interview can only be cancelled or rescheduled up to 2 hours before it starts.'**
+  String get hrvChangeWindow;
+
+  /// No description provided for @hrvNoInterviewBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'No interview is booked.'**
+  String get hrvNoInterviewBooked;
+
+  /// No description provided for @hrvInterviewWasCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The interview on {when} was cancelled.'**
+  String hrvInterviewWasCancelled(String when);
+
+  /// No description provided for @hrvScheduleNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule a new interview'**
+  String get hrvScheduleNew;
+
+  /// No description provided for @hrvOfferSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent. Waiting for {name} to accept. The offer letter and acceptance letter can be added once they accept.'**
+  String hrvOfferSent(String name);
+
+  /// No description provided for @hrvAcceptedAnotherCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted another company\'s offer, so this application was closed automatically.'**
+  String hrvAcceptedAnotherCompany(String name);
+
+  /// No description provided for @hrvPickDayTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a day and a time first.'**
+  String get hrvPickDayTime;
+
+  /// No description provided for @hrvChangeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} {verb}. Reason: {reason}'**
+  String hrvChangeNote(String actor, String verb, String reason);
+
+  /// No description provided for @ivVerbAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'asked to move the interview'**
+  String get ivVerbAsked;
+
+  /// No description provided for @ivVerbDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'declined moving the interview'**
+  String get ivVerbDeclined;
+
+  /// No description provided for @ivVerbMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'moved the interview'**
+  String get ivVerbMoved;
+
+  /// No description provided for @ivVerbAutoCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'cancelled the interview automatically'**
+  String get ivVerbAutoCancelled;
+
+  /// No description provided for @ivVerbCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'cancelled the interview'**
+  String get ivVerbCancelled;
+
+  /// No description provided for @ivVerbBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'booked the interview'**
+  String get ivVerbBooked;
+
+  /// No description provided for @acTabOne.
+  ///
+  /// In en, this message translates to:
+  /// **'One student'**
+  String get acTabOne;
+
+  /// No description provided for @acTabMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Many (list / CSV)'**
+  String get acTabMany;
+
+  /// No description provided for @acHowItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'Each student gets a random password that meets the password rules. You will see it once, on the next screen, to send to the student. At their first login they must choose a new password.'**
+  String get acHowItWorks;
+
+  /// No description provided for @acFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get acFullName;
+
+  /// No description provided for @acFullNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'As on the student card'**
+  String get acFullNameHint;
+
+  /// No description provided for @acEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get acEmail;
+
+  /// No description provided for @acRegNoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration number (optional)'**
+  String get acRegNoOptional;
+
+  /// No description provided for @acProgrammeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Programme (optional)'**
+  String get acProgrammeOptional;
+
+  /// No description provided for @acProgrammeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Bachelor of Computer Science'**
+  String get acProgrammeHint;
+
+  /// No description provided for @acCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get acCreateAccount;
+
+  /// No description provided for @acFileCouldNotRead.
+  ///
+  /// In en, this message translates to:
+  /// **'That file could not be read.'**
+  String get acFileCouldNotRead;
+
+  /// No description provided for @acFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is too large for a student list (512 KB at most).'**
+  String get acFileTooLarge;
+
+  /// No description provided for @acOnePerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'One student per line:'**
+  String get acOnePerLine;
+
+  /// No description provided for @acLineFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'email, full name, registration number, programme (the last two are optional). A header row is fine.'**
+  String get acLineFormat;
+
+  /// No description provided for @acChooseCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a CSV file'**
+  String get acChooseCsv;
+
+  /// No description provided for @acFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'File: {name}'**
+  String acFileName(String name);
+
+  /// No description provided for @acCreateAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Create accounts'**
+  String get acCreateAccounts;
+
+  /// No description provided for @acCreateN.
+  ///
+  /// In en, this message translates to:
+  /// **'Create {count} accounts'**
+  String acCreateN(int count);
+
+  /// No description provided for @acRowsSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows with a problem are skipped. Fix them and add them again.'**
+  String get acRowsSkipped;
+
+  /// No description provided for @acNoEmailApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No email app could be opened. Copy the details and send them another way.'**
+  String get acNoEmailApp;
+
+  /// No description provided for @acLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this screen?'**
+  String get acLeaveTitle;
+
+  /// No description provided for @acLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The temporary passwords are shown only here and cannot be seen again. Make sure you have copied or sent them.'**
+  String get acLeaveBody;
+
+  /// No description provided for @acStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get acStay;
+
+  /// No description provided for @acLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get acLeave;
+
+  /// No description provided for @acNewAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'New accounts'**
+  String get acNewAccounts;
+
+  /// No description provided for @acSendNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send each student their email and password now. The passwords are shown only on this screen. Students must choose a new password the first time they log in.'**
+  String get acSendNow;
+
+  /// No description provided for @acCopiedCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {count} accounts as CSV.'**
+  String acCopiedCsv(int count);
+
+  /// No description provided for @acCopyAllCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all as CSV'**
+  String get acCopyAllCsv;
+
+  /// No description provided for @acLoginCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Login details copied.'**
+  String get acLoginCopied;
+
+  /// No description provided for @acNotCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not created'**
+  String get acNotCreated;
+
+  /// No description provided for @acDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get acDone;
+
+  /// No description provided for @acCopyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy details'**
+  String get acCopyDetails;
+
+  /// No description provided for @acEmailStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Email student'**
+  String get acEmailStudent;
+
+  /// No description provided for @fpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'You logged in with a temporary password from your administrator. Choose your own password now. You cannot use the app until you do.'**
+  String get fpIntro;
+
+  /// No description provided for @fpNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get fpNewPassword;
+
+  /// No description provided for @fpConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get fpConfirmPassword;
+
+  /// No description provided for @fpSaveContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and continue'**
+  String get fpSaveContinue;
+
+  /// No description provided for @fpLogOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get fpLogOut;
+
+  /// No description provided for @ceNewCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new code was sent to {email}.'**
+  String ceNewCodeSent(String email);
+
+  /// No description provided for @ceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email'**
+  String get ceTitle;
+
+  /// No description provided for @ceIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to {email}. Type it below to confirm your account. It can take a minute and may land in your spam folder.'**
+  String ceIntro(String email);
+
+  /// No description provided for @ceCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code from the email'**
+  String get ceCodeLabel;
+
+  /// No description provided for @ceCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code'**
+  String get ceCodeHint;
+
+  /// No description provided for @ceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm account'**
+  String get ceConfirm;
+
+  /// No description provided for @ceResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code in {seconds}s'**
+  String ceResendIn(int seconds);
+
+  /// No description provided for @ceResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code'**
+  String get ceResend;
+
+  /// No description provided for @ceBackToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to log in'**
+  String get ceBackToLogin;
+
+  /// No description provided for @fgCodeRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'A new code was requested.'**
+  String get fgCodeRequested;
+
+  /// No description provided for @fgCheckEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email for the code.'**
+  String get fgCheckEmail;
+
+  /// No description provided for @fgTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get fgTitle;
+
+  /// No description provided for @fgEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the email address of your account. We will email you a code.'**
+  String get fgEnterEmail;
+
+  /// No description provided for @fgEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get fgEmailLabel;
+
+  /// No description provided for @fgEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email'**
+  String get fgEmailHint;
+
+  /// No description provided for @fgSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get fgSendCode;
+
+  /// No description provided for @fgSentIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for {email}, we have emailed a code. It can take a minute, and may land in your spam folder. The code expires after a short time.'**
+  String fgSentIntro(String email);
+
+  /// No description provided for @fgVerifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify code'**
+  String get fgVerifyCode;
+
+  /// No description provided for @fgDifferentEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different email'**
+  String get fgDifferentEmail;
+
+  /// No description provided for @fgCodeAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Code accepted. Choose a new password.'**
+  String get fgCodeAccepted;
+
+  /// No description provided for @fgNewPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new password'**
+  String get fgNewPasswordHint;
+
+  /// No description provided for @fgConfirmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your new password'**
+  String get fgConfirmHint;
+
+  /// No description provided for @fgSaveNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Save new password'**
+  String get fgSaveNew;
+
+  /// No description provided for @suPrivacyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please read and accept the privacy notice to continue.'**
+  String get suPrivacyRequired;
+
+  /// No description provided for @suPendingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created. An administrator must approve it before you can log in.'**
+  String get suPendingApproval;
+
+  /// No description provided for @suCreatedLoginConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is created. Log in to confirm your email with a new code.'**
+  String get suCreatedLoginConfirm;
+
+  /// No description provided for @suEmailConfirmedPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Email confirmed. An administrator must approve your account before you can log in.'**
+  String get suEmailConfirmedPending;
+
+  /// No description provided for @suExistsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account already exists'**
+  String get suExistsTitle;
+
+  /// No description provided for @suExistsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An account has already been created with {email}. Log in with it, or reset the password if you have forgotten it. No new email is sent for an existing account.'**
+  String suExistsBody(String email);
+
+  /// No description provided for @suForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password'**
+  String get suForgotPassword;
+
+  /// No description provided for @suStudentsCreatedByAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Student accounts are created by your administrator. Log in with the email and password you were given.'**
+  String get suStudentsCreatedByAdmin;
+
+  /// No description provided for @suFullNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name'**
+  String get suFullNameHint;
+
+  /// No description provided for @suAgreePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the '**
+  String get suAgreePrefix;
+
+  /// No description provided for @suPrivacyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'privacy notice'**
+  String get suPrivacyNotice;
+
+  /// No description provided for @loPasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed. Log in with your new password.'**
+  String get loPasswordChanged;
+
+  /// No description provided for @stMyInterviewTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'My interview days and times'**
+  String get stMyInterviewTimes;
+
+  /// No description provided for @stPrivacyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy notice'**
+  String get stPrivacyNotice;
+
+  /// No description provided for @stDeleteMyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get stDeleteMyAccount;
+
+  /// No description provided for @errUnsupportedImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported file format. Please upload a JPG, JPEG, or PNG image.'**
+  String get errUnsupportedImage;
+
+  /// No description provided for @errPhotoEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected photo is empty (0 bytes). Try a different photo.'**
+  String get errPhotoEmpty;
+
+  /// No description provided for @errPhotoNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected photo could not be found on disk.'**
+  String get errPhotoNotFound;
+
+  /// No description provided for @errUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed: {error}'**
+  String errUploadFailed(String error);
+
+  /// No description provided for @errCouldNotAccessCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access camera: {error}'**
+  String errCouldNotAccessCamera(String error);
+
+  /// No description provided for @errCouldNotAccessGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access gallery: {error}'**
+  String errCouldNotAccessGallery(String error);
+
+  /// No description provided for @errCouldNotRemovePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove photo: {error}'**
+  String errCouldNotRemovePhoto(String error);
+
+  /// No description provided for @errCouldNotSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save: {error}'**
+  String errCouldNotSave(String error);
+
+  /// No description provided for @errCouldNotSaveLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save language: {error}'**
+  String errCouldNotSaveLanguage(String error);
+
+  /// No description provided for @errCouldNotSaveTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save theme: {error}'**
+  String errCouldNotSaveTheme(String error);
+
+  /// No description provided for @hpDeadlinePassed.
+  ///
+  /// In en, this message translates to:
+  /// **'The deadline of this posting has passed. Edit the posting and choose a later deadline to reopen it.'**
+  String get hpDeadlinePassed;
+
+  /// No description provided for @hpExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get hpExpired;
+
+  /// No description provided for @hpRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended candidates'**
+  String get hpRecommended;
+
+  /// No description provided for @hpChooseLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the internship location on the map.'**
+  String get hpChooseLocation;
+
+  /// No description provided for @hpAddOneSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one required skill.'**
+  String get hpAddOneSkill;
+
+  /// No description provided for @hpCloseBeforeDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'The posting cannot close before its application deadline.'**
+  String get hpCloseBeforeDeadline;
+
+  /// No description provided for @hpFixFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fix the highlighted fields before publishing.'**
+  String get hpFixFields;
+
+  /// No description provided for @hpCouldNotSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save posting: {error}'**
+  String hpCouldNotSave(String error);
+
+  /// No description provided for @hpCouldNotDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete posting: {error}'**
+  String hpCouldNotDelete(String error);
+
+  /// No description provided for @hpCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get hpCustom;
+
+  /// No description provided for @hpCustomCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom category'**
+  String get hpCustomCategory;
+
+  /// No description provided for @hpCustomCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Marketing'**
+  String get hpCustomCategoryHint;
+
+  /// No description provided for @hpAllowancePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowance must be more than 0.'**
+  String get hpAllowancePositive;
+
+  /// No description provided for @hpAutoCloseCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting closes automatically after (optional)'**
+  String get hpAutoCloseCaption;
+
+  /// No description provided for @hpClosesOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting closes on {date}'**
+  String hpClosesOn(String date);
+
+  /// No description provided for @hpAutoCloseOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-close date (optional)'**
+  String get hpAutoCloseOptional;
+
+  /// No description provided for @acTitleStudents.
+  ///
+  /// In en, this message translates to:
+  /// **'Create student accounts'**
+  String get acTitleStudents;
+
+  /// No description provided for @acTitleSupervisors.
+  ///
+  /// In en, this message translates to:
+  /// **'Create supervisor accounts'**
+  String get acTitleSupervisors;
+
+  /// No description provided for @acHowItWorksSupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'Each supervisor gets a random password that meets the password rules, and the account is approved straight away. You will see the password once, on the next screen, to send to them. At their first login they must choose a new password.'**
+  String get acHowItWorksSupervisor;
+
+  /// No description provided for @acLineFormatSupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'email, full name. A header row is fine.'**
+  String get acLineFormatSupervisor;
+
+  /// No description provided for @acSendNowSupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'Send each supervisor their email and password now. The passwords are shown only on this screen. They must choose a new password the first time they log in.'**
+  String get acSendNowSupervisor;
+
+  /// No description provided for @adminAddSupervisors.
+  ///
+  /// In en, this message translates to:
+  /// **'Add supervisors'**
+  String get adminAddSupervisors;
+
+  /// No description provided for @adminAddStudents.
+  ///
+  /// In en, this message translates to:
+  /// **'Add students'**
+  String get adminAddStudents;
+
+  /// No description provided for @stSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get stSummaryTitle;
+
+  /// No description provided for @stViewFull.
+  ///
+  /// In en, this message translates to:
+  /// **'View full statistics'**
+  String get stViewFull;
+
+  /// No description provided for @stNoCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Join or register a company to see statistics here.'**
+  String get stNoCompany;
+
+  /// No description provided for @stNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to show yet.'**
+  String get stNothingYet;
+
+  /// No description provided for @stCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the statistics: {error}'**
+  String stCouldNotLoad(String error);
+
+  /// No description provided for @stTitleHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiring statistics'**
+  String get stTitleHr;
+
+  /// No description provided for @stTitleAcademic.
+  ///
+  /// In en, this message translates to:
+  /// **'Student progress'**
+  String get stTitleAcademic;
+
+  /// No description provided for @stTitleCompanySup.
+  ///
+  /// In en, this message translates to:
+  /// **'Intern progress'**
+  String get stTitleCompanySup;
+
+  /// No description provided for @stTitleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform statistics'**
+  String get stTitleAdmin;
+
+  /// No description provided for @stPostings.
+  ///
+  /// In en, this message translates to:
+  /// **'Postings'**
+  String get stPostings;
+
+  /// No description provided for @stOpenPostings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open postings'**
+  String get stOpenPostings;
+
+  /// No description provided for @stApplications.
+  ///
+  /// In en, this message translates to:
+  /// **'Applications'**
+  String get stApplications;
+
+  /// No description provided for @stApplicants.
+  ///
+  /// In en, this message translates to:
+  /// **'Applicants'**
+  String get stApplicants;
+
+  /// No description provided for @stInterviewing.
+  ///
+  /// In en, this message translates to:
+  /// **'In interview'**
+  String get stInterviewing;
+
+  /// No description provided for @stOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'Offered'**
+  String get stOffered;
+
+  /// No description provided for @stAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get stAccepted;
+
+  /// No description provided for @stRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get stRejected;
+
+  /// No description provided for @stPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for review'**
+  String get stPending;
+
+  /// No description provided for @stClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get stClosed;
+
+  /// No description provided for @stAcceptRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Acceptance rate'**
+  String get stAcceptRate;
+
+  /// No description provided for @stInterviewsUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming interviews'**
+  String get stInterviewsUpcoming;
+
+  /// No description provided for @stInterviewsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Interviews done'**
+  String get stInterviewsDone;
+
+  /// No description provided for @stByStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Applications by status'**
+  String get stByStatus;
+
+  /// No description provided for @stPerPosting.
+  ///
+  /// In en, this message translates to:
+  /// **'Per posting'**
+  String get stPerPosting;
+
+  /// No description provided for @stPostingRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{applications} applications · {interview} interview · {offered} offered · {accepted} accepted'**
+  String stPostingRow(
+    int applications,
+    int interview,
+    int offered,
+    int accepted,
+  );
+
+  /// No description provided for @stWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Applications per week (last 8 weeks)'**
+  String get stWeekly;
+
+  /// No description provided for @stStudents.
+  ///
+  /// In en, this message translates to:
+  /// **'Students'**
+  String get stStudents;
+
+  /// No description provided for @stPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Placed'**
+  String get stPlaced;
+
+  /// No description provided for @stNotPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not placed yet'**
+  String get stNotPlaced;
+
+  /// No description provided for @stReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get stReports;
+
+  /// No description provided for @stReportsWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your review'**
+  String get stReportsWaiting;
+
+  /// No description provided for @stReportsApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get stReportsApproved;
+
+  /// No description provided for @stReportsSentBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent back'**
+  String get stReportsSentBack;
+
+  /// No description provided for @stDocsWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents to review'**
+  String get stDocsWaiting;
+
+  /// No description provided for @stDocsApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents approved'**
+  String get stDocsApproved;
+
+  /// No description provided for @stEvaluationsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluations done'**
+  String get stEvaluationsDone;
+
+  /// No description provided for @stReportProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Report progress'**
+  String get stReportProgress;
+
+  /// No description provided for @stPerStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Per student'**
+  String get stPerStudent;
+
+  /// No description provided for @stStudentRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{reports} reports · {approved} approved · {pending} waiting'**
+  String stStudentRow(int reports, int approved, int pending);
+
+  /// No description provided for @stPlacedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Placed'**
+  String get stPlacedBadge;
+
+  /// No description provided for @stNotPlacedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Not placed'**
+  String get stNotPlacedBadge;
+
+  /// No description provided for @stInterns.
+  ///
+  /// In en, this message translates to:
+  /// **'Interns'**
+  String get stInterns;
+
+  /// No description provided for @stEvaluatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluated'**
+  String get stEvaluatedBadge;
+
+  /// No description provided for @stNotEvaluatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Not evaluated'**
+  String get stNotEvaluatedBadge;
+
+  /// No description provided for @stEvaluatedStudents.
+  ///
+  /// In en, this message translates to:
+  /// **'Interns evaluated'**
+  String get stEvaluatedStudents;
+
+  /// No description provided for @stPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People on the platform'**
+  String get stPeople;
+
+  /// No description provided for @stCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies'**
+  String get stCompanies;
+
+  /// No description provided for @stCompaniesVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get stCompaniesVerified;
+
+  /// No description provided for @stCompaniesPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for verification'**
+  String get stCompaniesPending;
+
+  /// No description provided for @stNewCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'New companies (30 days)'**
+  String get stNewCompanies;
+
+  /// No description provided for @stCompaniesWithPostings.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies with postings'**
+  String get stCompaniesWithPostings;
+
+  /// No description provided for @stNewPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'New people (30 days)'**
+  String get stNewPeople;
+
+  /// No description provided for @stPendingApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get stPendingApprovals;
+
+  /// No description provided for @stUsersByRole.
+  ///
+  /// In en, this message translates to:
+  /// **'People by role'**
+  String get stUsersByRole;
+
+  /// No description provided for @stCompaniesByStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies by status'**
+  String get stCompaniesByStatus;
+
+  /// No description provided for @stCompaniesJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies joined per month (last 6)'**
+  String get stCompaniesJoined;
+
+  /// No description provided for @stPeopleJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'People joined per month (last 6)'**
+  String get stPeopleJoined;
+
+  /// No description provided for @stRoleStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Students'**
+  String get stRoleStudent;
+
+  /// No description provided for @stRoleAcademic.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic supervisors'**
+  String get stRoleAcademic;
+
+  /// No description provided for @stRoleHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Company HR'**
+  String get stRoleHr;
+
+  /// No description provided for @stRoleCompanySup.
+  ///
+  /// In en, this message translates to:
+  /// **'Company supervisors'**
+  String get stRoleCompanySup;
+
+  /// No description provided for @stRoleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators'**
+  String get stRoleAdmin;
+
+  /// No description provided for @roleLabelStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Student'**
+  String get roleLabelStudent;
+
+  /// No description provided for @roleLabelAcademic.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic supervisor'**
+  String get roleLabelAcademic;
+
+  /// No description provided for @roleLabelHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Company HR'**
+  String get roleLabelHr;
+
+  /// No description provided for @roleLabelCompanySup.
+  ///
+  /// In en, this message translates to:
+  /// **'Company supervisor'**
+  String get roleLabelCompanySup;
+
+  /// No description provided for @roleLabelAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get roleLabelAdmin;
+
+  /// No description provided for @acTabOneSupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'One supervisor'**
+  String get acTabOneSupervisor;
+
+  /// No description provided for @acTabManySupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'Many (list / CSV)'**
+  String get acTabManySupervisor;
+
+  /// No description provided for @acFullNameHintSupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'As on the employee card'**
+  String get acFullNameHintSupervisor;
+
+  /// No description provided for @acEmailSupervisor.
+  ///
+  /// In en, this message translates to:
+  /// **'Email supervisor'**
+  String get acEmailSupervisor;
+
+  /// No description provided for @acCreateFailedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'The account could not be created: {reason}'**
+  String acCreateFailedReason(String reason);
+
+  /// No description provided for @adminNeverLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged in yet'**
+  String get adminNeverLoggedIn;
+
+  /// No description provided for @adminAwaitingApprovalBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting approval'**
+  String get adminAwaitingApprovalBadge;
+
+  /// No description provided for @adminNotApprovedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved'**
+  String get adminNotApprovedBadge;
+
+  /// No description provided for @adminFilterVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get adminFilterVerified;
+
+  /// No description provided for @adminFilterNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get adminFilterNotVerified;
+
+  /// No description provided for @adminNoCompaniesInFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'No companies in this group'**
+  String get adminNoCompaniesInFilter;
+
+  /// No description provided for @hpClosesAfterDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'The posting closes automatically after the application deadline. Without a deadline it stays open until you close it.'**
+  String get hpClosesAfterDeadline;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon, {name}!'**
+  String goodAfternoon(String name);
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening, {name}!'**
+  String goodEvening(String name);
 }
 
 class _AppLocalizationsDelegate

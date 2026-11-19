@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../widgets/reason_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/company_supervisor_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
+import '../../utils/error_text.dart';
+import '../../utils/lang.dart';
 
 class CompanySupervisorReviewsScreen extends StatefulWidget {
   const CompanySupervisorReviewsScreen({super.key});
@@ -65,7 +68,7 @@ class _CompanySupervisorReviewsScreenState
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save review: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not save review')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -83,7 +86,7 @@ class _CompanySupervisorReviewsScreenState
       ));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open file: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not open file')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -99,14 +102,14 @@ class _CompanySupervisorReviewsScreenState
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
+          unselectedLabelColor: kOnBannerSoft,
           indicatorColor: Colors.white,
           labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600),
           tabs: [Tab(text: l10n.csTabPending), Tab(text: l10n.csTabApproved), Tab(text: l10n.csTabRejected)],
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : TabBarView(
               controller: _tabController,
               children: ['submitted', 'approved', 'rejected'].map((status) {
@@ -167,7 +170,7 @@ class _ReportCard extends StatelessWidget {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: AppColors.surfaceVariant,
-                child: Text(logoLetter(data['student_name'] as String), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                child: Text(logoLetter(data['student_name'] as String), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -236,47 +239,22 @@ class _ReportCard extends StatelessWidget {
   }
 }
 
-class _CommentDialog extends StatefulWidget {
+/// Rejecting needs a written reason (at least 100 characters) that the student
+/// will read; approving may carry an optional comment.
+class _CommentDialog extends StatelessWidget {
   final bool isReject;
 
   const _CommentDialog({required this.isReject});
 
   @override
-  State<_CommentDialog> createState() => _CommentDialogState();
-}
-
-class _CommentDialogState extends State<_CommentDialog> {
-  final _commentController = TextEditingController();
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      title: Text(widget.isReject ? l10n.csRejectReport : l10n.csApproveReport, style: AppTextStyles.h3),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.isReject ? l10n.csRejectReasonPrompt : l10n.csApproveCommentPrompt, style: AppTextStyles.bodySecondary),
-          const SizedBox(height: 12),
-          TextField(controller: _commentController, maxLines: 3, decoration: InputDecoration(hintText: l10n.supTypeYourComment)),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        ElevatedButton(
-          onPressed: () {
-            if (widget.isReject && _commentController.text.trim().isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.csPleaseAddFeedback), backgroundColor: AppColors.error));
-              return;
-            }
-            Navigator.pop(context, _commentController.text);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: widget.isReject ? AppColors.error : AppColors.primary),
-          child: Text(widget.isReject ? l10n.hrReject : l10n.supApprove),
-        ),
-      ],
+    return ReasonDialog(
+      title: isReject ? l10n.csRejectReport : l10n.csApproveReport,
+      prompt: isReject ? l10n.csRejectReasonPrompt : l10n.csApproveCommentPrompt,
+      confirmLabel: isReject ? l10n.hrReject : l10n.supApprove,
+      reasonRequired: isReject,
+      destructive: isReject,
     );
   }
 }

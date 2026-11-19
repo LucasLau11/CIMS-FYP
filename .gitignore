@@ -44,10 +44,29 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Local secrets / environment files — never commit
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/.temp/
+nlp_service/.env
+
+# Android release signing material — never commit
+/android/key.properties
+*.jks
+*.keystore
+
 # nlp_service (Python)
 nlp_service/.venv/
 nlp_service/__pycache__/
 nlp_service/**/__pycache__/
+# regenerable training artefacts (rebuild with train/prepare_data.py)
+nlp_service/train/*.spacy
+nlp_service/models/*/model-last/
+nlp_service/models/skill_ner_v1/
+nlp_service/eval/predictions_*.json
+nlp_service/.venv-tf/
 
 # Subagent-driven-development scratch workspace (ledgers, briefs, reports)
 .superpowers/

@@ -3,14 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../utils/validators.dart';
+import '../widgets/account_actions.dart';
+import '../widgets/common/validated_field.dart';
 import '../widgets/common/shared_widgets.dart';
 import '../services/auth_service.dart';
 import 'photo_crop_screen.dart';
 import 'student/address_picker_screen.dart';
 import 'login_screen.dart';
+import '../utils/error_text.dart';
+import '../utils/responsive.dart';
+import '../theme/role_theme.dart';
+import 'hr/hr_availability_screen.dart';
+import 'stats_screen.dart';
+import '../utils/stats_report.dart';
 
-/// Full profile screen shared by HR, Company Supervisor, and Academic
-/// Supervisor — mirrors the student profile's personal-info/security/
+/// Full profile screen shared by HR, Company Supervisor, Academic
+/// Supervisor and Administrator (so every staff profile looks the same, with a
+/// statistics summary for the role) — mirrors the student profile's personal-info/security/
 /// preferences sections, minus the academic-specific fields (programme,
 /// resume, etc.) that don't apply to staff roles.
 class StaffProfileScreen extends StatefulWidget {
@@ -31,6 +41,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
 
   // Contact info
   bool _isEditingContactInfo = false;
+  final _contactFormKey = GlobalKey<FormState>();
   bool _isSavingContactInfo = false;
   String _email = '';
   final _nameController = TextEditingController();
@@ -44,8 +55,6 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
   String? _originalAddressText;
   double? _originalAddressLat;
   double? _originalAddressLng;
-
-  bool _isChangingPassword = false;
 
   String _selectedLanguage = 'English';
   String _selectedThemeCode = 'system';
@@ -121,7 +130,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
       if (!_allowedImageExtensions.any((ext) => lowerPath.endsWith(ext))) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Unsupported file format. Please upload a JPG, JPEG, or PNG image.'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errUnsupportedImage), backgroundColor: AppColors.error),
         );
         return;
       }
@@ -132,7 +141,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
       if (!exists || size == 0) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(exists ? 'The selected photo is empty (0 bytes). Try a different photo.' : 'The selected photo could not be found on disk.'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(exists ? AppLocalizations.of(context)!.errPhotoEmpty : AppLocalizations.of(context)!.errPhotoNotFound), backgroundColor: AppColors.error),
         );
         return;
       }
@@ -164,11 +173,11 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
           _localPreviewImage = null;
           _isUploadingAvatar = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppColors.error));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.errUploadFailed(friendlyError(e))), backgroundColor: AppColors.error));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not access ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(source == ImageSource.camera ? AppLocalizations.of(context)!.errCouldNotAccessCamera(friendlyError(e)) : AppLocalizations.of(context)!.errCouldNotAccessGallery(friendlyError(e)))));
     }
   }
 
@@ -185,7 +194,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isUploadingAvatar = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not remove photo: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.errCouldNotRemovePhoto(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -203,7 +212,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
               child: Align(alignment: Alignment.centerLeft, child: Text(l10n.profileUpdatePhoto, style: const TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700))),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
+              leading: Icon(Icons.photo_camera_outlined, color: AppColors.primaryText),
               title: Text(l10n.profileTakePhoto),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -211,7 +220,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+              leading: Icon(Icons.photo_library_outlined, color: AppColors.primaryText),
               title: Text(l10n.profileChooseFromGallery),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -253,10 +262,8 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
   }
 
   Future<void> _saveContactInfo() async {
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Full name cannot be blank.'), backgroundColor: AppColors.error));
-      return;
-    }
+    // Name and phone show their own message under the field.
+    if (!(_contactFormKey.currentState?.validate() ?? false)) return;
     setState(() => _isSavingContactInfo = true);
     try {
       await AuthService.instance.updateContactInfo(
@@ -280,7 +287,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSavingContactInfo = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.errCouldNotSave(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -299,117 +306,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
   // CHANGE PASSWORD
   // =====================================================================
 
-  void _showChangePasswordDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final currentController = TextEditingController();
-    final newController = TextEditingController();
-    final confirmController = TextEditingController();
-    String? errorText;
-    bool obscureCurrent = true;
-    bool obscureNew = true;
-    bool obscureConfirm = true;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(l10n.changePassword, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: currentController,
-                      obscureText: obscureCurrent,
-                      decoration: InputDecoration(
-                        labelText: l10n.currentPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
-                          onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: newController,
-                      obscureText: obscureNew,
-                      decoration: InputDecoration(
-                        labelText: l10n.newPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
-                          onPressed: () => setDialogState(() => obscureNew = !obscureNew),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: confirmController,
-                      obscureText: obscureConfirm,
-                      decoration: InputDecoration(
-                        labelText: l10n.confirmNewPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
-                          onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
-                        ),
-                      ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 10),
-                      Text(errorText!, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(onPressed: _isChangingPassword ? null : () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
-                ElevatedButton(
-                  onPressed: _isChangingPassword
-                      ? null
-                      : () async {
-                          if (currentController.text.isEmpty) {
-                            setDialogState(() => errorText = 'Enter your current password.');
-                            return;
-                          }
-                          final strengthError = AuthService.instance.validatePassword(newController.text);
-                          if (strengthError != null) {
-                            setDialogState(() => errorText = strengthError);
-                            return;
-                          }
-                          if (newController.text != confirmController.text) {
-                            setDialogState(() => errorText = 'New passwords do not match.');
-                            return;
-                          }
-                          setDialogState(() {
-                            errorText = null;
-                            _isChangingPassword = true;
-                          });
-                          try {
-                            await AuthService.instance.changePassword(currentPassword: currentController.text, newPassword: newController.text);
-                            if (!dialogContext.mounted) return;
-                            Navigator.pop(dialogContext);
-                            setState(() => _isChangingPassword = false);
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.profilePasswordChanged), backgroundColor: AppColors.primary));
-                          } catch (e) {
-                            setDialogState(() {
-                              _isChangingPassword = false;
-                              errorText = e.toString().replaceFirst('Exception: ', '');
-                            });
-                          }
-                        },
-                  child: _isChangingPassword
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(l10n.change),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+  void _showChangePasswordDialog() => showChangePasswordDialog(context);
 
   // =====================================================================
   // PREFERENCES
@@ -465,7 +362,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.profileNotificationPrefsUpdated), backgroundColor: AppColors.primary));
                           } catch (e) {
                             if (!sheetContext.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.error));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.errCouldNotSave(friendlyError(e))), backgroundColor: AppColors.error));
                           }
                         },
                         child: Text(l10n.save),
@@ -505,7 +402,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                     await AuthService.instance.updateLanguage(val!);
                   } catch (e) {
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save language: $e'), backgroundColor: AppColors.error));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.errCouldNotSaveLanguage(friendlyError(e))), backgroundColor: AppColors.error));
                   }
                 },
               );
@@ -546,7 +443,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not save theme: $e'), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.errCouldNotSaveTheme(friendlyError(e))), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -598,7 +495,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoadingProfile) {
-      return Scaffold(backgroundColor: AppColors.background, body: const Center(child: CircularProgressIndicator(color: AppColors.primary)));
+      return Scaffold(backgroundColor: AppColors.background, body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
     }
 
     final l10n = AppLocalizations.of(context)!;
@@ -608,13 +505,13 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: scaledExtent(context, 236, textShare: 0.3),
             pinned: true,
             backgroundColor: AppColors.primary,
             leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryLight], begin: Alignment.topLeft, end: Alignment.bottomRight)),
+                decoration: BoxDecoration(gradient: LinearGradient(colors: AppColors.headerGradient, begin: Alignment.topLeft, end: Alignment.bottomRight)),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -655,16 +552,31 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                              child: const Icon(Icons.camera_alt, size: 14, color: AppColors.primary),
+                              child: Icon(Icons.camera_alt, size: 14, color: AppColors.primaryText),
                             ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Text(_nameController.text.isEmpty ? l10n.notSet : _nameController.text,
-                        style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-                    Text(_email, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white70)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(_nameController.text.isEmpty ? l10n.notSet : _nameController.text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(_email, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: kOnBannerSoft)),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
+                      child: Text(roleLabel(l10n, RoleController.instance.role.value),
+                          style: const TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
+                    ),
                   ],
                 ),
               ),
@@ -673,6 +585,8 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
           SliverToBoxAdapter(
             child: Column(
               children: [
+                // The numbers for this role (applications, student progress, platform growth ...).
+                StatsSummaryCard(role: RoleController.instance.role.value),
                 SectionHeader(
                   title: l10n.personalInformation,
                   actionIcon: _isEditingContactInfo ? Icons.close : Icons.edit_outlined,
@@ -686,12 +600,24 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                 ),
                 _isEditingContactInfo ? _buildContactInfoEditForm(l10n) : _buildContactInfoView(l10n),
 
+                // HR people choose their own interview days and times here; nothing is
+                // set for them. Students pick a time from what they enter.
+                if (RoleController.instance.role.value == 'company_hr') ...[
+                  SectionHeader(title: l10n.avTitle),
+                  _SettingsTile(
+                    icon: Icons.event_available_outlined,
+                    label: l10n.stMyInterviewTimes,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HrAvailabilityScreen())),
+                  ),
+                ],
                 SectionHeader(title: l10n.account),
                 _SettingsTile(icon: Icons.lock_outline, label: l10n.changePassword, onTap: _showChangePasswordDialog),
                 _SettingsTile(icon: Icons.notifications_outlined, label: l10n.notificationPreferences, onTap: _showNotificationPreferences),
                 _SettingsTile(icon: Icons.language_outlined, label: l10n.language, trailing: _selectedLanguage, onTap: _showLanguagePicker),
                 _SettingsTile(icon: Icons.dark_mode_outlined, label: l10n.theme, trailing: _themeLabel(l10n), onTap: _showThemePicker),
+                _SettingsTile(icon: Icons.privacy_tip_outlined, label: l10n.stPrivacyNotice, onTap: () => openPrivacyPolicy(context)),
                 _SettingsTile(icon: Icons.logout, label: l10n.logOut, isDestructive: true, onTap: _handleLogout),
+                _SettingsTile(icon: Icons.delete_forever_outlined, label: l10n.stDeleteMyAccount, isDestructive: true, onTap: () => showDeleteAccountFlow(context)),
                 const SizedBox(height: 32),
               ],
             ),
@@ -717,12 +643,19 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-      child: Column(
+      child: Form(
+        key: _contactFormKey,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l10n.fullName, style: AppTextStyles.label),
           const SizedBox(height: 6),
-          TextField(controller: _nameController, decoration: const InputDecoration()),
+          ValidatedField(
+            controller: _nameController,
+            fieldValidator: (v) => Validators.fullName(v),
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+          ),
           const SizedBox(height: 14),
           Text(l10n.email, style: AppTextStyles.label),
           const SizedBox(height: 6),
@@ -735,7 +668,13 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
           const SizedBox(height: 14),
           Text(l10n.phone, style: AppTextStyles.label),
           const SizedBox(height: 6),
-          TextField(controller: _phoneController, keyboardType: TextInputType.phone, decoration: InputDecoration(hintText: l10n.profilePhoneHint)),
+          ValidatedField(
+            controller: _phoneController,
+            fieldValidator: (v) => Validators.phone(v, required: false),
+            keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.next,
+            hintText: l10n.profilePhoneHint,
+          ),
           const SizedBox(height: 14),
           Text(l10n.address, style: AppTextStyles.label),
           const SizedBox(height: 6),
@@ -770,6 +709,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
             ],
           ),
         ],
+      ),
       ),
     );
   }

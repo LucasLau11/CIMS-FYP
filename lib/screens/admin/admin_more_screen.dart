@@ -1,15 +1,22 @@
+import 'admin_analytics_screen.dart';
+import 'admin_audit_log_screen.dart';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/account_actions.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
 import '../login_screen.dart';
 import '../student/student_messages_screen.dart' show StudentMessagesScreen;
 import '../student/student_notifications_screen.dart' show StudentNotificationsScreen;
+import 'admin_approvals_screen.dart';
 import 'admin_document_templates_screen.dart';
 import 'admin_intakes_screen.dart';
 import 'admin_monitor_screen.dart';
-import 'admin_profile_screen.dart';
+import '../staff_profile_screen.dart';
+import '../stats_screen.dart';
+import '../../utils/error_text.dart';
+import '../../utils/lang.dart';
 
 class AdminMoreScreen extends StatefulWidget {
   const AdminMoreScreen({super.key});
@@ -22,7 +29,6 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
   String _email = '';
   String _selectedThemeCode = 'system';
   String _selectedLanguage = 'English';
-  bool _isChangingPassword = false;
   final Map<String, bool> _notificationPrefs = {
     'application_updates': true,
     'report_deadlines': true,
@@ -58,119 +64,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
     }
   }
 
-  void _showChangePasswordDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final currentController = TextEditingController();
-    final newController = TextEditingController();
-    final confirmController = TextEditingController();
-    String? errorText;
-    bool obscureCurrent = true;
-    bool obscureNew = true;
-    bool obscureConfirm = true;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(l10n.changePassword, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: currentController,
-                      obscureText: obscureCurrent,
-                      decoration: InputDecoration(
-                        labelText: l10n.currentPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
-                          onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: newController,
-                      obscureText: obscureNew,
-                      decoration: InputDecoration(
-                        labelText: l10n.newPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
-                          onPressed: () => setDialogState(() => obscureNew = !obscureNew),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: confirmController,
-                      obscureText: obscureConfirm,
-                      decoration: InputDecoration(
-                        labelText: l10n.confirmNewPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
-                          onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
-                        ),
-                      ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 10),
-                      Text(errorText!, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(onPressed: _isChangingPassword ? null : () => Navigator.pop(dialogContext), child: Text(l10n.cancel)),
-                ElevatedButton(
-                  onPressed: _isChangingPassword
-                      ? null
-                      : () async {
-                          if (currentController.text.isEmpty) {
-                            setDialogState(() => errorText = l10n.adminEnterCurrentPassword);
-                            return;
-                          }
-                          final strengthError = AuthService.instance.validatePassword(newController.text);
-                          if (strengthError != null) {
-                            setDialogState(() => errorText = strengthError);
-                            return;
-                          }
-                          if (newController.text != confirmController.text) {
-                            setDialogState(() => errorText = l10n.adminNewPasswordsDoNotMatch);
-                            return;
-                          }
-                          setDialogState(() {
-                            errorText = null;
-                            _isChangingPassword = true;
-                          });
-                          try {
-                            await AuthService.instance.changePassword(currentPassword: currentController.text, newPassword: newController.text);
-                            if (!dialogContext.mounted) return;
-                            Navigator.pop(dialogContext);
-                            setState(() => _isChangingPassword = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.adminPasswordChanged), backgroundColor: AppColors.primary),
-                            );
-                          } catch (e) {
-                            setDialogState(() {
-                              _isChangingPassword = false;
-                              errorText = e.toString().replaceFirst('Exception: ', '');
-                            });
-                          }
-                        },
-                  child: _isChangingPassword
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(l10n.change),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+  void _showChangePasswordDialog() => showChangePasswordDialog(context);
 
   void _showLanguagePicker() {
     final l10n = AppLocalizations.of(context)!;
@@ -196,7 +90,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                     await AuthService.instance.updateLanguage(val!);
                   } catch (e) {
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotSaveLanguage(e.toString())), backgroundColor: AppColors.error));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotSaveLanguage(friendlyError(e))), backgroundColor: AppColors.error));
                   }
                 },
               );
@@ -270,7 +164,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                           } catch (e) {
                             if (!sheetContext.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.adminCouldNotSave(e.toString())), backgroundColor: AppColors.error),
+                              SnackBar(content: Text(l10n.adminCouldNotSave(friendlyError(e))), backgroundColor: AppColors.error),
                             );
                           }
                         },
@@ -312,7 +206,7 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.errorCouldNotSaveTheme(e.toString())), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(l10n.errorCouldNotSaveTheme(friendlyError(e))), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -358,14 +252,14 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
         children: [
           GestureDetector(
             onTap: () async {
-              await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminProfileScreen()));
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffProfileScreen()));
               _load();
             },
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF0D6E78), Color(0xFF14B8C8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                gradient: LinearGradient(colors: AppColors.headerGradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
@@ -377,22 +271,50 @@ class _AdminMoreScreenState extends State<AdminMoreScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(l10n.adminSystemAdministrator, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                        Text(_email, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white70)),
+                        Text(_email, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: kOnBannerSoft)),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: Colors.white70),
+                  const Icon(Icons.chevron_right, color: kOnBannerSoft),
                 ],
               ),
             ),
           ),
           SectionHeader(title: l10n.adminSectionOversight),
           _MenuTile(
+            icon: Icons.verified_user_outlined,
+            label: tt('Pending approvals'),
+            subtitle: 'Review new supervisor and company accounts',
+            color: AppColors.warning,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminApprovalsScreen())),
+          ),
+          _MenuTile(
             icon: Icons.monitor_heart_outlined,
             label: l10n.adminMonitorTitle,
             subtitle: l10n.adminMonitorSubtitle,
             color: AppColors.primary,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMonitorScreen())),
+          ),
+          _MenuTile(
+            icon: Icons.bar_chart_outlined,
+            label: l10n.stTitleAdmin,
+            subtitle: l10n.stCompaniesJoined,
+            color: AppColors.primary,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StatsScreen(source: statsSourceFor('admin')!))),
+          ),
+          _MenuTile(
+            icon: Icons.insights_outlined,
+            label: l10n.adminAnalyticsTitle,
+            subtitle: l10n.adminAnalyticsSubtitle,
+            color: AppColors.primary,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAnalyticsScreen())),
+          ),
+          _MenuTile(
+            icon: Icons.fact_check_outlined,
+            label: l10n.adminAuditLogTitle,
+            subtitle: l10n.adminAuditLogSubtitle,
+            color: AppColors.primary,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAuditLogScreen())),
           ),
           _MenuTile(
             icon: Icons.description_outlined,

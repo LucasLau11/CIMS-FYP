@@ -1,5 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../utils/validators.dart';
+import '../../widgets/common/validated_field.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
@@ -10,6 +12,7 @@ import '../../utils/format_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../document_preview_screen.dart';
 import 'student_profile_screen.dart';
+import '../../utils/error_text.dart';
 
 class StudentApplyScreen extends StatefulWidget {
   final Map<String, dynamic> internship;
@@ -92,11 +95,16 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isExtractingCoverLetter = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotReadFile(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotReadFile(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
   bool get _hasResume => _resumeFilename != null && _resumeFilename!.trim().isNotEmpty;
+
+  /// The cover letter is optional, but if one is written it must be a real
+  /// one: at least 50 and at most 3000 characters.
+  String? get _coverLetterError =>
+      Validators.text(_coverLetterController.text, field: 'Cover letter', required: false, min: 50, max: 3000);
 
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
@@ -115,6 +123,8 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
         body: l10n.notifApplicationSubmittedBody(widget.internship['company_name'] as String),
         type: 'application',
         relatedId: widget.internship['id'] as String,
+        msgKey: 'app_submitted',
+        msgArgs: {'company': widget.internship['company_name'] as String},
       );
       if (!mounted) return;
       setState(() {
@@ -125,7 +135,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _submitError = e.toString().replaceFirst('Exception: ', '');
+        _submitError = friendlyError(e).replaceFirst('Exception: ', '');
       });
     }
   }
@@ -172,7 +182,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                               fontFamily: 'Poppins',
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: nameColor(widget.internship['company_name'] as String))),
+                              color: nameTextColor(widget.internship['company_name'] as String))),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -181,6 +191,8 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.internship['title'] as String,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 14,
@@ -188,6 +200,8 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                                 color: AppColors.textPrimary)),
                         Text(
                             '${widget.internship['company_name']} · ${widget.internship['location']}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: AppTextStyles.bodySecondary.copyWith(fontSize: 13)),
                       ],
                     ),
@@ -234,7 +248,9 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: _isSubmitting || (_currentStep == 0 && !_hasResume)
+                      onPressed: _isSubmitting ||
+                              (_currentStep == 0 && !_hasResume) ||
+                              (_currentStep == 1 && _coverLetterError != null)
                           ? null
                           : () {
                               if (_currentStep < 3) {
@@ -296,6 +312,7 @@ class _StudentApplyScreenState extends State<StudentApplyScreen> {
           controller: _coverLetterController,
           isExtracting: _isExtractingCoverLetter,
           onUpload: _uploadCoverLetter,
+          onChanged: () => setState(() {}),
         );
       case 2:
         return _SkillsStep(
@@ -341,7 +358,7 @@ class _ResumeStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (isLoading) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
         child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
@@ -367,14 +384,14 @@ class _ResumeStep extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.picture_as_pdf_outlined, size: 22, color: AppColors.primary),
+                  Icon(Icons.picture_as_pdf_outlined, size: 22, color: AppColors.primaryText),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(resumeFilename!,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -384,7 +401,7 @@ class _ResumeStep extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.open_in_new, size: 16, color: AppColors.primary),
+                  Icon(Icons.open_in_new, size: 16, color: AppColors.primaryText),
                 ],
               ),
             ),
@@ -430,8 +447,14 @@ class _CoverLetterStep extends StatelessWidget {
   final TextEditingController controller;
   final bool isExtracting;
   final VoidCallback onUpload;
+  final VoidCallback onChanged;
 
-  const _CoverLetterStep({required this.controller, required this.isExtracting, required this.onUpload});
+  const _CoverLetterStep({
+    required this.controller,
+    required this.isExtracting,
+    required this.onUpload,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -452,11 +475,22 @@ class _CoverLetterStep extends StatelessWidget {
           label: Text(isExtracting ? l10n.readingFile : l10n.uploadCoverLetterButton),
         ),
         const SizedBox(height: 16),
-        TextField(
+        ValidatedField(
           controller: controller,
+          fieldValidator: (v) => Validators.text(v, field: 'Cover letter', required: false, min: 50, max: 3000),
           maxLines: 12,
-          decoration: InputDecoration(
-            hintText: l10n.coverLetterHint,
+          maxLength: 3000,
+          showSuccess: false,
+          hintText: l10n.coverLetterHint,
+          helperText: 'Optional. If you write one, use 50 to 3000 characters.',
+          onChanged: (_) => onChanged(),
+        ),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, _) => Align(
+            alignment: Alignment.centerRight,
+            child: Text('${value.text.trim().length} / 3000',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted)),
           ),
         ),
         const SizedBox(height: 12),
@@ -465,8 +499,11 @@ class _CoverLetterStep extends StatelessWidget {
           children: [
             Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
             const SizedBox(width: 4),
-            Text(l10n.coverLetterTip,
-                style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted)),
+            Flexible(
+              child: Text(l10n.coverLetterTip,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textMuted)),
+            ),
           ],
         ),
       ],
@@ -512,7 +549,7 @@ class _SkillsStep extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (isSelected) const Icon(Icons.check, size: 14, color: AppColors.primary),
+                    if (isSelected) Icon(Icons.check, size: 14, color: AppColors.primaryText),
                     if (isSelected) const SizedBox(width: 4),
                     Text(skill,
                         style: TextStyle(
@@ -572,7 +609,7 @@ class _ReviewStep extends StatelessWidget {
           title: l10n.resume,
           child: Row(
             children: [
-              const Icon(Icons.picture_as_pdf_outlined, size: 16, color: AppColors.primary),
+              Icon(Icons.picture_as_pdf_outlined, size: 16, color: AppColors.primaryText),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(resumeFilename ?? l10n.noResume,
@@ -609,7 +646,7 @@ class _ReviewStep extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(6)),
                       child: Text(s,
-                          style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary)),
+                          style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText)),
                     ))
                 .toList(),
           ),

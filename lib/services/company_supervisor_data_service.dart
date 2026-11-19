@@ -39,10 +39,22 @@ class CompanySupervisorDataService {
 
   final SupabaseClient _client = Supabase.instance.client;
 
+  /// Report and evaluation progress of the interns placed at this company (migration 00039).
+  Future<Map<String, dynamic>> getStats() async {
+    final result = await _client.rpc('company_supervisor_stats');
+    return Map<String, dynamic>.from(result as Map);
+  }
+
   String get _userId {
     final id = AuthService.instance.currentUserId;
     if (id == null) throw Exception('You must be logged in.');
     return id;
+  }
+
+  /// Whether this student has already been given the company evaluation (an evaluation is final: a student gets one).
+  Future<bool> isEvaluated(String studentId) async {
+    final rows = await _client.from('evaluations').select('student_id').eq('student_id', studentId).eq('type', 'workplace').limit(1);
+    return List.from(rows).isNotEmpty;
   }
 
   Future<String?> get _companyId async {
@@ -62,7 +74,10 @@ class CompanySupervisorDataService {
         .from('applications')
         .select('student_id, applied_at, job_postings!inner(job_posting_id, title, company_id)')
         .eq('job_postings.company_id', companyId)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        // every intern has one company supervisor (the company's HR assigns it, or it is automatic when the company
+        // has just one): this list is the interns assigned to ME
+        .eq('company_supervisor_id', _userId);
     final apps = List<Map<String, dynamic>>.from(rows);
     if (apps.isEmpty) return [];
 
@@ -98,6 +113,13 @@ class CompanySupervisorDataService {
       for (final r in List<Map<String, dynamic>>.from(internshipStatuses)) r['student_id'] as String: r['status'] as String,
     };
 
+    // A student gets ONE company evaluation; once it is submitted the evaluation is closed (migration 00048).
+    final evaluated = {
+      for (final r in List<Map<String, dynamic>>.from(
+          await _client.from('evaluations').select('student_id').eq('type', 'workplace').inFilter('student_id', studentIds)))
+        r['student_id'] as String,
+    };
+
     return apps.map((a) {
       final id = a['student_id'] as String;
       final student = studentMap[id];
@@ -119,7 +141,8 @@ class CompanySupervisorDataService {
         'applied_at': a['applied_at'],
         'pending_review_count': pendingCount,
         'internship_status': statusById[id] ?? 'unassigned',
-        'can_evaluate': statusById[id] == 'completed',
+        'evaluated': evaluated.contains(id),
+        'can_evaluate': statusById[id] == 'completed' && !evaluated.contains(id),
       };
     }).toList();
   }
@@ -181,18 +204,28 @@ class CompanySupervisorDataService {
   // Evaluations
   // ---------------------------------------------------------------------
 
+  /// The company supervisor's evaluation on the university's company form (migration 00046): a mark
+  /// 0-6 for each of the 10 criteria ([marks], keys in grading_rubric.dart), attendance, an overall
+  /// grade, optional comments, a description of the training and the supervisor's designation.
   Future<void> submitEvaluation({
     required String studentId,
-    required Map<String, double> scores,
-    required double averageScore,
+    required Map<String, int> marks,
+    required int absentWithPermission,
+    required int absentWithoutPermission,
+    required String overallGrade,
     String? comments,
+    required String trainingNotes,
+    required String designation,
   }) =>
-      SupervisorDataService.instance.submitEvaluation(
+      SupervisorDataService.instance.submitCompanyEvaluation(
         studentId: studentId,
-        scores: scores,
-        averageScore: averageScore,
+        marks: marks,
+        absentWithPermission: absentWithPermission,
+        absentWithoutPermission: absentWithoutPermission,
+        overallGrade: overallGrade,
         comments: comments,
-        type: 'workplace',
+        trainingNotes: trainingNotes,
+        designation: designation,
       );
 
   // ---------------------------------------------------------------------

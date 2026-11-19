@@ -86,7 +86,7 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
                 decoration: BoxDecoration(color: nameColor(companyName).withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
                 child: Center(
                   child: Text(logoLetter(companyName),
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: nameColor(companyName))),
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: nameTextColor(companyName))),
                 ),
               ),
               const SizedBox(width: 14),
@@ -106,9 +106,9 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(companyName, style: AppTextStyles.bodySecondary.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                            Flexible(child: Text(companyName, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTextStyles.bodySecondary.copyWith(color: AppColors.primaryText, fontWeight: FontWeight.w600))),
                             const SizedBox(width: 2),
-                            Icon(Icons.chevron_right, size: 16, color: AppColors.primary),
+                            Icon(Icons.chevron_right, size: 16, color: AppColors.primaryText),
                           ],
                         ),
                       )
@@ -160,7 +160,7 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
                   .map((s) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(20)),
-                        child: Text(s, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary)),
+                        child: Text(s, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText)),
                       ))
                   .toList(),
             ),
@@ -169,7 +169,7 @@ class _StudentInternshipDetailsScreenState extends State<StudentInternshipDetail
           Text(l10n.aboutTheCompany, style: AppTextStyles.h3),
           const SizedBox(height: 8),
           if (_isLoadingCompany)
-            const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+            Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
           else
             Container(
               padding: const EdgeInsets.all(14),

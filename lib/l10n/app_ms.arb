@@ -1,11 +1,9 @@
 {
   "@@locale": "ms",
-
   "appTitle": "CIMS",
   "tarumt": "TARUMT",
   "splashTagline": "Sistem Pengurusan\nLatihan Industri Bersepadu",
   "loading": "Memuatkan...",
-
   "welcomeToCims": "Selamat Datang ke CIMS",
   "cimsFullName": "Sistem Pengurusan Latihan Industri Bersepadu",
   "emailAddress": "Alamat e-mel",
@@ -26,7 +24,6 @@
   "cancel": "Batal",
   "sendResetLink": "Hantar Pautan",
   "resetLinkSentMessage": "Jika akaun wujud untuk e-mel ini, pautan tetapan semula telah dihantar.",
-
   "createYourAccount": "Cipta Akaun CIMS Anda",
   "signupRoleNote": "E-mel pelajar/staf akan diberikan peranan secara automatik.\nAlamat Gmail, Outlook, atau Hotmail akan diminta memilih peranan di bawah.",
   "createAPassword": "Cipta kata laluan",
@@ -34,7 +31,6 @@
   "reEnterYourPassword": "Masukkan semula kata laluan anda",
   "selectYourRole": "Pilih peranan anda",
   "notInstitutionalEmailNote": "E-mel anda bukan alamat institusi TARC. Sila pilih peranan yang berkaitan dengan anda.",
-  "parentGuardian": "Ibu Bapa/Penjaga",
   "hrPersonnel": "Kakitangan HR",
   "companySupervisor": "Penyelia Syarikat",
   "signUp": "Daftar",
@@ -43,7 +39,6 @@
   "errorPasswordsDoNotMatch": "Kata laluan tidak sepadan.",
   "errorSelectRole": "Sila pilih peranan anda untuk teruskan.",
   "signUpCheckEmailMessage": "Akaun berjaya dicipta! Sila semak e-mel anda untuk mengesahkan akaun sebelum log masuk.",
-
   "dashboard": "Papan Pemuka",
   "overview": "Gambaran Keseluruhan",
   "internshipProgress": "Kemajuan Latihan Industri",
@@ -59,11 +54,15 @@
   "stepCompleted": "Selesai",
   "submitCompanyReview": "Hantar ulasan syarikat",
   "viewMyProgress": "Lihat kemajuan saya",
+  "defaultUserName": "Pengguna",
   "goodMorning": "Selamat pagi, {name}!",
   "@goodMorning": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
-
   "personalInformation": "Maklumat Peribadi",
   "academicInformation": "Maklumat Akademik",
   "resume": "Resume",
@@ -109,13 +108,11 @@
   "newPassword": "Kata laluan baharu",
   "confirmNewPassword": "Sahkan kata laluan baharu",
   "change": "Tukar",
-
   "delete": "Padam",
   "add": "Tambah",
   "confirm": "Sahkan",
   "close": "Tutup",
   "notSpecified": "Tidak dinyatakan",
-
   "hrRecruitmentOverview": "Gambaran keseluruhan pengambilan",
   "hrActivePostings": "Jawatan aktif",
   "hrNewApplicants": "Pemohon baharu",
@@ -128,9 +125,21 @@
   "hrPersonnelLabel": "Kakitangan HR",
   "hrJobPostings": "Jawatan kosong",
   "hrPostingsCount": "{count} jawatan",
-  "@hrPostingsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrPostingsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrActiveCount": "{count} aktif",
-  "@hrActiveCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrNoPostingsYet": "Belum ada jawatan",
   "hrCreateFirstPosting": "Cipta jawatan latihan industri pertama anda.",
   "hrClosePosting": "Tutup jawatan",
@@ -138,9 +147,21 @@
   "hrDeletePostingTitle": "Padam jawatan?",
   "hrDeletePostingMessage": "Ini akan memadam jawatan ini secara kekal. Permohonan sedia ada akan disimpan untuk rekod.",
   "hrApplicantsCount": "{count} pemohon",
-  "@hrApplicantsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@hrApplicantsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrPostedAgo": "Disiarkan {time}",
-  "@hrPostedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@hrPostedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrEditPosting": "Edit jawatan",
   "hrPostingDetails": "Butiran jawatan",
   "hrJobTitle": "Jawatan",
@@ -153,11 +174,23 @@
   "hrJobType": "Jenis kerja",
   "hrDuration": "Tempoh",
   "hrMonths": "{count} bulan",
-  "@hrMonths": { "placeholders": { "count": { "type": "int" } } },
+  "@hrMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrMonthlyAllowance": "Elaun bulanan (RM)",
   "hrMonthlyAllowanceHint": "cth. 1500",
   "hrDeadlineLabel": "Tarikh akhir: {date}",
-  "@hrDeadlineLabel": { "placeholders": { "date": { "type": "String" } } },
+  "@hrDeadlineLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "hrApplicationDeadlineOptional": "Tarikh akhir permohonan (pilihan)",
   "hrSkillsRequired": "Kemahiran diperlukan",
   "hrAddASkill": "Tambah kemahiran",
@@ -169,19 +202,55 @@
   "hrSkillRequired": "Tambah sekurang-kurangnya satu kemahiran diperlukan.",
   "hrApplicants": "Pemohon",
   "hrTabNew": "Baharu ({count})",
-  "@hrTabNew": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabInterview": "Temu duga ({count})",
-  "@hrTabInterview": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabInterview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabAccepted": "Diterima ({count})",
-  "@hrTabAccepted": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabAccepted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrTabRejected": "Ditolak ({count})",
-  "@hrTabRejected": { "placeholders": { "count": { "type": "int" } } },
+  "@hrTabRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hrNoApplicantsHere": "Tiada pemohon di sini",
   "hrApplicantsAppearHere": "Pemohon dalam peringkat ini akan dipaparkan di sini.",
   "hrInterviewColon": "Temu duga: {time}",
-  "@hrInterviewColon": { "placeholders": { "time": { "type": "String" } } },
+  "@hrInterviewColon": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrAppliedAgo": "Dimohon {time}",
-  "@hrAppliedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@hrAppliedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrApplicantProfile": "Profil pemohon",
   "hrAppliedFor": "Memohon untuk",
   "hrNoResumeUploaded": "Tiada resume dimuat naik",
@@ -191,7 +260,13 @@
   "hrReject": "Tolak",
   "hrScheduleInterview": "Jadualkan Temu Duga",
   "hrInterviewScheduledColon": "Temu duga dijadualkan: {time}",
-  "@hrInterviewScheduledColon": { "placeholders": { "time": { "type": "String" } } },
+  "@hrInterviewScheduledColon": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hrAccept": "Terima",
   "hrDate": "Tarikh",
   "hrSelectDate": "Pilih tarikh",
@@ -211,7 +286,6 @@
   "hrPostings": "Jawatan",
   "hrInterns": "Pelatih",
   "hrClosedStatus": "Ditutup",
-
   "supAssignedStudents": "Pelajar ditugaskan",
   "supPendingReviews": "Semakan tertunda",
   "supApprovedThisMonth": "Diluluskan bulan ini",
@@ -222,17 +296,35 @@
   "supNoStudentsYet": "Belum ada pelajar.",
   "supUpToDate": "Terkini",
   "supPendingCount": "{count} tertunda",
-  "@supPendingCount": { "placeholders": { "count": { "type": "int" } } },
+  "@supPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "supMyStudentsTitle": "Pelajar saya",
   "supSearchByNameOrProgramme": "Cari mengikut nama atau program...",
   "supStudentsCount": "{count} pelajar",
-  "@supStudentsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@supStudentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "supNoStudents": "Tiada pelajar",
   "supNoStudentsMatch": "Tiada pelajar sepadan dengan carian anda.",
   "supActiveInternship": "Latihan industri aktif",
   "supNoActiveInternship": "Tiada latihan industri aktif",
   "supLastReportAgo": "Laporan terakhir {time}",
-  "@supLastReportAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@supLastReportAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "supNoReportsYet": "Belum ada laporan",
   "supStudentDetails": "Butiran pelajar",
   "supEvaluate": "Nilai",
@@ -240,7 +332,13 @@
   "supMessage": "Mesej",
   "supLatestEvaluation": "Penilaian terkini",
   "supSubmittedAgo": "Dihantar {time}",
-  "@supSubmittedAgo": { "placeholders": { "time": { "type": "String" } } },
+  "@supSubmittedAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "supSubmissionHistory": "Sejarah penghantaran",
   "supNoSubmissionsYet": "Belum ada penghantaran.",
   "supReviews": "Semakan",
@@ -267,10 +365,15 @@
   "supSubmitEvaluation": "Hantar penilaian",
   "supEvaluationSubmitted": "Penilaian dihantar",
   "supEvaluationRecorded": "Penilaian anda untuk {name} telah direkodkan.",
-  "@supEvaluationRecorded": { "placeholders": { "name": { "type": "String" } } },
+  "@supEvaluationRecorded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "supBackToStudent": "Kembali ke pelajar",
   "supStudents": "Pelajar",
-
   "csCurrentInterns": "Pelatih semasa",
   "csReportsToReview": "Laporan untuk disemak",
   "csApprovedThisMonth": "Diluluskan bulan ini",
@@ -281,9 +384,21 @@
   "csNoInternsYet": "Belum ada pelatih.",
   "csInterns": "Pelatih",
   "csCurrentInternsCount": "{count} pelatih semasa",
-  "@csCurrentInternsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@csCurrentInternsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "csNeedsAttention": "{count} perlu perhatian",
-  "@csNeedsAttention": { "placeholders": { "count": { "type": "int" } } },
+  "@csNeedsAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "csNoInternsTitle": "Belum ada pelatih",
   "csNoInternsDescription": "Pemohon yang diterima di syarikat anda akan dipaparkan di sini.",
   "csInternDetails": "Butiran pelatih",
@@ -296,7 +411,13 @@
   "csSubmitEvaluation": "Hantar penilaian",
   "csEvaluationSubmitted": "Penilaian dihantar",
   "csEvaluationRecorded": "Penilaian tempat kerja anda untuk {name} telah direkodkan dan dikongsi dengan universiti.",
-  "@csEvaluationRecorded": { "placeholders": { "name": { "type": "String" } } },
+  "@csEvaluationRecorded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "csBackToIntern": "Kembali ke pelatih",
   "csReportReviews": "Semakan laporan",
   "csTabPending": "Tertunda",
@@ -314,7 +435,6 @@
   "csGradeSatisfactory": "Memuaskan",
   "csGradeNeedsImprovement": "Perlu penambahbaikan",
   "csAverageScore": "Skor purata",
-
   "setupYourCompany": "Sediakan syarikat anda",
   "setupLinkCompanyNote": "Pautkan akaun anda ke syarikat sebelum anda boleh menguruskan jawatan, pemohon atau pelatih.",
   "setupJoinExisting": "Sertai sedia ada",
@@ -328,7 +448,6 @@
   "setupLocationOptional": "Lokasi (pilihan) — ketik untuk pilih pada peta",
   "setupRegisterCompany": "Daftar syarikat",
   "setupCompanyNameRequired": "Nama syarikat diperlukan.",
-
   "profileMyProfile": "Profil saya",
   "profilePersonalInformation": "Maklumat peribadi",
   "profileFullName": "Nama penuh",
@@ -355,27 +474,73 @@
   "profileChooseFromGallery": "Pilih dari galeri",
   "profileRemovePhoto": "Buang foto",
   "profilePasswordChanged": "Kata laluan berjaya ditukar.",
-
   "justNow": "Baru sahaja",
   "minutesAgo": "{count, plural, other{{count} minit lalu}}",
-  "@minutesAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hoursAgo": "{count, plural, other{{count} jam lalu}}",
-  "@hoursAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "daysAgo": "{count, plural, other{{count} hari lalu}}",
-  "@daysAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "weeksAgo": "{count, plural, other{{count} minggu lalu}}",
-  "@weeksAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@weeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "monthsAgo": "{count, plural, other{{count} bulan lalu}}",
-  "@monthsAgo": { "placeholders": { "count": { "type": "int" } } },
+  "@monthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "yearsAgo": "{count, plural, other{{count} tahun lalu}}",
-  "@yearsAgo": { "placeholders": { "count": { "type": "int" } } },
-
+  "@yearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatConversationFallbackName": "perbualan ini",
   "chatDeleteConversationTitle": "Padam perbualan?",
   "chatDeleteConversationMessage": "Ini akan memadam keseluruhan perbualan dengan {name} untuk kamu berdua. Tindakan ini tidak boleh dibatalkan.",
-  "@chatDeleteConversationMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@chatDeleteConversationMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatCouldNotLoadContacts": "Tidak dapat memuatkan kenalan: {error}",
-  "@chatCouldNotLoadContacts": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotLoadContacts": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatNewMessageTitle": "Mesej baharu",
   "chatNoContactsToMessage": "Tiada akaun lain untuk dihubungi lagi.",
   "chatTabTitle": "Mesej",
@@ -390,19 +555,43 @@
   "chatPhotoAttachmentPreview": "📷 Foto",
   "chatArchiveAction": "Arkibkan",
   "chatCouldNotSendMessage": "Tidak dapat menghantar mesej: {error}",
-  "@chatCouldNotSendMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotSendMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatFileTooLarge": "Fail terlalu besar. Saiz maksimum ialah 10MB.",
   "chatCouldNotSendAttachment": "Tidak dapat menghantar lampiran: {error}",
-  "@chatCouldNotSendAttachment": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotSendAttachment": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatDeleteForMeAction": "Padam untuk saya",
   "chatDeleteForEveryoneAction": "Padam untuk semua",
   "chatDeleteForMeTitle": "Padam untuk saya?",
   "chatDeleteForMeMessage": "Mesej ini akan dialih keluar daripada paparan anda sahaja. Orang lain masih boleh melihatnya.",
   "chatCouldNotDeleteMessage": "Tidak dapat memadam mesej: {error}",
-  "@chatCouldNotDeleteMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotDeleteMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatEditMessageTitle": "Edit mesej",
   "chatCouldNotEditMessage": "Tidak dapat mengedit mesej: {error}",
-  "@chatCouldNotEditMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotEditMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatDeleteMessageTitle": "Padam mesej?",
   "chatCannotBeUndone": "Tindakan ini tidak boleh dibatalkan.",
   "chatSayHello": "Ucap salam 👋",
@@ -410,7 +599,13 @@
   "chatEditedLabel": "disunting",
   "chatAttachmentFallbackName": "Lampiran",
   "chatCouldNotUpdateMute": "Tidak dapat mengemas kini senyap: {error}",
-  "@chatCouldNotUpdateMute": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotUpdateMute": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatBlockContactTitle": "Sekat kenalan ini?",
   "chatUnblockContactTitle": "Nyahsekat kenalan ini?",
   "chatBlockContactMessage": "Mereka tidak akan dapat menghantar mesej kepada anda dalam perbualan ini lagi.",
@@ -418,9 +613,21 @@
   "chatBlockAction": "Sekat",
   "chatUnblockAction": "Nyahsekat",
   "chatCouldNotUpdateBlock": "Tidak dapat mengemas kini sekatan: {error}",
-  "@chatCouldNotUpdateBlock": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotUpdateBlock": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatCouldNotDeleteConversation": "Tidak dapat memadam perbualan: {error}",
-  "@chatCouldNotDeleteConversation": { "placeholders": { "error": { "type": "String" } } },
+  "@chatCouldNotDeleteConversation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatContactInfoTitle": "Maklumat kenalan",
   "chatPhoneNotAvailable": "Tidak tersedia",
   "chatSharedMediaFiles": "Media & fail dikongsi",
@@ -428,24 +635,49 @@
   "chatMuteNotifications": "Senyapkan notifikasi",
   "chatBlockContactToggle": "Sekat kenalan",
   "chatDeleteConversationButton": "Padam perbualan",
-
   "errorAddressSearchFailed": "Carian alamat gagal: {error}",
-  "@errorAddressSearchFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@errorAddressSearchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unknownLocationCoords": "Lokasi tidak diketahui ({lat}, {lng})",
-  "@unknownLocationCoords": { "placeholders": { "lat": { "type": "String" }, "lng": { "type": "String" } } },
+  "@unknownLocationCoords": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotResolveAddress": "Tidak dapat mengesan alamat untuk lokasi ini.",
   "selectYourAddress": "Pilih alamat anda",
   "searchForYourAddressHint": "Cari alamat anda...",
   "mapSearchOrTapHint": "Cari di atas, atau ketik peta untuk menetapkan pin",
   "resolvingAddress": "Mengesan alamat...",
   "confirmThisAddress": "Sahkan alamat ini",
-
   "coverLetterLoadedFromFile": "Surat iringan dimuatkan daripada fail — semak dan sunting sebelum meneruskan.",
   "errorCouldNotReadFile": "Tidak dapat membaca fail: {error}",
-  "@errorCouldNotReadFile": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotReadFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "notifApplicationSubmittedTitle": "Permohonan dihantar",
   "notifApplicationSubmittedBody": "Permohonan anda kepada {company} telah dihantar.",
-  "@notifApplicationSubmittedBody": { "placeholders": { "company": { "type": "String" } } },
+  "@notifApplicationSubmittedBody": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
   "apply": "Mohon",
   "coverLetter": "Surat Iringan",
   "review": "Semak",
@@ -473,15 +705,32 @@
   "applicationCannotBeEditedNote": "Setelah dihantar, permohonan anda tidak boleh disunting.",
   "applicationSubmittedExclaim": "Permohonan dihantar!",
   "applicationSubmittedDetail": "Permohonan anda kepada {company} telah dihantar. Anda akan dimaklumkan apabila terdapat kemas kini.",
-  "@applicationSubmittedDetail": { "placeholders": { "company": { "type": "String" } } },
+  "@applicationSubmittedDetail": {
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
   "backToSearch": "Kembali ke carian",
-
   "withdrawApplicationTitle": "Tarik balik permohonan?",
   "withdrawApplicationMessage": "Anda boleh memohon semula ke {title} kemudian jika anda berubah fikiran.",
-  "@withdrawApplicationMessage": { "placeholders": { "title": { "type": "String" } } },
+  "@withdrawApplicationMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "withdraw": "Tarik balik",
   "errorCouldNotWithdraw": "Tidak dapat menarik balik: {error}",
-  "@errorCouldNotWithdraw": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotWithdraw": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "coverLetterLabel": "SURAT IRINGAN",
   "skillsLabel": "KEMAHIRAN",
   "myApplications": "Permohonan saya",
@@ -493,10 +742,8 @@
   "rejected": "Ditolak",
   "noApplicationsHere": "Tiada permohonan di sini",
   "applicationsAppearHere": "Permohonan dalam kategori ini akan dipaparkan di sini.",
-
   "statusApproved": "Diluluskan",
   "statusSubmitted": "Dihantar",
-
   "noInterviewScheduled": "Tiada temu duga dijadualkan",
   "interviewNotifiedOnceScheduled": "Anda akan dimaklumkan sebaik sahaja syarikat menjadualkan temu duga anda.",
   "onlineInterviewLabel": "Temu duga dalam talian",
@@ -505,7 +752,6 @@
   "directionsUnavailableNote": "Arah tidak tersedia — lihat alamat di atas",
   "inPersonNoJoinLinkNote": "Ini adalah temu duga secara bersemuka — pautan sertai dalam talian tidak diperlukan.",
   "errorCouldNotOpenMeetingLink": "Tidak dapat membuka pautan mesyuarat.",
-
   "internshipDetails": "Butiran latihan industri",
   "monthlyAllowance": "Elaun bulanan",
   "applicationDeadline": "Tarikh akhir permohonan",
@@ -519,7 +765,6 @@
   "alreadyApplied": "Telah memohon",
   "companyPendingVerification": "Syarikat menunggu pengesahan",
   "applyNow": "Mohon sekarang",
-
   "notifications": "Notifikasi",
   "markAllRead": "Tandakan semua dibaca",
   "noNotificationsYet": "Belum ada notifikasi",
@@ -527,11 +772,15 @@
   "newLabel": "Baharu",
   "notificationApprove": "Lulus",
   "notificationReject": "Tolak",
-  "errorParentAlreadyLinked": "Pelajar ini sudah mempunyai ibu bapa yang diluluskan dan dipautkan. Hanya satu ibu bapa yang diluluskan boleh dipautkan pada satu masa.",
   "errorCouldNotRespondToRequest": "Tidak dapat memberi respons kepada permintaan ini: {error}",
-  "@errorCouldNotRespondToRequest": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRespondToRequest": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "earlier": "Sebelum ini",
-
   "docTypeOfferLetter": "Surat Tawaran",
   "docTypeIndemnityLetter": "Surat Indemniti",
   "docTypeCompanyAcceptanceLetter": "Surat Penerimaan Syarikat",
@@ -556,10 +805,22 @@
   "upload": "Muat naik",
   "errorFileTooLarge10mb": "Fail terlalu besar. Saiz maksimum ialah 10MB.",
   "errorUploadFailed": "Muat naik gagal: {error}",
-  "@errorUploadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@errorUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorEnterPeriod": "Sila masukkan tempoh, cth. \"Jun 2026\".",
   "errorCouldNotSubmit": "Tidak dapat menghantar: {error}",
-  "@errorCouldNotSubmit": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "newSubmission": "Penyerahan baharu",
   "submissionType": "Jenis penyerahan",
   "period": "Tempoh",
@@ -568,15 +829,26 @@
   "notesForSupervisorHint": "Tambah sebarang nota untuk penyelia anda...",
   "tapToSelectFile": "Ketik untuk memilih fail",
   "pdfDocxUpTo10mb": "PDF, DOCX sehingga 10MB",
-
   "errorLoadInternships": "Tidak dapat memuatkan latihan industri: {error}",
-  "@errorLoadInternships": { "placeholders": { "error": { "type": "String" } } },
+  "@errorLoadInternships": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "searchInternships": "Cari latihan industri",
   "titleSomethingWentWrong": "Sesuatu tidak kena",
   "retry": "Cuba lagi",
   "searchByRoleCompanySkillHint": "Cari mengikut jawatan, syarikat, atau kemahiran...",
   "opportunitiesFoundCount": "{count, plural, other{{count} peluang ditemui}}",
-  "@opportunitiesFoundCount": { "placeholders": { "count": { "type": "int" } } },
+  "@opportunitiesFoundCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noMatches": "Tiada padanan",
   "tryAdjustingSearchFilters": "Cuba laraskan carian atau penapis anda.",
   "pendingVerification": "Menunggu pengesahan",
@@ -587,10 +859,8 @@
   "minAllowanceLabel": "Elaun minimum (RM)",
   "maxAllowanceLabel": "Elaun maksimum (RM)",
   "applyFilters": "Gunakan penapis",
-
   "search": "Cari",
   "applications": "Permohonan",
-
   "programmeNotSet": "Program belum ditetapkan",
   "applicationsSent": "Permohonan dihantar",
   "interviewsScheduled": "Temu duga dijadualkan",
@@ -601,9 +871,24 @@
   "errorPhotoEmpty": "Foto yang dipilih adalah kosong (0 bait). Cuba foto lain.",
   "errorPhotoNotFound": "Foto yang dipilih tidak dapat dijumpai pada cakera.",
   "errorCouldNotAccessSource": "Tidak dapat mengakses {source}: {error}",
-  "@errorCouldNotAccessSource": { "placeholders": { "source": { "type": "String" }, "error": { "type": "String" } } },
+  "@errorCouldNotAccessSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotRemovePhoto": "Tidak dapat mengeluarkan foto: {error}",
-  "@errorCouldNotRemovePhoto": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemovePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "selectDateOfBirthHelpText": "Pilih tarikh lahir",
   "errorFullNameBlank": "Nama penuh tidak boleh kosong.",
   "errorPhoneBlank": "Nombor telefon tidak boleh kosong.",
@@ -614,7 +899,13 @@
   "errorSelectAddress": "Sila pilih alamat anda pada peta.",
   "personalInfoUpdated": "Maklumat peribadi dikemas kini.",
   "errorCouldNotSave": "Tidak dapat menyimpan: {error}",
-  "@errorCouldNotSave": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorSelectProgramme": "Sila pilih program anda.",
   "errorSelectFaculty": "Sila pilih fakulti anda.",
   "errorSelectSemester": "Sila pilih semester anda.",
@@ -633,7 +924,13 @@
   "errorPositionCompanyRequired": "Jawatan dan syarikat diperlukan.",
   "removeThisEntryTitle": "Keluarkan entri ini?",
   "errorCouldNotRemove": "Tidak dapat mengeluarkan: {error}",
-  "@errorCouldNotRemove": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemove": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unknownCompany": "Syarikat tidak diketahui",
   "unknownPosition": "Jawatan tidak diketahui",
   "errorEnterCurrentPassword": "Masukkan kata laluan semasa anda.",
@@ -649,24 +946,54 @@
   "reviewAndApply": "Semak & mohon",
   "fieldsFilledReviewNote": "Medan diisi di bawah — semak dan ketik Simpan (atau Tambah, untuk pengalaman kerja) untuk mengesahkan.",
   "errorCouldNotOpenResumeColon": "Tidak dapat membuka resume: {error}",
-  "@errorCouldNotOpenResumeColon": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotOpenResumeColon": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotRemoveResume": "Tidak dapat mengeluarkan resume: {error}",
-  "@errorCouldNotRemoveResume": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotRemoveResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "prefApplicationUpdates": "Kemas kini permohonan",
   "prefReportDeadlines": "Tarikh akhir laporan",
   "prefMessages": "Mesej",
   "prefSupervisorFeedback": "Maklum balas penyelia",
   "errorCouldNotSaveLanguage": "Tidak dapat menyimpan bahasa: {error}",
-  "@errorCouldNotSaveLanguage": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSaveLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorCouldNotSaveTheme": "Tidak dapat menyimpan tema: {error}",
-  "@errorCouldNotSaveTheme": { "placeholders": { "error": { "type": "String" } } },
+  "@errorCouldNotSaveTheme": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "yourNamePlaceholder": "Nama anda",
   "workExperience": "Pengalaman Kerja",
   "selectYourProgrammeHint": "Pilih program anda",
   "selectYourFacultyHint": "Pilih fakulti anda",
   "selectYourSemesterHint": "Pilih semester anda",
   "semesterNumber": "Semester {number}",
-  "@semesterNumber": { "placeholders": { "number": { "type": "int" } } },
+  "@semesterNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "cgpaHint": "cth. 3.62",
   "noSkillsAddedYet": "Belum ada kemahiran ditambah.",
   "addSkillHint": "cth. HTML, CSS, Java, Bercakap di Khalayak",
@@ -675,16 +1002,26 @@
   "dismiss": "Ketepikan",
   "noWorkExperienceAddedYet": "Belum ada pengalaman kerja ditambah.",
   "updatedOnDate": "· Dikemas kini {date}",
-  "@updatedOnDate": { "placeholders": { "date": { "type": "String" } } },
-
+  "@updatedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "adminStudentsTitle": "Pelajar",
   "adminCompaniesTitle": "Syarikat",
   "adminSupervisorsTitle": "Penyelia",
   "adminMoreTitle": "Lagi",
-
   "adminBrandLabel": "CIMS Admin",
   "adminWelcomeBack": "Selamat kembali, {name}",
-  "@adminWelcomeBack": { "placeholders": { "name": { "type": "String" } } },
+  "@adminWelcomeBack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminFallbackName": "Admin",
   "adminSystemOverview": "Gambaran keseluruhan sistem",
   "adminTotalStudents": "Jumlah pelajar",
@@ -693,35 +1030,82 @@
   "adminNeedsAttention": "Memerlukan perhatian",
   "adminAllClear": "Semua jelas — tiada apa-apa memerlukan perhatian anda sekarang.",
   "adminStudentsUnassignedCount": "{count} pelajar belum ditugaskan",
-  "@adminStudentsUnassignedCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminStudentsUnassignedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoSupervisorAssignedYet": "Belum ada penyelia akademik ditugaskan",
   "adminSubmissionsPendingReviewCount": "{count} penyerahan menunggu semakan",
-  "@adminSubmissionsPendingReviewCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminSubmissionsPendingReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminAwaitingReview": "Menunggu semakan penyelia atau admin",
   "adminAddCompany": "Tambah Syarikat",
   "adminAssignSupervisor": "Tugaskan Penyelia",
   "adminRecentlyRegistered": "Baru didaftarkan",
   "adminStudentRegisteredActivity": "{name} telah mendaftar",
-  "@adminStudentRegisteredActivity": { "placeholders": { "name": { "type": "String" } } },
+  "@adminStudentRegisteredActivity": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminUnnamedStudent": "Pelajar tanpa nama",
-
   "adminSearchCompaniesHint": "Cari syarikat...",
   "adminRegisteredCompaniesCount": "{count} syarikat berdaftar",
-  "@adminRegisteredCompaniesCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminRegisteredCompaniesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminPendingVerificationCount": "{count} menunggu pengesahan",
-  "@adminPendingVerificationCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminPendingVerificationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoCompaniesTitle": "Tiada syarikat",
   "adminNoCompaniesDescription": "Cuba laraskan carian anda, atau tambah satu.",
   "adminLocationNotSet": "Lokasi belum ditetapkan",
   "adminStatusPending": "Menunggu",
   "adminStatusVerified": "Disahkan",
   "adminCouldNotVerify": "Tidak dapat mengesahkan: {error}",
-  "@adminCouldNotVerify": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotVerify": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminRemoveCompanyTitle": "Keluarkan syarikat?",
   "adminRemoveCompanyMessage": "Ini mengeluarkan {name} daripada daftar. Ini tidak boleh dibatalkan.",
-  "@adminRemoveCompanyMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@adminRemoveCompanyMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotRemove": "Tidak dapat mengeluarkan: {error}",
-  "@adminCouldNotRemove": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotRemove": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCompanyDetailsTitle": "Butiran syarikat",
   "adminCompanyInformation": "Maklumat syarikat",
   "adminLocationLabel": "Lokasi",
@@ -733,7 +1117,13 @@
   "adminRemoveCompanyButton": "Keluarkan syarikat",
   "adminCompanyNameRequired": "Nama syarikat diperlukan.",
   "adminCouldNotSave": "Tidak dapat menyimpan: {error}",
-  "@adminCouldNotSave": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminEditCompanyTitle": "Edit Syarikat",
   "adminCompanyNameLabel": "Nama syarikat",
   "adminIndustryLabel": "Industri",
@@ -744,11 +1134,16 @@
   "adminHrContactNameLabel": "Nama hubungan HR",
   "adminHrEmailFieldLabel": "E-mel HR",
   "adminHrPhoneNumberLabel": "Nombor telefon HR",
-
   "adminUnassign": "Nyahtugaskan",
   "adminUnnamed": "Tanpa nama",
   "adminCouldNotAssign": "Tidak dapat menugaskan: {error}",
-  "@adminCouldNotAssign": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotAssign": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSearchByNameHint": "Cari mengikut nama...",
   "adminFilterAll": "Semua",
   "adminFilterAssigned": "Ditugaskan",
@@ -757,31 +1152,65 @@
   "adminNoStudentsFoundDescription": "Cuba laraskan carian atau penapis anda.",
   "adminProgrammeNotSet": "Program belum ditetapkan",
   "adminSupervisorColonName": "Penyelia: {name}",
-  "@adminSupervisorColonName": { "placeholders": { "name": { "type": "String" } } },
+  "@adminSupervisorColonName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminNoSupervisorAssigned": "Tiada penyelia ditugaskan",
   "adminAssign": "Tugaskan",
-
   "adminSearchSupervisorsHint": "Cari penyelia...",
   "adminAcademicSupervisorsCount": "{count} penyelia akademik",
-  "@adminAcademicSupervisorsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminAcademicSupervisorsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminNoSupervisorsFoundTitle": "Tiada penyelia ditemui",
   "adminNoSupervisorsFoundDescription": "Belum ada akaun penyelia akademik yang mendaftar.",
   "adminFacultyNotSet": "Fakulti belum ditetapkan",
   "adminThisSupervisorFallback": "penyelia ini",
   "adminPromoteToAdminTitle": "Naikkan taraf ke admin?",
   "adminPromoteToAdminMessage": "{name} akan serta-merta menjadi Pentadbir Sistem — akaun mereka akan mendapat akses admin penuh pada log masuk seterusnya dan tidak lagi muncul dalam senarai penyelia. Ini tidak boleh dibatalkan dari sini.",
-  "@adminPromoteToAdminMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@adminPromoteToAdminMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminPromote": "Naikkan taraf",
   "adminCouldNotPromote": "Tidak dapat menaikkan taraf: {error}",
-  "@adminCouldNotPromote": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotPromote": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSupervisorDetailsTitle": "Butiran penyelia",
   "adminPromoteToAdminButton": "Naikkan taraf ke admin",
   "adminNoStudentsAssignedYet": "Belum ada pelajar ditugaskan.",
-
   "adminCouldNotSaveReview": "Tidak dapat menyimpan semakan: {error}",
-  "@adminCouldNotSaveReview": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotSaveReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotOpenFile": "Tidak dapat membuka fail: {error}",
-  "@adminCouldNotOpenFile": { "placeholders": { "error": { "type": "String" } } },
+  "@adminCouldNotOpenFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminMonitorTitle": "Pantau",
   "adminTabStudentProgress": "Kemajuan pelajar",
   "adminTabReports": "Laporan",
@@ -789,7 +1218,6 @@
   "adminNoStudentsTitle": "Tiada pelajar",
   "adminNoStudentsRegisteredDescription": "Belum ada pelajar mendaftar.",
   "adminSubmissionsAppearHere": "Penyerahan akan dipaparkan di sini.",
-
   "adminEnterCurrentPassword": "Masukkan kata laluan semasa anda.",
   "adminNewPasswordsDoNotMatch": "Kata laluan baharu tidak sepadan.",
   "adminPasswordChanged": "Kata laluan ditukar",
@@ -808,113 +1236,106 @@
   "adminSectionPreferences": "Keutamaan",
   "adminNotifPrefsSubtitle": "Pilih apa yang anda ingin dimaklumkan",
   "adminSectionSystem": "Sistem",
-
   "adminFullNameCannotBeBlank": "Nama penuh tidak boleh kosong.",
   "adminUnsupportedFileFormat": "Format fail tidak disokong. Sila muat naik imej JPG, JPEG, atau PNG.",
   "adminPhotoEmptyError": "Foto yang dipilih adalah kosong (0 bait). Cuba foto lain.",
   "adminPhotoNotFoundError": "Foto yang dipilih tidak dapat dijumpai pada cakera.",
   "adminUploadFailed": "Muat naik gagal: {error}",
-  "@adminUploadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@adminUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminSourceCamera": "kamera",
   "adminSourceGallery": "galeri",
   "adminCouldNotAccessSource": "Tidak dapat mengakses {source}: {error}",
-  "@adminCouldNotAccessSource": { "placeholders": { "source": { "type": "String" }, "error": { "type": "String" } } },
+  "@adminCouldNotAccessSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "adminCouldNotRemovePhoto": "Tidak dapat mengeluarkan foto: {error}",
-  "@adminCouldNotRemovePhoto": { "placeholders": { "error": { "type": "String" } } },
-
+  "@adminCouldNotRemovePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "cropPhotoTitle": "Selaraskan foto anda",
   "cropPhotoConfirm": "Selesai",
   "errorCropFailed": "Tidak dapat memangkas foto. Sila cuba lagi.",
-
   "clear": "Kosongkan",
-
-  "parentWelcomeName": "Selamat datang, {name}",
-  "@parentWelcomeName": { "placeholders": { "name": { "type": "String" } } },
-  "parentWelcomeDefault": "Selamat datang, Ibu Bapa",
-  "parentDashboardSubtitle": "Pantau kemajuan latihan industri anak anda",
-  "parentNoChildrenTitle": "Belum ada anak yang dipautkan",
-  "parentNoChildrenDescription": "Pautkan akaun anak anda untuk mula memantau kemajuan latihan industri mereka. Mereka perlu meluluskan permintaan sebelum anda boleh melihat apa-apa.",
-  "parentLinkChildButton": "Pautkan anak",
-  "parentUnnamedStudent": "Pelajar tanpa nama",
-  "parentNoApplicationYet": "Belum ada permohonan latihan industri",
-  "parentSignFormButton": "Tandatangan borang",
-  "parentProgressButton": "Kemajuan",
-
-  "parentStudentEmailLabel": "E-mel pelajar",
-  "parentStudentEmailHint": "cth. john.doe",
-  "parentRelationshipLabel": "Hubungan",
-  "parentRelationshipFather": "Bapa",
-  "parentRelationshipMother": "Ibu",
-  "parentRelationshipGuardian": "Penjaga",
-  "parentNoStudentFoundError": "Tiada pelajar dijumpai dengan e-mel tersebut.",
-  "parentSearchError": "Tidak dapat mencari: {error}",
-  "@parentSearchError": { "placeholders": { "error": { "type": "String" } } },
-  "parentSendRequestButton": "Hantar permintaan",
-  "parentRequestSentMessage": "Permintaan dihantar. Pelajar perlu meluluskannya.",
-  "parentSendRequestError": "Tidak dapat menghantar permintaan: {error}",
-  "@parentSendRequestError": { "placeholders": { "error": { "type": "String" } } },
-  "parentCancelRequestError": "Tidak dapat membatalkan: {error}",
-  "@parentCancelRequestError": { "placeholders": { "error": { "type": "String" } } },
-  "parentYourRequestsTitle": "Permintaan anda",
-  "parentNoRequestsYet": "Belum ada permintaan dihantar.",
-  "parentAsRelationship": "Sebagai {relationship}",
-  "@parentAsRelationship": { "placeholders": { "relationship": { "type": "String" } } },
-  "parentUnknownStudent": "Pelajar tidak diketahui",
-
-  "parentProgressTitle": "Kemajuan Latihan Industri",
-  "parentApplicationStatusTitle": "Status permohonan",
-  "parentNoApplicationSubmittedYet": "Belum ada permohonan latihan industri dihantar.",
-  "parentUnknownCompany": "Syarikat tidak diketahui",
-  "parentAtAGlanceTitle": "Ringkasan",
-  "parentReportsSubmittedLabel": "Laporan dihantar",
-  "parentDurationLabel": "Tempoh",
-  "parentEvaluationTitle": "Penilaian",
-  "parentNoEvaluationsYet": "Belum ada penilaian dihantar.",
-  "parentAcademicSupervisorEvaluation": "Penilaian Penyelia Akademik",
-  "parentCompanySupervisorEvaluation": "Penilaian Penyelia Syarikat",
-  "parentRequiredDocumentsTitle": "Dokumen diperlukan",
-  "parentDocNotSubmitted": "Belum dihantar",
-  "parentMonthlyReportsTitle": "Laporan bulanan",
-  "parentNoMonthlyReportsYet": "Belum ada laporan bulanan dihantar.",
-  "parentFinalReportTitle": "Laporan akhir",
-  "parentNoFinalReportYet": "Belum ada laporan akhir dihantar.",
-  "parentMonthlyReportLabel": "Laporan Bulanan — {period}",
-  "@parentMonthlyReportLabel": { "placeholders": { "period": { "type": "String" } } },
-  "parentFinalReportLabel": "Laporan Akhir — {period}",
-  "@parentFinalReportLabel": { "placeholders": { "period": { "type": "String" } } },
-  "parentSubmittedDate": "Dihantar {date}",
-  "@parentSubmittedDate": { "placeholders": { "date": { "type": "String" } } },
-  "parentReadOnlyNotice": "Ini adalah paparan baca sahaja. Hubungi universiti untuk pertanyaan mengenai latihan industri anak anda.",
-
   "parentAcknowledgementTitle": "Borang Pengakuan",
   "parentFormNotConfiguredError": "Borang pengakuan belum disediakan lagi. Sila hubungi universiti.",
   "parentCouldNotLoadFormError": "Tidak dapat memuatkan borang pengakuan: {error}",
-  "@parentCouldNotLoadFormError": { "placeholders": { "error": { "type": "String" } } },
-  "parentTapToFillInstruction": "Ketik terus pada borang untuk mengisinya, kemudian hantar di bahagian bawah.",
+  "@parentCouldNotLoadFormError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentSignAndSubmitButton": "Tandatangan & Hantar",
   "parentSignatureTimestampNote": "Tandatangan digital anda akan direkodkan dengan cap masa.",
   "parentDrawSignatureTitle": "Lukis tandatangan anda",
   "parentCouldNotSubmitError": "Tidak dapat menghantar borang: {error}",
-  "@parentCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "@parentCouldNotSubmitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentCouldNotOpenFormError": "Tidak dapat membuka borang: {error}",
-  "@parentCouldNotOpenFormError": { "placeholders": { "error": { "type": "String" } } },
+  "@parentCouldNotOpenFormError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "parentFormSubmittedTitle": "Borang berjaya dihantar",
   "parentFormSubmittedDescription": "Pengakuan anda telah direkodkan.",
   "parentSignedOnDate": "Ditandatangani pada {date}",
-  "@parentSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "@parentSignedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "parentViewPdfButton": "Lihat PDF",
   "parentBackToHomeButton": "Kembali ke laman utama",
-
   "viewCompanyProfile": "Lihat profil syarikat",
   "companyProfileTitle": "Profil Syarikat",
   "companyProfileJobPostings": "Jawatan Ditawarkan",
   "companyProfileNoPostings": "Belum ada jawatan daripada syarikat ini.",
   "companyProfilePastInterns": "Bekas Pelatih",
   "companyProfileInternCount": "{count, plural, one{1 pelajar pernah menjalani latihan di sini} other{{count} pelajar pernah menjalani latihan di sini}}",
-  "@companyProfileInternCount": { "placeholders": { "count": { "type": "int" } } },
+  "@companyProfileInternCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "companyProfileReviews": "Ulasan",
   "companyProfileReviewCount": "{count, plural, one{1 ulasan} other{{count} ulasan}}",
-  "@companyProfileReviewCount": { "placeholders": { "count": { "type": "int" } } },
+  "@companyProfileReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "companyProfileNoReviewsYet": "Belum ada ulasan. Jadilah yang pertama berkongsi pengalaman anda.",
   "companyProfileWriteReview": "Tulis ulasan",
   "companyProfileEditReview": "Edit ulasan anda",
@@ -922,35 +1343,453 @@
   "companyProfileReviewHint": "Kongsikan pengalaman anda bekerja di sini (pilihan)",
   "companyProfileReviewSubmitted": "Ulasan dihantar. Terima kasih!",
   "companyProfileReviewError": "Tidak dapat menghantar ulasan: {error}",
-  "@companyProfileReviewError": { "placeholders": { "error": { "type": "String" } } },
+  "@companyProfileReviewError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "companyProfileMustApplyNote": "Hanya pelajar yang telah memohon ke syarikat ini boleh memberi ulasan.",
-
   "docFillAndSignAction": "Isi & Tandatangan",
   "docAwaitingCompanyUpload": "Menunggu muat naik daripada syarikat",
   "docAvailableOnceAccepted": "Tersedia setelah permohonan anda diterima",
-
   "studentLetterNotConfiguredError": "Borang ini belum disediakan lagi. Sila hubungi universiti.",
   "studentLetterCouldNotLoadError": "Tidak dapat memuatkan borang: {error}",
-  "@studentLetterCouldNotLoadError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterTapToFillInstruction": "Ketik terus pada borang untuk mengisinya, kemudian hantar di bahagian bawah.",
   "studentLetterSignAndSubmitButton": "Tandatangan & Hantar",
   "studentLetterSignatureTimestampNote": "Tandatangan digital anda akan direkodkan dengan cap masa.",
   "studentLetterDrawSignatureTitle": "Lukis tandatangan anda",
   "studentLetterCouldNotSubmitError": "Tidak dapat menghantar borang: {error}",
-  "@studentLetterCouldNotSubmitError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotSubmitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterCouldNotOpenError": "Tidak dapat membuka borang: {error}",
-  "@studentLetterCouldNotOpenError": { "placeholders": { "error": { "type": "String" } } },
+  "@studentLetterCouldNotOpenError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterSubmittedTitle": "Borang berjaya dihantar",
   "studentLetterSubmittedDescription": "Surat bertandatangan anda telah disimpan.",
   "studentLetterSignedOnDate": "Ditandatangani pada {date}",
-  "@studentLetterSignedOnDate": { "placeholders": { "date": { "type": "String" } } },
+  "@studentLetterSignedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "studentLetterViewPdfButton": "Lihat PDF",
   "studentLetterBackButton": "Kembali",
-
   "hrOfferLetterSectionTitle": "Surat Tawaran",
   "hrUploadOfferLetter": "Muat Naik Surat Tawaran",
   "hrReplaceOfferLetter": "Gantikan",
-
   "csDocuments": "Dokumen",
-  "csNoDocumentsOnFile": "Tiada dokumen direkodkan lagi."
+  "csNoDocumentsOnFile": "Tiada dokumen direkodkan lagi.",
+  "addToCalendar": "Tambah ke kalendar",
+  "calendarCouldNotOpen": "Tidak dapat membuka kalendar anda.",
+  "calendarEventTitle": "Temu duga: {title}",
+  "calendarEventDetails": "Temu duga CIMS dengan {company}",
+  "hrSearchApplicants": "Cari mengikut nama, program atau kemahiran",
+  "hrAllPostings": "Semua iklan",
+  "hrShortlisted": "Disenarai pendek",
+  "hrShortlist": "Senarai pendek",
+  "hrRemoveShortlist": "Buang daripada senarai pendek",
+  "hrPrivateNotes": "Nota peribadi",
+  "hrPrivateNotesInfo": "Hanya anda boleh melihat ini. Pelajar tidak akan melihatnya.",
+  "hrNoteHint": "Tulis nota tentang pemohon ini",
+  "hrSaveNote": "Simpan nota",
+  "hrNoteSaved": "Nota disimpan",
+  "hrNoMatchingApplicants": "Tiada pemohon sepadan dengan carian anda.",
+  "hrTabOffered": "Ditawarkan ({count})",
+  "hrTabClosed": "Ditutup ({count})",
+  "hrClearFilters": "Kosongkan penapis",
+  "adminAuditLogTitle": "Log audit",
+  "adminAuditLogSubtitle": "Siapa meluluskan, mencipta atau mengubah apa",
+  "auditFilterAll": "Semua",
+  "auditFilterAccounts": "Akaun",
+  "auditFilterCompanies": "Syarikat",
+  "auditFilterStudents": "Pelajar",
+  "auditFilterSetup": "Persediaan",
+  "auditEmpty": "Belum ada yang direkodkan.",
+  "auditSystem": "Sistem",
+  "auditLoadMore": "Muat lagi",
+  "adminAnalyticsTitle": "Analitik penempatan",
+  "adminAnalyticsSubtitle": "Kadar penempatan, permohonan dan pelajar yang belum mendapat latihan industri",
+  "analyticsPlacementRate": "Kadar penempatan",
+  "analyticsPlacedOf": "{placed} daripada {total} pelajar telah ditempatkan",
+  "analyticsStudentsApplied": "Telah memohon",
+  "analyticsApplications": "Permohonan",
+  "analyticsWithoutPlacement": "Belum ditempatkan",
+  "analyticsByStatus": "Permohonan mengikut status",
+  "analyticsByProgramme": "Mengikut program",
+  "analyticsByCompany": "Mengikut syarikat",
+  "analyticsTopPostings": "Iklan paling banyak dimohon",
+  "analyticsUnplaced": "Pelajar tanpa penempatan",
+  "analyticsExportCsv": "Eksport CSV",
+  "analyticsExportFailed": "Tidak dapat mencipta atau membuka fail.",
+  "analyticsRowStudentsPlaced": "{placed}/{students} ditempatkan",
+  "analyticsRowCompany": "{postings} iklan · {applications} permohonan · {placed} ditempatkan",
+  "analyticsRowPosting": "{company} · {applications} permohonan · {offered} ditawarkan",
+  "analyticsNoStudentsUnplaced": "Semua pelajar telah ditempatkan.",
+  "ivTheCompany": "Syarikat",
+  "ivTheStudent": "Pelajar",
+  "ivTheSystem": "Sistem",
+  "ivRequestSentCompany": "Permintaan dihantar. Temu duga hanya dialihkan jika syarikat bersetuju.",
+  "ivDeclineNewTimeTitle": "Tolak masa baharu",
+  "ivDeclinePromptToCompany": "Beritahu syarikat sebab anda menolak. Temu duga kekal pada masa semasa.",
+  "ivDeclineHint": "cth. Saya tidak dapat hadir pada masa itu.",
+  "ivDecline": "Tolak",
+  "ivAccept": "Terima",
+  "ivAcceptedMoved": "Diterima. Temu duga anda telah dialihkan.",
+  "ivDeclinedStays": "Ditolak. Temu duga kekal seperti asal.",
+  "ivCancelInterview": "Batalkan temu duga",
+  "ivCancelPromptToCompany": "Beritahu syarikat sebab anda membatalkan temu duga pada {when}. Mereka akan melihat sebab ini.",
+  "ivCancelledNotified": "Temu duga dibatalkan. Syarikat telah dimaklumkan beserta sebab anda.",
+  "ivCouldNotCancel": "Tidak dapat membatalkan: {error}",
+  "ivCancelButton": "Batal",
+  "ivRescheduleButton": "Jadual semula",
+  "ivChangeWindowStudent": "Temu duga hanya boleh dibatalkan atau dijadualkan semula sehingga 2 jam sebelum bermula. Jika anda tidak dapat hadir, sila hantar mesej kepada syarikat.",
+  "ivCompanyWillArrange": "Syarikat akan mengatur masa baharu jika permohonan anda diteruskan.",
+  "ivChangesTitle": "Perubahan",
+  "ivChangeMoved": "{actor} mengalihkan temu duga",
+  "ivChangeMovedFromTo": "{actor} mengalihkan temu duga dari {from} ke {to}",
+  "ivChangeAsked": "{actor} meminta untuk mengalihkan temu duga",
+  "ivChangeAskedTo": "{actor} meminta untuk mengalihkan temu duga ke {to}",
+  "ivChangeDeclined": "{actor} menolak masa baharu",
+  "ivChangeDeclinedFor": "{actor} menolak masa baharu ({time})",
+  "ivAutoCancelled": "Temu duga dibatalkan secara automatik",
+  "ivChangeCancelled": "{actor} membatalkan temu duga",
+  "ivReasonLine": "Sebab: {reason}",
+  "ivYouAskedToReschedule": "Anda meminta untuk menjadualkan semula",
+  "ivAskedToReschedule": "{who} meminta untuk menjadualkan semula",
+  "ivLineNow": "Sekarang",
+  "ivLineProposed": "Dicadangkan",
+  "ivLineReason": "Sebab",
+  "ivWaitingFor": "Menunggu {who}. Temu duga kekal pada masa semasa kecuali mereka bersetuju.",
+  "ivMovesOnlyIfYouAccept": "Temu duga hanya dialihkan jika anda bersetuju. Jika anda menolak, ia kekal pada masa semasa.",
+  "ivWithdrawRequest": "Tarik balik permintaan",
+  "ivTryAgain": "Cuba lagi",
+  "ivNoFreeTimes": "Tiada masa temu duga kosong dalam {days} hari akan datang.",
+  "ivNoFreeTimesHint": "Masa temu duga datang daripada ketersediaan mingguan penemu duga. Semua slot mungkin telah ditempah, atau tiada ketersediaan ditetapkan.",
+  "ivChooseDay": "Pilih hari",
+  "ivChooseTime": "Pilih masa",
+  "ivPickFirst": "Pilih hari dan masa baharu dahulu.",
+  "ivRequestNewTime": "Minta masa baharu",
+  "ivReasonForChange": "Sebab perubahan",
+  "ivWillSeeReason": "{who} akan melihat sebab ini. Temu duga hanya dialihkan jika mereka bersetuju; sehingga itu ia kekal pada masa semasa.",
+  "ivReasonHint": "cth. Saya ada peperiksaan universiti pada masa itu.",
+  "ivSendRequest": "Hantar permintaan",
+  "offAcceptTitle": "Terima tawaran ini?",
+  "offAcceptBody": "{title} di {company} akan menjadi latihan industri aktif anda.",
+  "offAcceptCloses": "{count} permohonan terbuka anda yang lain akan ditutup dan tidak boleh dibuka semula.",
+  "offAcceptOne": "Anda hanya boleh mempunyai satu latihan industri aktif.",
+  "offNotYet": "Belum lagi",
+  "offAcceptOffer": "Terima tawaran",
+  "offAccepted": "Tawaran diterima. {company} telah dimaklumkan.",
+  "offCouldNotAccept": "Tidak dapat menerima tawaran: {error}",
+  "appTabOffers": "Tawaran ({count})",
+  "appInterviewCancelledTap": "Temu duga dibatalkan. Ketik untuk melihat sebabnya.",
+  "appOfferedBody": "Tahniah, syarikat ini telah menawarkan latihan industri kepada anda. Anda boleh memegang beberapa tawaran; menerima satu akan menutup yang lain.",
+  "appReasonFromCompany": "Sebab daripada syarikat",
+  "appNoReasonRecorded": "Tiada sebab direkodkan.",
+  "appClosedAcceptedOther": "Ditutup kerana anda telah menerima tawaran lain.",
+  "pushOffTitle": "Makluman di luar aplikasi dimatikan",
+  "pushOffBody": "Telefon anda menyekat pemberitahuan CIMS, jadi temu duga, tawaran dan mesej baharu hanya dipaparkan di sini. Hidupkannya untuk dimaklumkan serta-merta.",
+  "pushTurnOn": "Hidupkan pemberitahuan",
+  "reasonRequiredHelper": "Wajib, sekurang-kurangnya {min} aksara.",
+  "reasonOptionalHelper": "Pilihan.",
+  "ivSlotsFree": "{count} kosong",
+  "avHoursSaved": "Waktu disimpan.",
+  "avRemoveTitle": "Buang waktu ini?",
+  "avRemoveBody": "{day} {from} hingga {to} tidak lagi ditawarkan untuk temu duga baharu. Temu duga yang sudah ditempah dalam tempoh ini kekal seperti sedia ada.",
+  "avKeep": "Kekalkan",
+  "avRemove": "Buang",
+  "avDayOffHelp": "Hari anda tidak dapat hadir",
+  "avTitle": "Ketersediaan temu duga",
+  "avAddHours": "Tambah waktu",
+  "avIntro": "Tetapkan waktu anda boleh menjalankan temu duga. Setiap tempoh dipecahkan kepada slot mengikut tempoh yang anda pilih, dan slot akan hilang sebaik sahaja ditempah, jadi tiada siapa boleh menempah masa yang sama dua kali. Waktu adalah dalam waktu Malaysia.",
+  "avWeeklyHours": "Waktu mingguan",
+  "avNoHoursYet": "Belum ada waktu ditetapkan. Ketik \"Tambah waktu\" supaya temu duga boleh dijadualkan dengan anda.",
+  "avDaysOff": "Hari cuti",
+  "avAddDayOff": "Tambah hari cuti",
+  "avNoDaysOff": "Tiada hari cuti akan datang. Tambah cuti atau cuti umum di sini dan tiada temu duga akan ditawarkan pada hari tersebut.",
+  "avNotAvailable": "Tidak tersedia",
+  "avMinutesShort": "{minutes} min",
+  "avPickOneDay": "Pilih sekurang-kurangnya satu hari.",
+  "avEndAfterStart": "Masa tamat mesti selepas masa mula.",
+  "avShorterThanSlot": "Tempoh ini lebih pendek daripada satu slot {minutes} minit.",
+  "avOverlap": "Waktu ini bertindih dengan waktu yang telah anda tetapkan pada salah satu hari yang dipilih. Buang atau ubah waktu sedia ada dahulu.",
+  "avAddAvailableHours": "Tambah waktu tersedia",
+  "avDays": "Hari",
+  "avMonFri": "Isn–Jum",
+  "avEveryDay": "Setiap hari",
+  "avFromTime": "Dari {time}",
+  "avToTime": "Hingga {time}",
+  "avLengthOfInterview": "Tempoh setiap temu duga",
+  "avSlotsSummary": "{count} slot, setiap satu {minutes} minit, bagi setiap hari yang dipilih.",
+  "avSaveHours": "Simpan waktu",
+  "apTitle": "Profil pelajar",
+  "apUnnamed": "Pelajar tanpa nama",
+  "apCouldNotOpenResume": "Tidak dapat membuka resume: {error}",
+  "apCouldNotLoad": "Tidak dapat memuatkan profil penuh: {error}",
+  "apContact": "Hubungan",
+  "apEmail": "E-mel",
+  "apPhone": "Telefon",
+  "apStudies": "Pengajian",
+  "apProgramme": "Program",
+  "apFaculty": "Fakulti",
+  "apSemester": "Semester",
+  "apCgpa": "CGPA",
+  "apSkills": "Kemahiran",
+  "apNoSkills": "Tiada kemahiran disenaraikan.",
+  "apWorkExperience": "Pengalaman kerja",
+  "apNoExperience": "Tiada pengalaman kerja disenaraikan.",
+  "apResume": "Resume",
+  "apNoResume": "Tiada resume dimuat naik",
+  "apView": "Lihat",
+  "apNotProvided": "Tidak diberikan",
+  "apPresent": "Kini",
+  "hrViewFullProfile": "Lihat profil penuh",
+  "hrvInterviewCancelledWas": "Temu duga dibatalkan (asalnya {when})",
+  "hrvInterviewLine": "Temu duga: {when}",
+  "hrvAcceptedAnother": "Pelajar menerima tawaran lain.",
+  "hrvCouldNotUploadOffer": "Tidak dapat memuat naik surat tawaran: {error}",
+  "hrvWithdrawOffer": "Tarik balik tawaran",
+  "hrvRejectApplication": "Tolak permohonan",
+  "hrvWithdrawPrompt": "Beritahu {name} sebab tawaran ditarik balik. Mereka akan melihat sebab ini.",
+  "hrvRejectPrompt": "Beritahu {name} sebab permohonan tidak berjaya. Mereka akan melihat sebab ini.",
+  "hrvReject": "Tolak",
+  "hrvRejectHint": "cth. Jawatan ini telah diisi oleh calon yang mempunyai pengalaman lebih relevan.",
+  "hrvCouldNotReject": "Tidak dapat menolak: {error}",
+  "hrvMakeOfferTitle": "Buat tawaran?",
+  "hrvMakeOfferBody": "{name} akan dimaklumkan dan boleh menerima tawaran daripada skrin Permohonan mereka. Mereka mungkin memegang tawaran daripada beberapa syarikat; sebaik sahaja mereka menerima satu, yang lain akan ditutup.",
+  "hrvMakeOffer": "Buat tawaran",
+  "hrvCouldNotMakeOffer": "Tidak dapat membuat tawaran: {error}",
+  "hrvNoResumeUploaded": "Tiada resume dimuat naik.",
+  "hrvSetMyAvailability": "Tetapkan ketersediaan saya",
+  "hrvDeclinePrompt": "Beritahu {name} sebab anda menolak. Temu duga kekal pada masa semasa.",
+  "hrvDeclineHint": "cth. Pada hari itu penemu duga tidak dapat hadir.",
+  "hrvAcceptedMoved": "Diterima. Temu duga telah dialihkan.",
+  "hrvCancelPrompt": "Beritahu {name} sebab temu duga pada {when} dibatalkan. Mereka akan melihat sebab ini.",
+  "hrvCancelHint": "cth. Penemu duga tidak dapat hadir pada hari itu.",
+  "hrvCancelledNotified": "Temu duga dibatalkan. {name} telah dimaklumkan beserta sebab anda.",
+  "hrvChangeWindow": "Temu duga hanya boleh dibatalkan atau dijadualkan semula sehingga 2 jam sebelum bermula.",
+  "hrvNoInterviewBooked": "Tiada temu duga ditempah.",
+  "hrvInterviewWasCancelled": "Temu duga pada {when} telah dibatalkan.",
+  "hrvScheduleNew": "Jadualkan temu duga baharu",
+  "hrvOfferSent": "Tawaran dihantar. Menunggu {name} menerima. Surat tawaran dan surat penerimaan boleh ditambah selepas mereka menerima.",
+  "hrvAcceptedAnotherCompany": "{name} menerima tawaran syarikat lain, jadi permohonan ini ditutup secara automatik.",
+  "hrvPickDayTime": "Pilih hari dan masa dahulu.",
+  "hrvChangeNote": "{actor} {verb}. Sebab: {reason}",
+  "ivVerbAsked": "meminta untuk mengalihkan temu duga",
+  "ivVerbDeclined": "menolak pengalihan temu duga",
+  "ivVerbMoved": "mengalihkan temu duga",
+  "ivVerbAutoCancelled": "membatalkan temu duga secara automatik",
+  "ivVerbCancelled": "membatalkan temu duga",
+  "ivVerbBooked": "menempah temu duga",
+  "acTabOne": "Seorang pelajar",
+  "acTabMany": "Ramai (senarai / CSV)",
+  "acHowItWorks": "Setiap pelajar mendapat kata laluan rawak yang memenuhi peraturan kata laluan. Anda akan melihatnya sekali sahaja, pada skrin seterusnya, untuk dihantar kepada pelajar. Pada log masuk pertama mereka mesti memilih kata laluan baharu.",
+  "acFullName": "Nama penuh",
+  "acFullNameHint": "Seperti pada kad pelajar",
+  "acEmail": "E-mel",
+  "acRegNoOptional": "Nombor pendaftaran (pilihan)",
+  "acProgrammeOptional": "Program (pilihan)",
+  "acProgrammeHint": "cth. Ijazah Sarjana Muda Sains Komputer",
+  "acCreateAccount": "Cipta akaun",
+  "acFileCouldNotRead": "Fail itu tidak dapat dibaca.",
+  "acFileTooLarge": "Fail itu terlalu besar untuk senarai pelajar (maksimum 512 KB).",
+  "acOnePerLine": "Seorang pelajar setiap baris:",
+  "acLineFormat": "e-mel, nama penuh, nombor pendaftaran, program (dua yang terakhir adalah pilihan). Baris tajuk dibenarkan.",
+  "acChooseCsv": "Pilih fail CSV",
+  "acFileName": "Fail: {name}",
+  "acCreateAccounts": "Cipta akaun",
+  "acCreateN": "Cipta {count} akaun",
+  "acRowsSkipped": "Baris yang bermasalah dilangkau. Betulkan dan tambah semula.",
+  "acNoEmailApp": "Tiada aplikasi e-mel dapat dibuka. Salin butiran dan hantar dengan cara lain.",
+  "acLeaveTitle": "Tinggalkan skrin ini?",
+  "acLeaveBody": "Kata laluan sementara hanya dipaparkan di sini dan tidak boleh dilihat semula. Pastikan anda telah menyalin atau menghantarnya.",
+  "acStay": "Kekal",
+  "acLeave": "Tinggalkan",
+  "acNewAccounts": "Akaun baharu",
+  "acSendNow": "Hantar e-mel dan kata laluan kepada setiap pelajar sekarang. Kata laluan hanya dipaparkan pada skrin ini. Pelajar mesti memilih kata laluan baharu pada log masuk pertama.",
+  "acCopiedCsv": "{count} akaun disalin sebagai CSV.",
+  "acCopyAllCsv": "Salin semua sebagai CSV",
+  "acLoginCopied": "Butiran log masuk disalin.",
+  "acNotCreated": "Tidak dicipta",
+  "acDone": "Selesai",
+  "acCopyDetails": "Salin butiran",
+  "acEmailStudent": "E-mel pelajar",
+  "fpIntro": "Anda log masuk dengan kata laluan sementara daripada pentadbir anda. Pilih kata laluan anda sendiri sekarang. Anda tidak boleh menggunakan aplikasi ini sehingga anda berbuat demikian.",
+  "fpNewPassword": "Kata laluan baharu",
+  "fpConfirmPassword": "Sahkan kata laluan baharu",
+  "fpSaveContinue": "Simpan dan teruskan",
+  "fpLogOut": "Log keluar",
+  "ceNewCodeSent": "Kod baharu telah dihantar ke {email}.",
+  "ceTitle": "Sahkan e-mel anda",
+  "ceIntro": "Kami telah menghantar kod ke {email}. Taip di bawah untuk mengesahkan akaun anda. Ia mungkin mengambil masa seminit dan mungkin masuk ke folder spam anda.",
+  "ceCodeLabel": "Kod daripada e-mel",
+  "ceCodeHint": "Masukkan kod",
+  "ceConfirm": "Sahkan akaun",
+  "ceResendIn": "Hantar kod baharu dalam {seconds}s",
+  "ceResend": "Hantar kod baharu",
+  "ceBackToLogin": "Kembali ke log masuk",
+  "fgCodeRequested": "Kod baharu telah diminta.",
+  "fgCheckEmail": "Semak e-mel anda untuk kod tersebut.",
+  "fgTitle": "Tetap semula kata laluan",
+  "fgEnterEmail": "Masukkan alamat e-mel akaun anda. Kami akan menghantar kod melalui e-mel.",
+  "fgEmailLabel": "Alamat e-mel",
+  "fgEmailHint": "Masukkan e-mel anda",
+  "fgSendCode": "Hantar kod",
+  "fgSentIntro": "Jika akaun wujud untuk {email}, kami telah menghantar kod melalui e-mel. Ia mungkin mengambil masa seminit dan mungkin masuk ke folder spam. Kod akan tamat tempoh selepas seketika.",
+  "fgVerifyCode": "Sahkan kod",
+  "fgDifferentEmail": "Gunakan e-mel lain",
+  "fgCodeAccepted": "Kod diterima. Pilih kata laluan baharu.",
+  "fgNewPasswordHint": "Cipta kata laluan baharu",
+  "fgConfirmHint": "Masukkan semula kata laluan baharu anda",
+  "fgSaveNew": "Simpan kata laluan baharu",
+  "suPrivacyRequired": "Sila baca dan terima notis privasi untuk meneruskan.",
+  "suPendingApproval": "Akaun dicipta. Pentadbir mesti meluluskannya sebelum anda boleh log masuk.",
+  "suCreatedLoginConfirm": "Akaun anda telah dicipta. Log masuk untuk mengesahkan e-mel anda dengan kod baharu.",
+  "suEmailConfirmedPending": "E-mel disahkan. Pentadbir mesti meluluskan akaun anda sebelum anda boleh log masuk.",
+  "suExistsTitle": "Akaun sudah wujud",
+  "suExistsBody": "Akaun sudah dicipta dengan {email}. Log masuk dengannya, atau tetapkan semula kata laluan jika anda terlupa. Tiada e-mel baharu dihantar untuk akaun yang sudah wujud.",
+  "suForgotPassword": "Lupa kata laluan",
+  "suStudentsCreatedByAdmin": "Akaun pelajar dicipta oleh pentadbir anda. Log masuk dengan e-mel dan kata laluan yang diberikan kepada anda.",
+  "suFullNameHint": "Masukkan nama penuh anda",
+  "suAgreePrefix": "Saya telah membaca dan bersetuju dengan ",
+  "suPrivacyNotice": "notis privasi",
+  "loPasswordChanged": "Kata laluan ditukar. Log masuk dengan kata laluan baharu anda.",
+  "stMyInterviewTimes": "Hari dan masa temu duga saya",
+  "stPrivacyNotice": "Notis privasi",
+  "stDeleteMyAccount": "Padam akaun saya",
+  "errUnsupportedImage": "Format fail tidak disokong. Sila muat naik imej JPG, JPEG atau PNG.",
+  "errPhotoEmpty": "Foto yang dipilih kosong (0 bait). Cuba foto lain.",
+  "errPhotoNotFound": "Foto yang dipilih tidak dijumpai pada peranti.",
+  "errUploadFailed": "Muat naik gagal: {error}",
+  "errCouldNotAccessCamera": "Tidak dapat mengakses kamera: {error}",
+  "errCouldNotAccessGallery": "Tidak dapat mengakses galeri: {error}",
+  "errCouldNotRemovePhoto": "Tidak dapat membuang foto: {error}",
+  "errCouldNotSave": "Tidak dapat menyimpan: {error}",
+  "errCouldNotSaveLanguage": "Tidak dapat menyimpan bahasa: {error}",
+  "errCouldNotSaveTheme": "Tidak dapat menyimpan tema: {error}",
+  "hpDeadlinePassed": "Tarikh akhir iklan ini telah berlalu. Edit iklan dan pilih tarikh akhir yang lebih lewat untuk membukanya semula.",
+  "hpExpired": "Tamat tempoh",
+  "hpRecommended": "Calon yang disyorkan",
+  "hpChooseLocation": "Pilih lokasi latihan industri pada peta.",
+  "hpAddOneSkill": "Tambah sekurang-kurangnya satu kemahiran yang diperlukan.",
+  "hpCloseBeforeDeadline": "Iklan tidak boleh ditutup sebelum tarikh akhir permohonan.",
+  "hpFixFields": "Sila betulkan medan yang diserlahkan sebelum menerbitkan.",
+  "hpCouldNotSave": "Tidak dapat menyimpan iklan: {error}",
+  "hpCouldNotDelete": "Tidak dapat memadam iklan: {error}",
+  "hpCustom": "Tersuai…",
+  "hpCustomCategory": "Kategori tersuai",
+  "hpCustomCategoryHint": "cth. Pemasaran",
+  "hpAllowancePositive": "Elaun mesti lebih daripada 0.",
+  "hpAutoCloseCaption": "Iklan ditutup secara automatik selepas (pilihan)",
+  "hpClosesOn": "Iklan ditutup pada {date}",
+  "hpAutoCloseOptional": "Tarikh tutup automatik (pilihan)",
+  "acTitleStudents": "Cipta akaun pelajar",
+  "acTitleSupervisors": "Cipta akaun penyelia",
+  "acHowItWorksSupervisor": "Setiap penyelia mendapat kata laluan rawak yang memenuhi peraturan kata laluan, dan akaun diluluskan serta-merta. Anda akan melihat kata laluan sekali sahaja, pada skrin seterusnya, untuk dihantar kepada mereka. Pada log masuk pertama mereka mesti memilih kata laluan baharu.",
+  "acLineFormatSupervisor": "e-mel, nama penuh. Baris tajuk dibenarkan.",
+  "acSendNowSupervisor": "Hantar e-mel dan kata laluan kepada setiap penyelia sekarang. Kata laluan hanya dipaparkan pada skrin ini. Mereka mesti memilih kata laluan baharu pada log masuk pertama.",
+  "adminAddSupervisors": "Tambah penyelia",
+  "adminAddStudents": "Tambah pelajar",
+  "stSummaryTitle": "Statistik",
+  "stViewFull": "Lihat statistik penuh",
+  "stNoCompany": "Sertai atau daftarkan syarikat untuk melihat statistik di sini.",
+  "stNothingYet": "Belum ada apa-apa untuk dipaparkan.",
+  "stCouldNotLoad": "Tidak dapat memuatkan statistik: {error}",
+  "stTitleHr": "Statistik pengambilan",
+  "stTitleAcademic": "Kemajuan pelajar",
+  "stTitleCompanySup": "Kemajuan pelatih",
+  "stTitleAdmin": "Statistik platform",
+  "stPostings": "Iklan",
+  "stOpenPostings": "Iklan dibuka",
+  "stApplications": "Permohonan",
+  "stApplicants": "Pemohon",
+  "stInterviewing": "Dalam temu duga",
+  "stOffered": "Ditawarkan",
+  "stAccepted": "Diterima",
+  "stRejected": "Ditolak",
+  "stPending": "Menunggu semakan",
+  "stClosed": "Ditutup",
+  "stAcceptRate": "Kadar penerimaan",
+  "stInterviewsUpcoming": "Temu duga akan datang",
+  "stInterviewsDone": "Temu duga selesai",
+  "stByStatus": "Permohonan mengikut status",
+  "stPerPosting": "Setiap iklan",
+  "stPostingRow": "{applications} permohonan · {interview} temu duga · {offered} ditawarkan · {accepted} diterima",
+  "stWeekly": "Permohonan seminggu (8 minggu lepas)",
+  "stStudents": "Pelajar",
+  "stPlaced": "Ditempatkan",
+  "stNotPlaced": "Belum ditempatkan",
+  "stReports": "Laporan",
+  "stReportsWaiting": "Menunggu semakan anda",
+  "stReportsApproved": "Diluluskan",
+  "stReportsSentBack": "Dikembalikan",
+  "stDocsWaiting": "Dokumen untuk disemak",
+  "stDocsApproved": "Dokumen diluluskan",
+  "stEvaluationsDone": "Penilaian selesai",
+  "stReportProgress": "Kemajuan laporan",
+  "stPerStudent": "Setiap pelajar",
+  "stStudentRow": "{reports} laporan · {approved} diluluskan · {pending} menunggu",
+  "stPlacedBadge": "Ditempatkan",
+  "stNotPlacedBadge": "Belum ditempatkan",
+  "stInterns": "Pelatih",
+  "stEvaluatedBadge": "Dinilai",
+  "stNotEvaluatedBadge": "Belum dinilai",
+  "stEvaluatedStudents": "Pelatih dinilai",
+  "stPeople": "Pengguna dalam platform",
+  "stCompanies": "Syarikat",
+  "stCompaniesVerified": "Disahkan",
+  "stCompaniesPending": "Menunggu pengesahan",
+  "stNewCompanies": "Syarikat baharu (30 hari)",
+  "stCompaniesWithPostings": "Syarikat dengan iklan",
+  "stNewPeople": "Pengguna baharu (30 hari)",
+  "stPendingApprovals": "Menunggu kelulusan",
+  "stUsersByRole": "Pengguna mengikut peranan",
+  "stCompaniesByStatus": "Syarikat mengikut status",
+  "stCompaniesJoined": "Syarikat menyertai sebulan (6 bulan lepas)",
+  "stPeopleJoined": "Pengguna menyertai sebulan (6 bulan lepas)",
+  "stRoleStudent": "Pelajar",
+  "stRoleAcademic": "Penyelia akademik",
+  "stRoleHr": "HR syarikat",
+  "stRoleCompanySup": "Penyelia syarikat",
+  "stRoleAdmin": "Pentadbir",
+  "roleLabelStudent": "Pelajar",
+  "roleLabelAcademic": "Penyelia akademik",
+  "roleLabelHr": "HR syarikat",
+  "roleLabelCompanySup": "Penyelia syarikat",
+  "roleLabelAdmin": "Pentadbir",
+  "acTabOneSupervisor": "Seorang penyelia",
+  "acTabManySupervisor": "Ramai (senarai / CSV)",
+  "acFullNameHintSupervisor": "Seperti pada kad pekerja",
+  "acEmailSupervisor": "E-mel penyelia",
+  "acCreateFailedReason": "Akaun tidak dapat dicipta: {reason}",
+  "adminNeverLoggedIn": "Belum log masuk",
+  "adminAwaitingApprovalBadge": "Menunggu kelulusan",
+  "adminNotApprovedBadge": "Tidak diluluskan",
+  "adminFilterVerified": "Disahkan",
+  "adminFilterNotVerified": "Belum disahkan",
+  "adminNoCompaniesInFilter": "Tiada syarikat dalam kumpulan ini",
+  "hpClosesAfterDeadline": "Iklan ditutup secara automatik selepas tarikh akhir permohonan. Tanpa tarikh akhir, ia kekal terbuka sehingga anda menutupnya.",
+  "goodAfternoon": "Selamat petang, {name}!",
+  "goodEvening": "Selamat malam, {name}!"
 }

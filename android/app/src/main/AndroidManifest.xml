@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Declared in main (not only debug/profile) so release builds can reach
+         Supabase. Without it a release APK has no network access at all. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android 13+ needs this runtime permission for push notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
-        android:label="fyp_cims"
+        android:label="CIMS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

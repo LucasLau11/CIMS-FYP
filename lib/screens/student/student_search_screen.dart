@@ -5,6 +5,7 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
 import 'student_internship_details_screen.dart';
+import '../../utils/error_text.dart';
 
 class StudentSearchScreen extends StatefulWidget {
   const StudentSearchScreen({super.key});
@@ -32,6 +33,23 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
   void initState() {
     super.initState();
     _load();
+    StudentDataService.applicationsVersion.addListener(_refreshApplied);
+  }
+
+  @override
+  void dispose() {
+    StudentDataService.applicationsVersion.removeListener(_refreshApplied);
+    super.dispose();
+  }
+
+  /// Applying, withdrawing or accepting an offer happens on other tabs, which
+  /// leave this one alive in the background: reload which postings are applied to.
+  Future<void> _refreshApplied() async {
+    try {
+      final appliedIds = await StudentDataService.instance.getAppliedInternshipIds();
+      if (!mounted) return;
+      setState(() => _appliedIds = appliedIds);
+    } catch (_) {}
   }
 
   Future<void> _load() async {
@@ -52,7 +70,7 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _error = l10n.errorLoadInternships(e.toString());
+        _error = l10n.errorLoadInternships(friendlyError(e));
         _isLoading = false;
       });
     }
@@ -103,7 +121,7 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null
               ? EmptyState(
                   icon: Icons.error_outline,
@@ -171,7 +189,7 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                         child: Row(
                           children: [
-                            Text(l10n.opportunitiesFoundCount(results.length), style: AppTextStyles.caption),
+                            Flexible(child: Text(l10n.opportunitiesFoundCount(results.length), style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)),
                           ],
                         ),
                       ),
@@ -272,7 +290,7 @@ class _InternshipCard extends StatelessWidget {
                       fontFamily: 'Poppins',
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: nameColor(companyName),
+                      color: nameTextColor(companyName),
                     ),
                   ),
                 ),
@@ -307,14 +325,12 @@ class _InternshipCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 6,
             children: [
-              Flexible(
-                child: _InfoChip(icon: Icons.location_on_outlined, label: data['location'] as String),
-              ),
-              const SizedBox(width: 8),
+              _InfoChip(icon: Icons.location_on_outlined, label: data['location'] as String),
               _InfoChip(icon: Icons.schedule, label: formatDuration(data['duration_months'] as int)),
-              const SizedBox(width: 8),
               _InfoChip(icon: Icons.attach_money, label: formatAllowance(parseNum(data['allowance_month']))),
             ],
           ),
@@ -336,21 +352,28 @@ class _InternshipCard extends StatelessWidget {
             }).toList(),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(timeAgo(context, postedAt), style: AppTextStyles.caption),
-              const Spacer(),
-              if (!applied)
-                ElevatedButton(
-                  onPressed: onTap,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          // The button sits at the right edge; its width is capped (not flexed) so a
+          // narrow screen or large text cannot overflow, and the time text takes the rest.
+          LayoutBuilder(
+            builder: (context, constraints) => Row(
+              children: [
+                Expanded(child: Text(timeAgo(context, postedAt), style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)),
+                const SizedBox(width: 8),
+                if (!applied)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.65),
+                    child: ElevatedButton(
+                      onPressed: onTap,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(l10n.viewDetails, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                    ),
                   ),
-                  child: Text(l10n.viewDetails, style: const TextStyle(fontSize: 13)),
-                ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -446,8 +469,7 @@ class _FilterSheetState extends State<_FilterSheet> {
         children: [
           Row(
             children: [
-              Text(l10n.filters, style: AppTextStyles.h3),
-              const Spacer(),
+              Expanded(child: Text(l10n.filters, style: AppTextStyles.h3, overflow: TextOverflow.ellipsis)),
               TextButton(
                 onPressed: () => setState(() {
                   _location = 'All';

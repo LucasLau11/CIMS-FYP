@@ -11,6 +11,7 @@ import '../../utils/format_utils.dart';
 import '../../utils/profanity_filter.dart';
 import '../../l10n/app_localizations.dart';
 import '../document_preview_screen.dart';
+import '../../utils/error_text.dart';
 
 const List<String> _imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
@@ -35,7 +36,9 @@ class StudentMessagesScreen extends StatefulWidget {
 }
 
 class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
-  static const _rolesAllowedToStartNewConversations = {'admin', 'academic_supervisor', 'company_hr', 'parent', 'student'};
+  // Every role can start chats now; WHO each role may start one with is decided by the
+  // database (`can_message`), and the "new message" list only shows those people.
+  static const _rolesAllowedToStartNewConversations = {'admin', 'academic_supervisor', 'company_hr', 'student', 'company_supervisor'};
 
   bool _isLoading = true;
   List<Map<String, dynamic>> _conversations = [];
@@ -118,7 +121,7 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotLoadContacts(e.toString())), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotLoadContacts(friendlyError(e))), backgroundColor: AppColors.error));
       return;
     }
 
@@ -157,11 +160,7 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
                             ? person['full_name'] as String
                             : person['role'] as String;
                         return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: nameColor(name).withOpacity(0.15),
-                            child: Text(logoLetter(name),
-                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, color: nameColor(name))),
-                          ),
+                          leading: ProfileAvatar(name: name, avatarUrl: person['avatar_url'] as String?),
                           title: Text(name),
                           subtitle: Text(_roleLabel(l10n, person['role'] as String)),
                           onTap: () => Navigator.pop(context, person),
@@ -176,7 +175,15 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
 
     if (selected == null) return;
     if (!mounted) return;
-    final conversation = await StudentDataService.instance.getOrCreateConversation(selected['id'] as String);
+    Map<String, dynamic> conversation;
+    try {
+      conversation = await StudentDataService.instance.getOrCreateConversation(selected['id'] as String);
+    } catch (e) {
+      // The database explains why a chat cannot be started; say it instead of doing nothing.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e)), backgroundColor: AppColors.error));
+      return;
+    }
     if (!mounted) return;
     await Navigator.push(
       context,
@@ -206,7 +213,7 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: _conversations.isEmpty
@@ -225,6 +232,15 @@ class _StudentMessagesScreenState extends State<StudentMessagesScreen> {
                       itemBuilder: (_, i) => _ConversationTile(
                         data: _conversations[i],
                         onTap: () => _openConversation(_conversations[i]),
+                        onOpenProfile: () async {
+                          final other = _conversations[i]['other_profile'] as Map<String, dynamic>?;
+                          if (other == null) return;
+                          final deleted = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(builder: (_) => _ContactInfoScreen(conversationId: _conversations[i]['id'] as String, otherProfile: other)),
+                          );
+                          if (deleted == true) _load();
+                        },
                         onArchive: () => _archive(_conversations[i]),
                         onDelete: () => _delete(_conversations[i]),
                       ),
@@ -278,7 +294,7 @@ class _ArchivedConversationsScreenState extends State<_ArchivedConversationsScre
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(title: l10n.chatArchivedChatsTitle),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _conversations.isEmpty
               ? EmptyState(
                   icon: Icons.archive_outlined,
@@ -294,11 +310,7 @@ class _ArchivedConversationsScreenState extends State<_ArchivedConversationsScre
                     final name =
                         (other?['full_name'] as String?)?.isNotEmpty == true ? other!['full_name'] as String : l10n.chatUnknownUser;
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: nameColor(name).withOpacity(0.15),
-                        child: Text(logoLetter(name),
-                            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, color: nameColor(name))),
-                      ),
+                      leading: ProfileAvatar(name: name, avatarUrl: other?['avatar_url'] as String?),
                       title: Text(name),
                       trailing: TextButton(onPressed: () => _unarchive(convo), child: Text(l10n.chatUnarchiveAction)),
                     );
@@ -318,8 +330,6 @@ String _roleLabel(AppLocalizations l10n, String role) {
       return l10n.hrPersonnelLabel;
     case 'company_supervisor':
       return l10n.companySupervisor;
-    case 'parent':
-      return l10n.parentGuardian;
     default:
       return role;
   }
@@ -340,7 +350,9 @@ class _ConversationTile extends StatelessWidget {
   final VoidCallback onArchive;
   final VoidCallback onDelete;
 
-  const _ConversationTile({required this.data, required this.onTap, required this.onArchive, required this.onDelete});
+  final VoidCallback onOpenProfile;
+
+  const _ConversationTile({required this.data, required this.onTap, required this.onOpenProfile, required this.onArchive, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -356,11 +368,9 @@ class _ConversationTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.only(left: 16, right: 4),
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: nameColor(name).withOpacity(0.15),
-        child: Text(logoLetter(name),
-            style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700, color: nameColor(name))),
+      leading: GestureDetector(
+        onTap: onOpenProfile,
+        child: ProfileAvatar(name: name, avatarUrl: other?['avatar_url'] as String?, radius: 24),
       ),
       title: Text(name,
           style: TextStyle(
@@ -386,7 +396,7 @@ class _ConversationTile extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(left: 8),
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
               child: Text('$unreadCount',
                   style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
             ),
@@ -512,7 +522,7 @@ class ChatScreenState extends State<ChatScreen> {
       final l10n = AppLocalizations.of(context)!;
       setState(() => _pendingMessages.removeWhere((p) => p['id'] == localId));
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotSendMessage(e.toString())), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotSendMessage(friendlyError(e))), backgroundColor: AppColors.error));
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -575,7 +585,7 @@ class ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       setState(() => _pendingMessages.removeWhere((p) => p['id'] == localId));
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotSendAttachment(e.toString())), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotSendAttachment(friendlyError(e))), backgroundColor: AppColors.error));
     } finally {
       if (mounted) setState(() => _isAttaching = false);
     }
@@ -655,7 +665,7 @@ class ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotDeleteMessage(e.toString())), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotDeleteMessage(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -683,7 +693,7 @@ class ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotEditMessage(e.toString())), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotEditMessage(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -719,7 +729,7 @@ class ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotDeleteMessage(e.toString())), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.chatCouldNotDeleteMessage(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -749,11 +759,7 @@ class ChatScreenState extends State<ChatScreen> {
           },
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: nameColor(name).withOpacity(0.2),
-                child: Text(logoLetter(name), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: nameColor(name))),
-              ),
+              ProfileAvatar(name: name, avatarUrl: widget.otherProfile['avatar_url'] as String?, radius: 16),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -765,7 +771,7 @@ class ChatScreenState extends State<ChatScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     Text(role,
-                        style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white70),
+                        style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: kOnBannerSoft),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                   ],
@@ -779,7 +785,7 @@ class ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ? Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : (_messages.isEmpty && _pendingMessages.isEmpty)
                     ? Center(
                         child: Text(l10n.chatSayHello, style: TextStyle(fontFamily: 'Inter', color: AppColors.textMuted)),
@@ -831,7 +837,7 @@ class ChatScreenState extends State<ChatScreen> {
                   onTap: _send,
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                     child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
                   ),
                 ),
@@ -894,16 +900,16 @@ class _MessageBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (data['edited_at'] != null) ...[
-                        Text(l10n.chatEditedLabel, style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: isMine ? Colors.white60 : AppColors.textMuted)),
+                        Text(l10n.chatEditedLabel, style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: isMine ? kOnBannerSoft : AppColors.textMuted)),
                         const SizedBox(width: 4),
                       ],
-                      Text(timeLabel, style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: isMine ? Colors.white60 : AppColors.textMuted)),
+                      Text(timeLabel, style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: isMine ? kOnBannerSoft : AppColors.textMuted)),
                       if (isMine) ...[
                         const SizedBox(width: 4),
                         Icon(
                           isPending ? Icons.done : Icons.done_all,
                           size: 12,
-                          color: (!isPending && data['read_at'] != null) ? Colors.white : Colors.white60,
+                          color: (!isPending && data['read_at'] != null) ? Colors.white : kOnBannerSoft,
                         ),
                       ],
                     ],
@@ -996,7 +1002,7 @@ class _ContactInfoScreen extends StatefulWidget {
 
 class _ContactInfoScreenState extends State<_ContactInfoScreen> {
   bool _isLoading = true;
-  String? _phone;
+  Map<String, dynamic>? _profile;
   List<Map<String, dynamic>> _sharedMedia = [];
   bool _muted = false;
   bool _blocked = false;
@@ -1015,7 +1021,7 @@ class _ContactInfoScreenState extends State<_ContactInfoScreen> {
       final media = await StudentDataService.instance.getSharedMedia(widget.conversationId);
       if (!mounted) return;
       setState(() {
-        _phone = contactInfo?['phone'] as String?;
+        _profile = contactInfo;
         _sharedMedia = media;
         _isLoading = false;
       });
@@ -1033,7 +1039,7 @@ class _ContactInfoScreenState extends State<_ContactInfoScreen> {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       setState(() => _muted = !value);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.chatCouldNotUpdateMute(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.chatCouldNotUpdateMute(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -1058,7 +1064,7 @@ class _ContactInfoScreenState extends State<_ContactInfoScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _blocked = !value);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.chatCouldNotUpdateBlock(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.chatCouldNotUpdateBlock(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -1087,17 +1093,74 @@ class _ContactInfoScreenState extends State<_ContactInfoScreen> {
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.chatCouldNotDeleteConversation(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.chatCouldNotDeleteConversation(friendlyError(e))), backgroundColor: AppColors.error));
     }
+  }
+
+  /// The other person's profile card: contact details, then what is relevant
+  /// to their role (a student's programme and skills, a staff member's company).
+  List<Widget> _profileDetails(AppLocalizations l10n) {
+    final p = _profile;
+    final rows = <(String, String)>[
+      ('Email', (p?['email'] as String?) ?? ''),
+      (l10n.phone, (p?['phone'] as String?) ?? ''),
+      ('Company', (p?['company_name'] as String?) ?? ''),
+      ('Industry', (p?['company_industry'] as String?) ?? ''),
+      ('Programme', (p?['programme'] as String?) ?? ''),
+      ('Faculty', (p?['faculty'] as String?) ?? ''),
+      ('Semester', p?['semester'] == null ? '' : '${p!['semester']}'),
+    ].where((r) => r.$2.trim().isNotEmpty).toList();
+    final skills = List<String>.from((p?['skills'] as List?) ?? const []);
+
+    if (p == null) {
+      return [Text(l10n.chatPhoneNotAvailable, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary))];
+    }
+    return [
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0) const Divider(height: 18),
+              Text(rows[i].$1, style: AppTextStyles.label),
+              const SizedBox(height: 3),
+              Text(rows[i].$2, style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.textPrimary)),
+            ],
+            if (rows.isEmpty) Text(l10n.chatPhoneNotAvailable, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+          ],
+        ),
+      ),
+      if (skills.isNotEmpty) ...[
+        const SizedBox(height: 16),
+        Text(l10n.hrSkills, style: AppTextStyles.label),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final skill in skills)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(20)),
+                child: Text(skill, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText)),
+              ),
+          ],
+        ),
+      ],
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final name = (widget.otherProfile['full_name'] as String?)?.isNotEmpty == true
-        ? widget.otherProfile['full_name'] as String
-        : l10n.chatUnknownUser;
-    final roleValue = widget.otherProfile['role'] as String?;
+    final name = (_profile?['full_name'] as String?)?.isNotEmpty == true
+        ? _profile!['full_name'] as String
+        : ((widget.otherProfile['full_name'] as String?)?.isNotEmpty == true
+            ? widget.otherProfile['full_name'] as String
+            : l10n.chatUnknownUser);
+    final roleValue = (_profile?['role'] as String?) ?? widget.otherProfile['role'] as String?;
     final role = roleValue != null ? _roleLabel(l10n, roleValue) : '';
 
     return Scaffold(
@@ -1108,28 +1171,26 @@ class _ContactInfoScreenState extends State<_ContactInfoScreen> {
         title: Text(l10n.chatContactInfoTitle, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
                 Center(
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 34,
-                        backgroundColor: nameColor(name).withOpacity(0.2),
-                        child: Text(logoLetter(name), style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: nameColor(name))),
+                      ProfileAvatar(
+                        name: name,
+                        avatarUrl: (_profile?['avatar_url'] as String?) ?? widget.otherProfile['avatar_url'] as String?,
+                        radius: 48,
                       ),
-                      const SizedBox(height: 10),
-                      Text(name, style: AppTextStyles.h2),
-                      Text(role, style: AppTextStyles.bodySecondary),
+                      const SizedBox(height: 12),
+                      Text(name, style: AppTextStyles.h2, textAlign: TextAlign.center),
+                      Text(role, style: AppTextStyles.bodySecondary, textAlign: TextAlign.center),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(l10n.phone, style: AppTextStyles.label),
-                const SizedBox(height: 8),
-                Text(_phone?.isNotEmpty == true ? _phone! : l10n.chatPhoneNotAvailable, style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary)),
+                ..._profileDetails(l10n),
                 const SizedBox(height: 24),
                 Text(l10n.chatSharedMediaFiles, style: AppTextStyles.label),
                 const SizedBox(height: 8),
@@ -1140,7 +1201,7 @@ class _ContactInfoScreenState extends State<_ContactInfoScreen> {
                     final fileName = (m['attachment_file_name'] as String?) ?? (m['attachment_path'] as String).split('/').last;
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(_isImage(fileName) ? Icons.image_outlined : Icons.insert_drive_file_outlined, color: AppColors.primary),
+                      leading: Icon(_isImage(fileName) ? Icons.image_outlined : Icons.insert_drive_file_outlined, color: AppColors.primaryText),
                       title: Text(fileName, maxLines: 1, overflow: TextOverflow.ellipsis),
                       onTap: () async {
                         final url = await StudentDataService.instance.getChatAttachmentSignedUrl(m['attachment_path'] as String);

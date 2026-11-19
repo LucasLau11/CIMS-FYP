@@ -69,8 +69,8 @@ class _AdminShellState extends State<AdminShell> {
           onTap: _onTabTapped,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.dashboard_outlined),
-              activeIcon: const Icon(Icons.dashboard),
+              icon: const Icon(Icons.admin_panel_settings_outlined),
+              activeIcon: const Icon(Icons.admin_panel_settings),
               label: l10n.dashboard,
             ),
             BottomNavigationBarItem(

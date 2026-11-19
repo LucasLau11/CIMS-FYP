@@ -4,6 +4,8 @@ import 'package:pdfx/pdfx.dart';
 import 'package:docx_to_text/docx_to_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
+import '../utils/error_text.dart';
+import '../utils/lang.dart';
 
 /// Shared in-app viewer for any uploaded document (resume, report,
 /// document, chat attachment) across every role — replaces the previous
@@ -32,7 +34,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       await launchUrl(Uri.parse(widget.url), mode: LaunchMode.externalApplication);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open file: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not open file')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -107,7 +109,7 @@ class _PdfPreviewState extends State<_PdfPreview> {
   @override
   Widget build(BuildContext context) {
     if (_failed) {
-      return _UnsupportedPreview(onOpenExternally: widget.onOpenExternally, message: 'Could not load this PDF for preview.');
+      return _UnsupportedPreview(onOpenExternally: widget.onOpenExternally, message: tt('Could not load this PDF for preview.'));
     }
     return PdfView(
       controller: _controller,
@@ -117,8 +119,8 @@ class _PdfPreviewState extends State<_PdfPreview> {
       },
       builders: PdfViewBuilders<DefaultBuilderOptions>(
         options: const DefaultBuilderOptions(),
-        documentLoaderBuilder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        pageLoaderBuilder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        documentLoaderBuilder: (_) => Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        pageLoaderBuilder: (_) => Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
     );
   }
@@ -141,10 +143,10 @@ class _ImagePreview extends StatelessWidget {
           fit: BoxFit.contain,
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return Center(child: CircularProgressIndicator(color: AppColors.primary));
           },
           errorBuilder: (context, error, stackTrace) =>
-              _UnsupportedPreview(onOpenExternally: onOpenExternally, message: 'Could not load this image for preview.'),
+              _UnsupportedPreview(onOpenExternally: onOpenExternally, message: tt('Could not load this image for preview.')),
         ),
       ),
     );
@@ -181,10 +183,10 @@ class _DocxPreviewState extends State<_DocxPreview> {
       future: _textFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+          return Center(child: CircularProgressIndicator(color: AppColors.primary));
         }
         if (snapshot.hasError || !snapshot.hasData || snapshot.data!.trim().isEmpty) {
-          return _UnsupportedPreview(onOpenExternally: widget.onOpenExternally, message: 'Could not load this document for preview.');
+          return _UnsupportedPreview(onOpenExternally: widget.onOpenExternally, message: tt('Could not load this document for preview.'));
         }
         return Column(
           children: [
@@ -194,12 +196,12 @@ class _DocxPreviewState extends State<_DocxPreview> {
               color: AppColors.infoBg,
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                  Icon(Icons.info_outline, size: 16, color: AppColors.primaryText),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       "Showing extracted text only — formatting isn't preserved. Open externally for the original layout.",
-                      style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary),
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText),
                     ),
                   ),
                 ],
@@ -243,7 +245,7 @@ class _UnsupportedPreview extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onOpenExternally,
               icon: const Icon(Icons.open_in_new, size: 18),
-              label: const Text('Open externally'),
+              label: Text(tt('Open externally')),
             ),
           ],
         ),

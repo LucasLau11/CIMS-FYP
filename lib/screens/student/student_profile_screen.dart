@@ -1,20 +1,28 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/account_actions.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/auth_service.dart';
 import '../../services/student_data_service.dart';
 import '../../services/resume_parser_service.dart';
 import '../../utils/file_picker_utils.dart';
 import '../../utils/format_utils.dart';
+import '../../utils/validators.dart';
+import '../../widgets/common/validated_field.dart';
 import '../document_preview_screen.dart';
 import '../login_screen.dart';
 import '../photo_crop_screen.dart';
 import 'address_picker_screen.dart';
+import '../../utils/error_text.dart';
+import '../../utils/responsive.dart';
+import '../../utils/lang.dart';
+import '../../widgets/profile_actions.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -38,6 +46,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String _email = '';
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _personalFormKey = GlobalKey<FormState>();
+  final _academicFormKey = GlobalKey<FormState>();
+  final _skillFieldKey = GlobalKey<FormFieldState<String>>();
+  bool _personalAttempted = false;
   DateTime? _dateOfBirth;
   String? _addressText;
   double? _addressLat;
@@ -59,7 +71,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String? _faculty;
   final _cgpaController = TextEditingController();
   final _academicSupervisorController = TextEditingController();
+  String? _academicSupervisorId;
   final _studentRegNoController = TextEditingController();
+  // Optional, kept apart from the student record; letters (indemnity, company acceptance) fill it in from here.
+  final _icController = TextEditingController();
+  String _originalIc = '';
 
   String? _originalProgramme;
   int? _originalSemester;
@@ -98,7 +114,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   List<ParsedWorkExperience> _suggestedWorkExperience = [];
 
   // ---- Change password state ----
-  bool _isChangingPassword = false;
 
   // ---- Resume state ----
   String? _resumeFilename;
@@ -140,6 +155,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     _cgpaController.dispose();
     _academicSupervisorController.dispose();
     _studentRegNoController.dispose();
+    _icController.dispose();
     _skillInputController.dispose();
     super.dispose();
   }
@@ -178,6 +194,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         });
       }
 
+      String? ic;
+      try {
+        ic = await StudentDataService.instance.getMyIcNumber();
+      } catch (_) {
+        // Non-fatal: the IC number simply shows as not set.
+      }
+      if (!mounted) return;
       setState(() {
         _avatarUrl = resolvedAvatarUrl;
         _email = profile?['email'] as String? ?? '';
@@ -209,6 +232,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         final cgpaVal = parseNum(profile?['cgpa'])?.toDouble();
         _cgpaController.text = cgpaVal != null ? cgpaVal.toStringAsFixed(2) : '';
         _academicSupervisorController.text = profile?['academic_supervisor_name'] as String? ?? '';
+        _academicSupervisorId = profile?['academic_supervisor_id'] as String?;
         _studentRegNoController.text = profile?['student_reg_no'] as String? ?? '';
 
         _originalProgramme = _programme;
@@ -216,6 +240,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         _originalFaculty = _faculty;
         _originalCgpaText = _cgpaController.text;
         _originalStudentRegNo = _studentRegNoController.text;
+        _icController.text = ic ?? '';
+        _originalIc = _icController.text;
 
         _skills = List<String>.from(profile?['skills'] as List? ?? []);
         _originalSkills = List<String>.from(_skills);
@@ -297,14 +323,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           _isUploadingAvatar = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorUploadFailed(e.toString())), backgroundColor: AppColors.error),
+          SnackBar(content: Text(l10n.errorUploadFailed(friendlyError(e))), backgroundColor: AppColors.error),
         );
       }
     } catch (e) {
       if (!mounted) return;
       final sourceLabel = source == ImageSource.camera ? 'camera' : 'gallery';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorCouldNotAccessSource(sourceLabel, e.toString()))),
+        SnackBar(content: Text(l10n.errorCouldNotAccessSource(sourceLabel, friendlyError(e)))),
       );
     }
   }
@@ -324,7 +350,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       setState(() => _isUploadingAvatar = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorCouldNotRemovePhoto(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotRemovePhoto(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -347,7 +373,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
+              leading: Icon(Icons.photo_camera_outlined, color: AppColors.primaryText),
               title: Text(l10n.profileTakePhoto),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -355,7 +381,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+              leading: Icon(Icons.photo_library_outlined, color: AppColors.primaryText),
               title: Text(l10n.profileChooseFromGallery),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -414,30 +440,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     }
   }
 
+  /// Runs every personal-info rule at once (the text fields show their own
+  /// message under the field; the date of birth and address show theirs too).
+  /// Returns a summary only when something needs fixing.
   String? _validatePersonalInfo() {
-    final l10n = AppLocalizations.of(context)!;
-    if (_nameController.text.trim().isEmpty) {
-      return l10n.errorFullNameBlank;
-    }
-    if (_phoneController.text.trim().isEmpty) {
-      return l10n.errorPhoneBlank;
-    }
-    if (!RegExp(r'^[0-9+\-\s]{7,15}$').hasMatch(_phoneController.text.trim())) {
-      return l10n.errorInvalidPhone;
-    }
-    if (_dateOfBirth == null) {
-      return l10n.errorSelectDob;
-    }
-    final now = DateTime.now();
-    if (_dateOfBirth!.isAfter(now)) {
-      return l10n.errorDobInFuture;
-    }
-    final minAgeDate = DateTime(now.year - 17, now.month, now.day);
-    if (_dateOfBirth!.isAfter(minAgeDate)) {
-      return l10n.errorMinAge17;
-    }
-    if (_addressText == null || _addressText!.trim().isEmpty) {
-      return l10n.errorSelectAddress;
+    setState(() => _personalAttempted = true);
+    final fieldsOk = _personalFormKey.currentState?.validate() ?? false;
+    final dobError = Validators.dateOfBirth(_dateOfBirth, minAge: 17);
+    final addressMissing = _addressText == null || _addressText!.trim().isEmpty;
+    if (!fieldsOk || dobError != null || addressMissing) {
+      return tt('Please fix the highlighted fields.');
     }
     return null;
   }
@@ -480,7 +492,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       setState(() => _isSavingPersonalInfo = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotSave(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -502,19 +514,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   // =====================================================================
 
   String? _validateAcademicInfo() {
-    final l10n = AppLocalizations.of(context)!;
-    if (_programme == null) return l10n.errorSelectProgramme;
-    if (_faculty == null) return l10n.errorSelectFaculty;
-    if (_semester == null) return l10n.errorSelectSemester;
-
-    final cgpaText = _cgpaController.text.trim();
-    if (cgpaText.isEmpty) return l10n.errorCgpaBlank;
-    final cgpaValue = double.tryParse(cgpaText);
-    if (cgpaValue == null || cgpaValue < 0 || cgpaValue > 4.0) {
-      return l10n.errorInvalidCgpaRange;
-    }
-
-    return null;
+    final ok = _academicFormKey.currentState?.validate() ?? false;
+    return ok ? null : tt('Please fix the highlighted fields.');
   }
 
   Future<void> _saveAcademicInfo() async {
@@ -536,6 +537,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         cgpa: double.parse(_cgpaController.text.trim()),
         studentRegNo: _studentRegNoController.text,
       );
+      final icNormalized = _icController.text.trim().isEmpty ? null : Validators.normalizeIc(_icController.text);
+      await StudentDataService.instance.saveMyIcNumber(icNormalized);
+      _icController.text = icNormalized ?? '';
       if (!mounted) return;
       setState(() {
         _originalProgramme = _programme;
@@ -543,6 +547,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         _originalFaculty = _faculty;
         _originalCgpaText = _cgpaController.text;
         _originalStudentRegNo = _studentRegNoController.text;
+        _originalIc = _icController.text;
         _isEditingAcademicInfo = false;
         _isSavingAcademicInfo = false;
       });
@@ -553,7 +558,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       setState(() => _isSavingAcademicInfo = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotSave(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -565,6 +570,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       _faculty = _originalFaculty;
       _cgpaController.text = _originalCgpaText;
       _studentRegNoController.text = _originalStudentRegNo;
+      _icController.text = _originalIc;
       _isEditingAcademicInfo = false;
     });
   }
@@ -576,8 +582,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   void _addSkill(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return;
-    if (_skills.any((s) => s.toLowerCase() == trimmed.toLowerCase())) {
-      _skillInputController.clear();
+    // The field shows the reason (too short, duplicate, odd characters, limit).
+    if (Validators.skill(trimmed, existing: _skills) != null) {
+      _skillFieldKey.currentState?.validate();
       return;
     }
     setState(() {
@@ -606,7 +613,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       setState(() => _isSavingSkills = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotSave(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -629,6 +636,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     final startYearController = TextEditingController(text: existing?['start_year']?.toString() ?? '');
     final endYearController = TextEditingController(text: existing?['end_year']?.toString() ?? '');
     bool isCurrent = existing?['is_current'] as bool? ?? false;
+    final formKey = GlobalKey<FormState>();
     String? error;
     bool isSaving = false;
 
@@ -642,30 +650,66 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               title: Text(existing == null ? l10n.addWorkExperience : l10n.editWorkExperience,
                   style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
               content: SingleChildScrollView(
-                child: Column(
+                child: Form(
+                  key: formKey,
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(controller: positionController, decoration: InputDecoration(labelText: l10n.positionJobTitleLabel)),
+                    ValidatedField(
+                      controller: positionController,
+                      fieldValidator: (v) => Validators.text(v, field: 'Position', min: 2, max: 100),
+                      labelText: l10n.positionJobTitleLabel,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
+                    ),
                     const SizedBox(height: 12),
-                    TextField(controller: companyController, decoration: InputDecoration(labelText: l10n.setupCompanyName)),
+                    ValidatedField(
+                      controller: companyController,
+                      fieldValidator: (v) => Validators.text(v, field: 'Company name', min: 2, max: 100),
+                      labelText: l10n.setupCompanyName,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
+                    ),
                     const SizedBox(height: 12),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: TextField(
+                          child: ValidatedField(
                             controller: startYearController,
+                            fieldValidator: (v) => Validators.year(v, field: 'Start year', today: DateTime.now()),
                             keyboardType: TextInputType.number,
-                            decoration: InputDecoration(labelText: l10n.startYearLabel, hintText: l10n.startYearHint),
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            maxLength: 4,
+                            showSuccess: false,
+                            labelText: l10n.startYearLabel,
+                            hintText: l10n.startYearHint,
+                            onChanged: (_) {
+                              if (endYearController.text.isNotEmpty) formKey.currentState?.validate();
+                            },
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: TextField(
+                          child: ValidatedField(
                             controller: endYearController,
                             enabled: !isCurrent,
+                            fieldValidator: (v) {
+                              if (isCurrent) return null;
+                              final yearError = Validators.year(v, field: 'End year');
+                              if (yearError != null) return yearError;
+                              final start = int.tryParse(startYearController.text.trim());
+                              if (start != null && int.parse(v.trim()) < start) {
+                                return 'End year cannot be before the start year ($start).';
+                              }
+                              return null;
+                            },
                             keyboardType: TextInputType.number,
-                            decoration: InputDecoration(labelText: l10n.endYearLabel),
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            maxLength: 4,
+                            showSuccess: false,
+                            labelText: l10n.endYearLabel,
                           ),
                         ),
                       ],
@@ -676,18 +720,26 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       value: isCurrent,
                       title: Text(l10n.iCurrentlyWorkHere, style: const TextStyle(fontFamily: 'Inter', fontSize: 13)),
                       activeColor: AppColors.primary,
-                      onChanged: (v) => setDialogState(() => isCurrent = v ?? false),
+                      onChanged: (v) {
+                        setDialogState(() => isCurrent = v ?? false);
+                        if (isCurrent) endYearController.clear();
+                        formKey.currentState?.validate();
+                      },
                     ),
-                    TextField(
+                    ValidatedField(
                       controller: descriptionController,
+                      fieldValidator: (v) => Validators.text(v, field: 'Description', required: false, max: 500),
                       maxLines: 3,
-                      decoration: InputDecoration(labelText: l10n.descriptionOptionalLabel),
+                      maxLength: 500,
+                      showSuccess: false,
+                      labelText: l10n.descriptionOptionalLabel,
                     ),
                     if (error != null) ...[
                       const SizedBox(height: 10),
                       Text(error!, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
                     ],
                   ],
+                ),
                 ),
               ),
               actions: [
@@ -696,10 +748,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   onPressed: isSaving
                       ? null
                       : () async {
-                          if (positionController.text.trim().isEmpty || companyController.text.trim().isEmpty) {
-                            setDialogState(() => error = l10n.errorPositionCompanyRequired);
-                            return;
-                          }
+                          if (!(formKey.currentState?.validate() ?? false)) return;
                           setDialogState(() {
                             error = null;
                             isSaving = true;
@@ -733,7 +782,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           } catch (e) {
                             setDialogState(() {
                               isSaving = false;
-                              error = l10n.errorCouldNotSave(e.toString());
+                              error = l10n.errorCouldNotSave(friendlyError(e));
                             });
                           }
                         },
@@ -767,7 +816,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       _loadWorkExperience();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotRemove(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotRemove(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -787,7 +836,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       _loadWorkExperience();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not add')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -795,136 +844,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   // CHANGE PASSWORD
   // =====================================================================
 
-  void _showChangePasswordDialog() {
-    final currentController = TextEditingController();
-    final newController = TextEditingController();
-    final confirmController = TextEditingController();
-    String? errorText;
-    bool obscureCurrent = true;
-    bool obscureNew = true;
-    bool obscureConfirm = true;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final l10n = AppLocalizations.of(dialogContext)!;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(l10n.changePassword,
-                  style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: currentController,
-                      obscureText: obscureCurrent,
-                      decoration: InputDecoration(
-                        labelText: l10n.currentPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                              size: 20),
-                          onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: newController,
-                      obscureText: obscureNew,
-                      decoration: InputDecoration(
-                        labelText: l10n.newPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                              size: 20),
-                          onPressed: () => setDialogState(() => obscureNew = !obscureNew),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: confirmController,
-                      obscureText: obscureConfirm,
-                      decoration: InputDecoration(
-                        labelText: l10n.confirmNewPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                              size: 20),
-                          onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
-                        ),
-                      ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 10),
-                      Text(errorText!,
-                          style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: _isChangingPassword ? null : () => Navigator.pop(dialogContext),
-                  child: Text(l10n.cancel),
-                ),
-                ElevatedButton(
-                  onPressed: _isChangingPassword
-                      ? null
-                      : () async {
-                    if (currentController.text.isEmpty) {
-                      setDialogState(() => errorText = l10n.errorEnterCurrentPassword);
-                      return;
-                    }
-                    final strengthError = AuthService.instance.validatePassword(newController.text);
-                    if (strengthError != null) {
-                      setDialogState(() => errorText = strengthError);
-                      return;
-                    }
-                    if (newController.text != confirmController.text) {
-                      setDialogState(() => errorText = l10n.errorNewPasswordsMismatch);
-                      return;
-                    }
-
-                    setDialogState(() {
-                      errorText = null;
-                      _isChangingPassword = true;
-                    });
-
-                    try {
-                      await AuthService.instance.changePassword(
-                        currentPassword: currentController.text,
-                        newPassword: newController.text,
-                      );
-                      if (!dialogContext.mounted) return;
-                      Navigator.pop(dialogContext);
-                      setState(() => _isChangingPassword = false);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(l10n.profilePasswordChanged),
-                            backgroundColor: AppColors.primary),
-                      );
-                    } catch (e) {
-                      setDialogState(() {
-                        _isChangingPassword = false;
-                        errorText = e.toString().replaceFirst('Exception: ', '');
-                      });
-                    }
-                  },
-                  child: _isChangingPassword
-                      ? const SizedBox(
-                      width: 16, height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(l10n.change),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+  void _showChangePasswordDialog() => showChangePasswordDialog(context);
 
   // =====================================================================
   // RESUME
@@ -952,7 +872,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text('${friendlyError(e)}'), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -1006,7 +926,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       setState(() => _isUploadingResume = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorUploadFailed(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorUploadFailed(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -1049,15 +969,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(dialogContext, controller.text), child: const Text('Save')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(tt('Cancel'))),
+          ElevatedButton(onPressed: () => Navigator.pop(dialogContext, controller.text), child: Text(tt('Save'))),
         ],
       ),
     );
     if (newUrl == null || newUrl.trim().isEmpty || !mounted) return;
     await ResumeParserService.instance.setNlpServiceUrl(newUrl);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('NLP service URL updated.'), backgroundColor: AppColors.primary));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('NLP service URL updated.'), backgroundColor: AppColors.primary));
   }
 
   Future<void> _offerResumeScan(File file) async {
@@ -1071,7 +991,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         // NLP service unreachable (offline, tunnel restarted, timed out,
         // etc.) — silently fall back to the local regex-only parser rather
         // than losing the autofill feature entirely.
-        data = ResumeParserService.instance.parse(text);
+        data = await ResumeParserService.instance.parseOnDevice(text);
       }
     } catch (e) {
       // Non-fatal — scanning is a bonus feature, upload already succeeded.
@@ -1110,6 +1030,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               const SizedBox(height: 10),
               Text(foundLines.join('\n'),
                   style: const TextStyle(fontFamily: 'Inter', fontSize: 13)),
+              // Where the skills came from, so it is visible when the on-device model did the work.
+              if (data.source == 'regex+model') ...[
+                const SizedBox(height: 8),
+                Text(
+                  tr('The skills were found by the on-device AI model (TensorFlow Lite), because this resume has no skills list.',
+                      ms: 'Kemahiran ditemui oleh model AI dalam peranti (TensorFlow Lite), kerana resume ini tiada senarai kemahiran.',
+                      zh: '由于这份简历没有技能列表，技能由设备上的 AI 模型（TensorFlow Lite）找出。'),
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppColors.textSecondary),
+                ),
+              ],
               const SizedBox(height: 10),
               Text(
                 data.source == 'nlp' ? l10n.parsedWithAi : l10n.parsedOffline,
@@ -1188,7 +1118,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorCouldNotOpenResumeColon(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotOpenResumeColon(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -1210,7 +1140,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       setState(() => _isUploadingResume = false);
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorCouldNotRemoveResume(e.toString())), backgroundColor: AppColors.error),
+        SnackBar(content: Text(l10n.errorCouldNotRemoveResume(friendlyError(e))), backgroundColor: AppColors.error),
       );
     }
   }
@@ -1287,7 +1217,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           } catch (e) {
                             if (!sheetContext.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.errorCouldNotSave(e.toString())), backgroundColor: AppColors.error),
+                              SnackBar(content: Text(l10n.errorCouldNotSave(friendlyError(e))), backgroundColor: AppColors.error),
                             );
                           }
                         },
@@ -1329,7 +1259,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.errorCouldNotSaveLanguage(e.toString())), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(l10n.errorCouldNotSaveLanguage(friendlyError(e))), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -1373,7 +1303,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.errorCouldNotSaveTheme(e.toString())), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(l10n.errorCouldNotSaveTheme(friendlyError(e))), backgroundColor: AppColors.error),
                     );
                   }
                 },
@@ -1446,7 +1376,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: scaledExtent(context, 200, textShare: 0.3),
             pinned: true,
             backgroundColor: AppColors.primary,
             leading: IconButton(
@@ -1455,9 +1385,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryLight],
+                    colors: AppColors.headerGradient,
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -1522,18 +1452,28 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                              child: const Icon(Icons.camera_alt, size: 14, color: AppColors.primary),
+                              child: Icon(Icons.camera_alt, size: 14, color: AppColors.primaryText),
                             ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Text(_nameController.text.isEmpty ? 'Your name' : _nameController.text,
-                        style: const TextStyle(
-                            fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-                    Text(_email,
-                        style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: Colors.white70)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(_nameController.text.isEmpty ? 'Your name' : _nameController.text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(_email,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: kOnBannerSoft)),
+                    ),
                   ],
                 ),
               ),
@@ -1587,6 +1527,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   _buildWorkExperienceSection(),
 
                   GestureDetector(
+                    // Long-press the "Resume" heading to change the resume-scan service address (the
+                    // ngrok URL changes every time the tunnel restarts). Works in installed builds too.
                     onLongPress: _showNlpServiceUrlEditor,
                     child: SectionHeader(title: l10n.resume),
                   ),
@@ -1608,7 +1550,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       label: l10n.theme,
                       trailing: _themeLabel(l10n),
                       onTap: _showThemePicker),
+                  _SettingsTile(icon: Icons.privacy_tip_outlined, label: tt('Privacy notice'), onTap: () => openPrivacyPolicy(context)),
                   _SettingsTile(icon: Icons.logout, label: l10n.logOut, isDestructive: true, onTap: _handleLogout),
+                  _SettingsTile(icon: Icons.delete_forever_outlined, label: tt('Delete my account'), isDestructive: true, onTap: () => showDeleteAccountFlow(context)),
                   const SizedBox(height: 32),
                 ],
               );
@@ -1650,20 +1594,29 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: Form(
+        key: _personalFormKey,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l10n.fullName, style: AppTextStyles.label),
           const SizedBox(height: 6),
-          TextField(controller: _nameController, decoration: const InputDecoration()),
+          ValidatedField(
+            controller: _nameController,
+            fieldValidator: (v) => v.trim().isEmpty ? l10n.errorFullNameBlank : Validators.fullName(v),
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+          ),
           const SizedBox(height: 14),
 
           Text(l10n.phone, style: AppTextStyles.label),
           const SizedBox(height: 6),
-          TextField(
+          ValidatedField(
             controller: _phoneController,
+            fieldValidator: (v) => v.trim().isEmpty ? l10n.errorPhoneBlank : Validators.phone(v),
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(),
+            textInputAction: TextInputAction.next,
+            hintText: '012-345 6789',
           ),
           const SizedBox(height: 14),
 
@@ -1709,6 +1662,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               ),
             ),
           ),
+          if (_personalAttempted || _dateOfBirth != null)
+            _fieldError(Validators.dateOfBirth(_dateOfBirth, minAge: 17)),
           const SizedBox(height: 14),
 
           Text(l10n.address, style: AppTextStyles.label),
@@ -1739,6 +1694,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               ),
             ),
           ),
+          if (_personalAttempted)
+            _fieldError((_addressText == null || _addressText!.trim().isEmpty) ? l10n.errorSelectAddress : null),
           const SizedBox(height: 18),
 
           Row(
@@ -1764,18 +1721,31 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ),
         ],
       ),
+      ),
+    );
+  }
+
+  Widget _fieldError(String? message) {
+    if (message == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, left: 4),
+      child: Text(message, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
     );
   }
 
   Widget _buildAcademicInfoView() {
     final l10n = AppLocalizations.of(context)!;
-    return _InfoSection(
+    final section = _InfoSection(
       items: [
         _InfoItem(icon: Icons.school_outlined, label: l10n.programme, value: _programme ?? l10n.notSet),
         _InfoItem(
             icon: Icons.badge_outlined,
             label: l10n.studentRegNo,
             value: _studentRegNoController.text.isEmpty ? l10n.notSet : _studentRegNoController.text),
+        _InfoItem(
+            icon: Icons.fingerprint,
+            label: tr('IC number', ms: 'Nombor IC', zh: '身份证号码'),
+            value: _icController.text.isEmpty ? l10n.notSet : _icController.text),
         _InfoItem(icon: Icons.calendar_today_outlined, label: l10n.semester, value: _semester != null ? '${l10n.semester} $_semester' : l10n.notSet),
         _InfoItem(icon: Icons.class_outlined, label: l10n.faculty, value: _faculty ?? l10n.notSet),
         _InfoItem(icon: Icons.grade_outlined, label: l10n.cgpa, value: _cgpaController.text.isEmpty ? l10n.notSet : _cgpaController.text),
@@ -1783,6 +1753,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             icon: Icons.person_pin_outlined,
             label: l10n.academicSupervisor,
             value: _academicSupervisorController.text.isEmpty ? l10n.assignedBySystem : _academicSupervisorController.text),
+      ],
+    );
+    if (_academicSupervisorId == null) return section;
+    // A student may message their own academic supervisor straight from here.
+    return Column(
+      children: [
+        section,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: MessageButton(profileId: _academicSupervisorId!),
+        ),
       ],
     );
   }
@@ -1797,7 +1778,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: Form(
+        key: _academicFormKey,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l10n.programme, style: AppTextStyles.label),
@@ -1805,9 +1788,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           DropdownButtonFormField<String>(
             value: _programme,
             isExpanded: true,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: (v) => v == null ? l10n.errorSelectProgramme : null,
             decoration: InputDecoration(hintText: l10n.selectYourProgrammeHint),
             items: _programmeOptions
-                .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13))))
+                .map((p) => DropdownMenuItem(value: p, child: Text(p, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))))
                 .toList(),
             onChanged: (val) => setState(() => _programme = val),
           ),
@@ -1815,10 +1800,33 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
           Text(l10n.studentRegNo, style: AppTextStyles.label),
           const SizedBox(height: 6),
-          TextField(
+          ValidatedField(
             controller: _studentRegNoController,
-            decoration: InputDecoration(hintText: l10n.studentRegNoHint),
+            fieldValidator: (v) => Validators.studentRegNo(v),
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.next,
+            maxLength: 10,
+            hintText: l10n.studentRegNoHint,
           ),
+          const SizedBox(height: 14),
+
+          Text(tr('IC number (optional)', ms: 'Nombor IC (pilihan)', zh: '身份证号码（选填）'), style: AppTextStyles.label),
+          const SizedBox(height: 6),
+          ValidatedField(
+            controller: _icController,
+            fieldValidator: (v) => Validators.icNumber(v),
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            maxLength: 14,
+            showSuccess: false,
+            hintText: '030514-10-1234',
+          ),
+          const SizedBox(height: 4),
+          Text(
+              tr('Only used to fill in your letters (such as the indemnity and company acceptance letters). Not shown to other students.',
+                  ms: 'Hanya digunakan untuk mengisi surat anda (seperti surat indemniti dan surat penerimaan syarikat). Tidak dipaparkan kepada pelajar lain.',
+                  zh: '仅用于填写您的信函（如赔偿保证书和公司接受信）。不会向其他学生显示。'),
+              style: AppTextStyles.caption),
           const SizedBox(height: 14),
 
           Text(l10n.faculty, style: AppTextStyles.label),
@@ -1826,9 +1834,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           DropdownButtonFormField<String>(
             value: _faculty,
             isExpanded: true,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: (v) => v == null ? l10n.errorSelectFaculty : null,
             decoration: InputDecoration(hintText: l10n.selectYourFacultyHint),
             items: _facultyOptions
-                .map((f) => DropdownMenuItem(value: f, child: Text(f, style: const TextStyle(fontSize: 13))))
+                .map((f) => DropdownMenuItem(value: f, child: Text(f, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))))
                 .toList(),
             onChanged: (val) => setState(() => _faculty = val),
           ),
@@ -1837,7 +1847,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           Text(l10n.semester, style: AppTextStyles.label),
           const SizedBox(height: 6),
           DropdownButtonFormField<int>(
+            isExpanded: true,
             value: _semester,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: (v) => v == null ? l10n.errorSelectSemester : null,
             decoration: InputDecoration(hintText: l10n.selectYourSemesterHint),
             items: List.generate(4, (i) => i + 1)
                 .map((s) => DropdownMenuItem(value: s, child: Text(l10n.semesterNumber(s))))
@@ -1848,10 +1861,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
           Text(l10n.cgpa, style: AppTextStyles.label),
           const SizedBox(height: 6),
-          TextField(
+          ValidatedField(
             controller: _cgpaController,
+            fieldValidator: (v) => v.trim().isEmpty ? l10n.errorCgpaBlank : Validators.cgpa(v),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(hintText: l10n.cgpaHint),
+            textInputAction: TextInputAction.done,
+            maxLength: 4,
+            hintText: l10n.cgpaHint,
           ),
           const SizedBox(height: 14),
 
@@ -1907,6 +1923,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -1930,7 +1947,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.visibility_outlined, color: AppColors.primary),
+                leading: Icon(Icons.visibility_outlined, color: AppColors.primaryText),
                 title: Text(l10n.view),
                 onTap: () {
                   Navigator.pop(sheetContext);
@@ -1938,7 +1955,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.swap_horiz, color: AppColors.primary),
+                leading: Icon(Icons.swap_horiz, color: AppColors.primaryText),
                 title: Text(l10n.replace),
                 onTap: () {
                   Navigator.pop(sheetContext);
@@ -1978,7 +1995,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             .map((s) => Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(20)),
-                  child: Text(s, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary)),
+                  child: Text(s, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText)),
                 ))
             .toList(),
       ),
@@ -1997,14 +2014,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: ValidatedField(
+                  key: _skillFieldKey,
                   controller: _skillInputController,
-                  decoration: InputDecoration(hintText: l10n.addSkillHint),
+                  fieldValidator: (v) => Validators.skill(v, existing: _skills),
+                  showSuccess: false,
+                  maxLength: 40,
+                  hintText: l10n.addSkillHint,
                   onSubmitted: _addSkill,
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(icon: const Icon(Icons.add_circle, color: AppColors.primary), onPressed: () => _addSkill(_skillInputController.text)),
+              IconButton(icon: Icon(Icons.add_circle, color: AppColors.primaryText), onPressed: () => _addSkill(_skillInputController.text)),
             ],
           ),
           const SizedBox(height: 10),
@@ -2013,7 +2034,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             runSpacing: 8,
             children: _skills
                 .map((s) => Chip(
-                      label: Text(s, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary)),
+                      label: Text(s, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText)),
                       backgroundColor: AppColors.accent,
                       onDeleted: () => _removeSkill(s),
                     ))
@@ -2091,7 +2112,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               )),
         ],
         if (_isLoadingWorkExperience)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
           )
@@ -2170,7 +2191,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: AppColors.surfaceVariant, shape: BoxShape.circle),
-              child: const Icon(Icons.upload_file_outlined, color: AppColors.primary, size: 26),
+              child: Icon(Icons.upload_file_outlined, color: AppColors.primaryText, size: 26),
             ),
             const SizedBox(height: 12),
             Text(l10n.noResumeUploaded,

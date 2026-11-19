@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
+import '../utils/validators.dart';
+import '../widgets/common/validated_field.dart';
+import 'forgot_password_screen.dart';
+import 'confirm_email_screen.dart';
+import 'force_password_change_screen.dart';
 import 'student_shell.dart';
 import 'admin_shell.dart';
 import 'supervisor_shell.dart';
 import 'hr_shell.dart';
 import 'company_supervisor_shell.dart';
-import 'parent_shell.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,36 +27,32 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  // Per-field errors, shown directly under their respective inputs.
-  String? _emailError;
+  final _formKey = GlobalKey<FormState>();
+
+  // Answer from the server after pressing Log in. Supabase deliberately does
+  // not say whether the email or the password was wrong, so it is shown under
+  // the password field. (The email itself is checked live while typing.)
   String? _passwordError;
+  String? _emailError;
   // General account-level issues that aren't tied to a specific field
   // (e.g. missing profile data) — shown as a banner above the button.
   String? _generalError;
 
   void _clearErrors() {
-    _emailError = null;
     _passwordError = null;
+    _emailError = null;
     _generalError = null;
   }
 
   Future<void> _handleLogin() async {
-    final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     setState(_clearErrors);
 
-    bool hasError = false;
-    if (email.isEmpty) {
-      setState(() => _emailError = l10n.errorEnterEmail);
-      hasError = true;
-    }
-    if (password.isEmpty) {
-      setState(() => _passwordError = l10n.errorEnterPassword);
-      hasError = true;
-    }
-    if (hasError) return;
+    // Shows the live rules' message on any field that is still empty or
+    // invalid, so nothing is sent to the server until both look right.
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
 
@@ -67,12 +67,18 @@ class _LoginScreenState extends State<LoginScreen> {
       _routeToShellByRole(role);
     } on AuthFieldException catch (e) {
       if (!mounted) return;
+      if (e.target == AuthFieldTarget.unconfirmed) {
+        setState(() => _isLoading = false);
+        await _confirmEmail(email);
+        return;
+      }
       setState(() {
         _isLoading = false;
-        if (e.target == AuthFieldTarget.credentials) {
-          // Supabase doesn't tell us whether the email or the password was
-          // wrong (security by design), so this shows under the password
-          // field — the natural "final" field before submitting.
+        if (e.target == AuthFieldTarget.email) {
+          _emailError = e.message;
+        } else if (e.target == AuthFieldTarget.password || e.target == AuthFieldTarget.credentials) {
+          // `credentials` is only used when the database could not say which of
+          // the two was wrong; it shows under the password field.
           _passwordError = e.message;
         } else {
           _generalError = e.message;
@@ -87,76 +93,40 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _handleForgotPassword() async {
-    final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController(text: _emailController.text.trim());
-    bool isSending = false;
-
-    await showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(l10n.resetYourPassword,
-                  style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.resetPasswordInstructions,
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: l10n.enterYourEmail,
-                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isSending ? null : () => Navigator.of(dialogContext).pop(),
-                  child: Text(l10n.cancel),
-                ),
-                ElevatedButton(
-                  onPressed: isSending
-                      ? null
-                      : () async {
-                    final email = controller.text.trim();
-                    if (email.isEmpty) return;
-
-                    setDialogState(() => isSending = true);
-                    await AuthService.instance.sendPasswordResetEmail(email);
-                    if (!dialogContext.mounted) return;
-
-                    Navigator.of(dialogContext).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.resetLinkSentMessage),
-                        backgroundColor: AppColors.primary,
-                      ),
-                    );
-                  },
-                  child: isSending
-                      ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                      : Text(l10n.sendResetLink),
-                ),
-              ],
-            );
-          },
-        );
-      },
+  /// The account exists but its email was never confirmed: send a fresh code
+  /// and let the person type it in, then carry on into the app.
+  Future<void> _confirmEmail(String email) async {
+    final role = await Navigator.of(context).push<UserRole>(
+      MaterialPageRoute(builder: (_) => ConfirmEmailScreen(email: email, sendCodeOnOpen: true)),
     );
+    if (!mounted || role == null) return;
+    final staff = role == UserRole.academicSupervisor || role == UserRole.companySupervisor;
+    if (staff) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: Duration(seconds: 8),
+          content: Text(AppLocalizations.of(context)!.suEmailConfirmedPending),
+        ),
+      );
+      return;
+    }
+    _routeToShellByRole(role);
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ForgotPasswordScreen(initialEmail: _emailController.text.trim()),
+      ),
+    );
+    if (changed == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.loPasswordChanged),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+    }
   }
 
   void _routeToShellByRole(UserRole role) {
@@ -173,9 +143,6 @@ class _LoginScreenState extends State<LoginScreen> {
       case UserRole.companySupervisor:
         _routeToShell(destination: const CompanySupervisorShell());
         break;
-      case UserRole.parent:
-        _routeToShell(destination: const ParentShell());
-        break;
       case UserRole.admin:
         _routeToShell(destination: const AdminShell());
         break;
@@ -185,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _routeToShell({required Widget destination}) {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => destination,
+        pageBuilder: (_, __, ___) => PasswordChangeGate(child: destination),
         transitionsBuilder: (_, animation, __, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 400),
@@ -275,51 +242,59 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
 
-              // Email field
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(l10n.emailAddress, style: AppTextStyles.label),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                onChanged: (_) => setState(() => _emailError = null),
-                decoration: InputDecoration(
-                  hintText: l10n.enterYourEmail,
-                  prefixIcon: Icon(Icons.email_outlined,
-                      size: 20, color: AppColors.textMuted),
-                  errorText: _emailError,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Password field
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(l10n.password, style: AppTextStyles.label),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                onChanged: (_) => setState(() => _passwordError = null),
-                decoration: InputDecoration(
-                  hintText: l10n.enterYourPassword,
-                  prefixIcon: Icon(Icons.lock_outline,
-                      size: 20, color: AppColors.textMuted),
-                  errorText: _passwordError,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 20,
-                      color: AppColors.textMuted,
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Email field — checked live while typing
+                    Text(l10n.emailAddress, style: AppTextStyles.label),
+                    const SizedBox(height: 6),
+                    ValidatedField(
+                      controller: _emailController,
+                      fieldValidator: (v) => v.trim().isEmpty ? l10n.errorEnterEmail : Validators.emailFormat(v),
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      hintText: l10n.enterYourEmail,
+                      externalError: _emailError,
+                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
+                      onChanged: (_) {
+                        if (_passwordError != null || _emailError != null) {
+                          setState(() {
+                            _passwordError = null;
+                            _emailError = null;
+                          });
+                        }
+                      },
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
+                    const SizedBox(height: 14),
+
+                    // Password field — only the server can say if it is wrong
+                    Text(l10n.password, style: AppTextStyles.label),
+                    const SizedBox(height: 6),
+                    ValidatedField(
+                      controller: _passwordController,
+                      fieldValidator: (v) => v.isEmpty ? l10n.errorEnterPassword : null,
+                      obscureText: _obscurePassword,
+                      showSuccess: false,
+                      textInputAction: TextInputAction.done,
+                      hintText: l10n.enterYourPassword,
+                      externalError: _passwordError,
+                      prefixIcon: Icon(Icons.lock_outline, size: 20, color: AppColors.textMuted),
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          size: 20,
+                          color: AppColors.textMuted,
+                        ),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                      onChanged: (_) {
+                        if (_passwordError != null) setState(() => _passwordError = null);
+                      },
+                      onSubmitted: (_) => _isLoading ? null : _handleLogin(),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -330,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: TextButton(
                   onPressed: _isLoading ? null : _handleForgotPassword,
                   child: Text(l10n.forgotPassword,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13,
                           color: AppColors.primary)),
@@ -365,13 +340,13 @@ class _LoginScreenState extends State<LoginScreen> {
               TextButton(
                 onPressed: _isLoading
                     ? null
-                    : () => Navigator.of(context).pushReplacement(
+                    : () => Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (_) => const SignUpScreen()),
                 ),
                 child: Text(
                   l10n.noAccountSignUp,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 13,
                       color: AppColors.primary),

@@ -8,6 +8,8 @@ import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
 import '../student/student_messages_screen.dart';
 import 'company_supervisor_evaluate_screen.dart';
+import '../../utils/error_text.dart';
+import '../../utils/lang.dart';
 
 class CompanySupervisorStudentsScreen extends StatefulWidget {
   const CompanySupervisorStudentsScreen({super.key});
@@ -49,7 +51,7 @@ class _CompanySupervisorStudentsScreenState extends State<CompanySupervisorStude
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(title: l10n.csInterns),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: Column(
@@ -58,13 +60,15 @@ class _CompanySupervisorStudentsScreenState extends State<CompanySupervisorStude
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     child: Row(
                       children: [
-                        Text(l10n.csCurrentInternsCount(_interns.length), style: AppTextStyles.caption),
-                        const Spacer(),
+                        Flexible(child: Text(l10n.csCurrentInternsCount(_interns.length), style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)),
+                        const SizedBox(width: 8),
                         if (atRisk > 0)
-                          Container(
+                          Flexible(
+                            child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(color: AppColors.errorBg, borderRadius: BorderRadius.circular(6)),
-                            child: Text(l10n.csNeedsAttention(atRisk), style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.error)),
+                            child: Text(l10n.csNeedsAttention(atRisk), overflow: TextOverflow.ellipsis, style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.error)),
+                          ),
                           ),
                       ],
                     ),
@@ -112,7 +116,7 @@ class _InternCard extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             backgroundColor: AppColors.infoBg,
-            child: Text(logoLetter(name), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
+            child: Text(logoLetter(name), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -148,16 +152,26 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _reports = [];
   List<Map<String, dynamic>> _documents = [];
+  // Read again from the database every time this page loads (and right after an evaluation is submitted): the copy of
+  // the student's data this page was opened with goes stale, which let a second evaluation be started.
+  bool _evaluated = false;
 
   @override
   void initState() {
     super.initState();
+    _evaluated = widget.data['evaluated'] == true;
     _load();
   }
 
   Future<void> _load() async {
     try {
       final studentId = widget.data['id'] as String;
+      try {
+        final evaluated = await CompanySupervisorDataService.instance.isEvaluated(studentId);
+        if (mounted) setState(() => _evaluated = evaluated || _evaluated);
+      } catch (_) {
+        // Non-fatal: the database refuses a second evaluation anyway.
+      }
       final reports = await CompanySupervisorDataService.instance.getReviewItems();
       final documents = await CompanySupervisorDataService.instance.getInternDocuments(studentId);
       if (!mounted) return;
@@ -199,7 +213,7 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open chat: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not open chat')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -208,7 +222,8 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final data = widget.data;
     final name = data['full_name'] as String;
-    final canEvaluate = data['can_evaluate'] == true;
+    final evaluated = _evaluated;
+    final canEvaluate = data['can_evaluate'] == true && !evaluated;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -226,13 +241,13 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
                 CircleAvatar(
                   radius: 34,
                   backgroundColor: AppColors.infoBg,
-                  child: Text(logoLetter(name), style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                  child: Text(logoLetter(name), style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                 ),
                 const SizedBox(height: 10),
                 Text(name, style: AppTextStyles.h2),
                 Text((data['programme'] as String?) ?? l10n.notSpecified, style: AppTextStyles.bodySecondary),
                 const SizedBox(height: 6),
-                Text((data['role_title'] as String?) ?? '', style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary)),
+                Text((data['role_title'] as String?) ?? '', style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primaryText)),
               ],
             ),
           ),
@@ -243,12 +258,17 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
                 child: ElevatedButton.icon(
                   onPressed: canEvaluate
                       ? () async {
-                          await Navigator.push(context, MaterialPageRoute(builder: (_) => CompanySupervisorEvaluateScreen(intern: data)));
+                          final submitted = await Navigator.push<bool>(
+                              context, MaterialPageRoute(builder: (_) => CompanySupervisorEvaluateScreen(intern: data)));
+                          // closed at once, without waiting for the reload
+                          if (submitted == true && mounted) setState(() => _evaluated = true);
                           _load();
                         }
                       : null,
-                  icon: const Icon(Icons.assessment_outlined, size: 16),
-                  label: Text(l10n.supEvaluate),
+                  icon: Icon(evaluated ? Icons.check_circle_outline : Icons.assessment_outlined, size: 16),
+                  label: Text(evaluated
+                      ? tr('Evaluation submitted', ms: 'Penilaian dihantar', zh: '评估已提交')
+                      : l10n.supEvaluate),
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
                 ),
               ),
@@ -263,7 +283,14 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
               ),
             ],
           ),
-          if (!canEvaluate) ...[
+          if (evaluated) ...[
+            const SizedBox(height: 8),
+            Text(
+                tr('You have evaluated this student. The evaluation is closed and cannot be changed.',
+                    ms: 'Anda telah menilai pelajar ini. Penilaian ditutup dan tidak boleh diubah.',
+                    zh: '您已评估该学生。评估已关闭，无法修改。'),
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
+          ] else if (!canEvaluate) ...[
             const SizedBox(height: 8),
             Text(l10n.supEvaluateLockedNote, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
           ],
@@ -271,7 +298,7 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
           Text(l10n.csReportSubmissions, style: AppTextStyles.h3),
           const SizedBox(height: 10),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            Center(child: CircularProgressIndicator(color: AppColors.primary))
           else if (_reports.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -301,7 +328,7 @@ class _InternDetailScreenState extends State<InternDetailScreen> {
           Text(l10n.csDocuments, style: AppTextStyles.h3),
           const SizedBox(height: 10),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            Center(child: CircularProgressIndicator(color: AppColors.primary))
           else if (_documents.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),

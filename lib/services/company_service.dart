@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
 
@@ -59,16 +61,63 @@ class CompanyService {
     await _client.from(subtypeTable).update({'company_id': companyId}).eq('profile_id', _userId);
   }
 
+  /// Registers a new company, joins it, and uploads its legal documents (each `{file, name, size}`).
+  /// The company starts as "pending": an administrator verifies it from the documents, and until then
+  /// it cannot post internships.
   Future<void> createAndJoinCompany({
     required String name,
     String? industry,
     String? location,
+    List<({File file, String name, int size})> documents = const [],
   }) async {
     final row = await _client.from('companies').insert({
       'name': name.trim(),
       'industry': industry,
       'location': location,
     }).select().single();
-    await joinCompany(row['company_id'] as String);
+    final companyId = row['company_id'] as String;
+    await joinCompany(companyId);
+    for (final d in documents) {
+      await uploadCompanyDocument(companyId: companyId, file: d.file, fileName: d.name, sizeBytes: d.size);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Legal documents (company verification, migration 00044). The HR people of the company add
+  // and see them; administrators see every company's.
+  // ---------------------------------------------------------------------
+
+  Future<List<Map<String, dynamic>>> getCompanyDocuments(String companyId) async {
+    final rows = await _client.from('company_documents').select().eq('company_id', companyId).order('uploaded_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  Future<void> uploadCompanyDocument({required String companyId, required File file, required String fileName, required int sizeBytes}) async {
+    final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final path = '$companyId/${DateTime.now().millisecondsSinceEpoch}_$safe';
+    final ext = fileName.split('.').last.toLowerCase();
+    final contentType = ext == 'pdf' ? 'application/pdf' : (ext == 'png' ? 'image/png' : 'image/jpeg');
+    await _client.storage.from('company_documents').upload(path, file, fileOptions: FileOptions(contentType: contentType));
+    await _client.from('company_documents').insert({
+      'company_id': companyId,
+      'uploaded_by': _userId,
+      'file_name': fileName,
+      'storage_path': path,
+      'file_size_bytes': sizeBytes,
+    });
+  }
+
+  Future<void> deleteCompanyDocument(Map<String, dynamic> document) async {
+    final path = document['storage_path'] as String;
+    await _client.from('company_documents').delete().eq('document_id', document['document_id'] as String);
+    try {
+      await _client.storage.from('company_documents').remove([path]);
+    } catch (_) {
+      // the row is gone; a leftover file is harmless
+    }
+  }
+
+  Future<String> getCompanyDocumentUrl(String storagePath) async {
+    return await _client.storage.from('company_documents').createSignedUrl(storagePath, 300);
   }
 }

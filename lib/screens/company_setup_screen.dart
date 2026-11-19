@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../utils/validators.dart';
+import '../widgets/common/validated_field.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/shared_widgets.dart';
@@ -6,6 +8,9 @@ import '../services/company_service.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'student/address_picker_screen.dart';
+import '../utils/error_text.dart';
+import '../utils/lang.dart';
+import '../utils/company_document_picker.dart';
 
 const List<String> kCompanyIndustries = [
   'Technology',
@@ -45,10 +50,14 @@ class _CompanySetupScreenState extends State<CompanySetupScreen> {
   bool _registeringNew = false;
 
   final _nameController = TextEditingController();
+  final _nameFieldKey = GlobalKey<FormFieldState<String>>();
   String? _industry;
   String? _locationText;
   double? _locationLat;
   double? _locationLng;
+  // the legal documents an administrator verifies the company by (required for a new company)
+  final List<PickedCompanyDocument> _docs = [];
+  String? _docsError;
 
   @override
   void initState() {
@@ -79,28 +88,49 @@ class _CompanySetupScreenState extends State<CompanySetupScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not join company: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not join company')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
   Future<void> _register() async {
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.setupCompanyNameRequired), backgroundColor: AppColors.error));
-      return;
+    // The name field shows its own message (required, length, or "already registered").
+    final nameOk = _nameFieldKey.currentState?.validate() ?? false;
+    if (_docs.isEmpty) {
+      setState(() => _docsError = tr('Upload at least one legal document of your company (for example the SSM certificate).',
+          ms: 'Muat naik sekurang-kurangnya satu dokumen perundangan syarikat anda (contohnya sijil SSM).',
+          zh: '请至少上传一份公司的法律文件（例如 SSM 证书）。'));
     }
+    if (!nameOk || _docs.isEmpty) return;
     setState(() => _isSubmitting = true);
     try {
       await CompanyService.instance.createAndJoinCompany(
         name: _nameController.text,
         industry: _industry,
         location: _locationText,
+        documents: _docs,
       );
       widget.onDone();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not register company: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not register company')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
+  }
+
+  Future<void> _addDocs() async {
+    final result = await pickCompanyDocuments();
+    if (!mounted) return;
+    if (result.rejected.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(tr('Not added: ${result.rejected.join(', ')}', ms: 'Tidak ditambah: ${result.rejected.join(', ')}', zh: '未添加：${result.rejected.join('、')}')),
+        backgroundColor: AppColors.warning,
+      ));
+    }
+    if (result.accepted.isEmpty) return;
+    setState(() {
+      _docs.addAll(result.accepted);
+      _docsError = null;
+    });
   }
 
   Future<void> _pickLocation() async {
@@ -138,7 +168,7 @@ class _CompanySetupScreenState extends State<CompanySetupScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -147,12 +177,12 @@ class _CompanySetupScreenState extends State<CompanySetupScreen> {
                   decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                      Icon(Icons.info_outline, size: 16, color: AppColors.primaryText),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           l10n.setupLinkCompanyNote,
-                          style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary),
+                          style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText),
                         ),
                       ),
                     ],
@@ -203,7 +233,22 @@ class _CompanySetupScreenState extends State<CompanySetupScreen> {
                     ),
                   ],
                 ] else ...[
-                  TextFormField(controller: _nameController, decoration: InputDecoration(labelText: l10n.setupCompanyName)),
+                  ValidatedField(
+                    key: _nameFieldKey,
+                    controller: _nameController,
+                    fieldValidator: (v) {
+                      if (v.trim().isEmpty) return l10n.setupCompanyNameRequired;
+                      final rule = Validators.text(v, field: 'Company name', min: 2, max: 100);
+                      if (rule != null) return rule;
+                      if (!RegExp(r'\p{L}', unicode: true).hasMatch(v)) return 'Company name must contain letters.';
+                      final taken = _companies.any((c) => (c['name'] as String).trim().toLowerCase() == v.trim().toLowerCase());
+                      if (taken) return 'A company with this name is already registered. Use "Join existing" instead.';
+                      return null;
+                    },
+                    textCapitalization: TextCapitalization.words,
+                    maxLength: 100,
+                    labelText: l10n.setupCompanyName,
+                  ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: _industry,
@@ -233,6 +278,40 @@ class _CompanySetupScreenState extends State<CompanySetupScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  Text(tr('Company legal documents (required)', ms: 'Dokumen perundangan syarikat (wajib)', zh: '公司法律文件（必填）'), style: AppTextStyles.label),
+                  const SizedBox(height: 4),
+                  Text(
+                    tr('An administrator verifies your company from these, for example the SSM business registration certificate. Until then you can use the app but cannot post internships.',
+                        ms: 'Pentadbir mengesahkan syarikat anda berdasarkan dokumen ini, contohnya sijil pendaftaran perniagaan SSM. Sehingga itu anda boleh menggunakan aplikasi tetapi tidak boleh menyiarkan latihan industri.',
+                        zh: '管理员会根据这些文件（例如 SSM 商业注册证书）认证您的公司。认证之前您可以使用应用，但无法发布实习职位。'),
+                    style: AppTextStyles.caption,
+                  ),
+                  const SizedBox(height: 8),
+                  for (var i = 0; i < _docs.length; i++)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.fromLTRB(12, 2, 2, 2),
+                      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
+                      child: Row(
+                        children: [
+                          Icon(Icons.description_outlined, size: 18, color: AppColors.primaryText),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(_docs[i].name, style: const TextStyle(fontFamily: 'Inter', fontSize: 13), overflow: TextOverflow.ellipsis)),
+                          IconButton(icon: const Icon(Icons.close, size: 18), onPressed: _isSubmitting ? null : () => setState(() => _docs.removeAt(i))),
+                        ],
+                      ),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: _isSubmitting ? null : _addDocs,
+                    icon: const Icon(Icons.upload_file, size: 18),
+                    label: Text(tr('Add document', ms: 'Tambah dokumen', zh: '添加文件')),
+                  ),
+                  if (_docsError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 4),
+                      child: Text(_docsError!, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+                    ),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,

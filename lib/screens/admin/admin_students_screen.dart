@@ -5,6 +5,8 @@ import '../../widgets/common/shared_widgets.dart';
 import '../../services/admin_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../supervisor/supervisor_students_screen.dart' show StudentDetailScreen;
+import '../../utils/error_text.dart';
+import 'admin_create_students_screen.dart';
 
 class AdminStudentsScreen extends StatefulWidget {
   const AdminStudentsScreen({super.key});
@@ -30,7 +32,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
     setState(() => _isLoading = true);
     try {
       final students = await AdminDataService.instance.getStudents();
-      final supervisors = await AdminDataService.instance.getSupervisors();
+      final supervisors = await AdminDataService.instance.getSupervisors(approvedOnly: true);
       if (!mounted) return;
       setState(() {
         _students = students;
@@ -74,17 +76,11 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
               child: ListView(
                 controller: scrollController,
                 children: [
-                  if (student['supervisor_name'] != null)
-                    ListTile(
-                      leading: Icon(Icons.person_off_outlined, color: AppColors.error),
-                      title: Text(l10n.adminUnassign, style: TextStyle(color: AppColors.error)),
-                      onTap: () => Navigator.pop(context, <String, dynamic>{}),
-                    ),
                   ..._supervisors.map((sup) => ListTile(
                         leading: CircleAvatar(
                           backgroundColor: nameColor(sup['full_name'] as String? ?? '').withOpacity(0.15),
                           child: Text(logoLetter(sup['full_name'] as String? ?? '?'),
-                              style: TextStyle(fontWeight: FontWeight.w700, color: nameColor(sup['full_name'] as String? ?? ''))),
+                              style: TextStyle(fontWeight: FontWeight.w700, color: nameTextColor(sup['full_name'] as String? ?? ''))),
                         ),
                         title: Text((sup['full_name'] as String?)?.isNotEmpty == true ? sup['full_name'] as String : l10n.adminUnnamed),
                         subtitle: Text(l10n.supStudentsCount(sup['student_count'] as int)),
@@ -108,7 +104,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotAssign(e.toString())), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.adminCouldNotAssign(friendlyError(e))), backgroundColor: AppColors.error));
     }
   }
 
@@ -120,8 +116,17 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(title: l10n.adminStudentsTitle),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final created = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const AdminCreateStudentsScreen()));
+          if (created == true) _load();
+        },
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.person_add_alt_1_outlined, color: Colors.white),
+        label: Text(l10n.adminAddStudents, style: const TextStyle(color: Colors.white)),
+      ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: Column(
@@ -158,7 +163,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-                    child: Row(children: [Text(l10n.supStudentsCount(results.length), style: AppTextStyles.caption)]),
+                    child: Row(children: [Flexible(child: Text(l10n.supStudentsCount(results.length), style: AppTextStyles.caption, overflow: TextOverflow.ellipsis))]),
                   ),
                   Expanded(
                     child: results.isEmpty
@@ -170,7 +175,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
                               data: results[i],
                               onAssign: () => _assign(results[i]),
                               onTap: () async {
-                                await Navigator.push(context, MaterialPageRoute(builder: (_) => StudentDetailScreen(studentId: results[i]['id'] as String)));
+                                await Navigator.push(context, MaterialPageRoute(builder: (_) => StudentDetailScreen(studentId: results[i]['id'] as String, adminMode: true)));
                                 _load();
                               },
                             ),
@@ -193,7 +198,11 @@ class _StudentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final name = (data['full_name'] as String?)?.isNotEmpty == true ? data['full_name'] as String : l10n.adminUnnamedStudent;
+    final email = (data['email'] as String?) ?? '';
+    final name = (data['full_name'] as String?)?.isNotEmpty == true
+        ? data['full_name'] as String
+        : (email.isNotEmpty ? email : l10n.adminUnnamedStudent);
+    final neverLoggedIn = data['has_logged_in'] == false;
     final supervisorName = data['supervisor_name'] as String?;
     final isUnassigned = supervisorName == null;
 
@@ -205,7 +214,7 @@ class _StudentCard extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             backgroundColor: AppColors.surfaceVariant,
-            child: Text(logoLetter(name), style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
+            child: Text(logoLetter(name), style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -214,6 +223,16 @@ class _StudentCard extends StatelessWidget {
               children: [
                 Text(name, style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 Text((data['programme'] as String?) ?? l10n.adminProgrammeNotSet, style: AppTextStyles.caption, overflow: TextOverflow.ellipsis),
+                if (neverLoggedIn)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 2),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(color: AppColors.warningBg, borderRadius: BorderRadius.circular(6)),
+                      child: Text(l10n.adminNeverLoggedIn,
+                          style: TextStyle(fontFamily: 'Inter', fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.warning)),
+                    ),
+                  ),
                 Text(
                   supervisorName != null ? l10n.adminSupervisorColonName(supervisorName) : l10n.adminNoSupervisorAssigned,
                   style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: isUnassigned ? AppColors.error : AppColors.primary),
@@ -221,7 +240,17 @@ class _StudentCard extends StatelessWidget {
               ],
             ),
           ),
-          TextButton(onPressed: onAssign, child: Text(l10n.adminAssign)),
+          // A student who already has an academic supervisor is shown as assigned and cannot be given
+          // another one from here (to change it, remove the assignment on the student's page first).
+          if (isUnassigned)
+            TextButton(onPressed: onAssign, child: Text(l10n.adminAssign))
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(color: AppColors.successBg, borderRadius: BorderRadius.circular(20)),
+              child: Text(l10n.adminFilterAssigned,
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.success)),
+            ),
         ],
       ),
     );

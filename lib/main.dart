@@ -1,3 +1,4 @@
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,9 +9,14 @@ import 'services/locale_controller.dart';
 import 'services/theme_controller.dart';
 import 'services/push_notification_service.dart';
 import 'l10n/app_localizations.dart';
+import 'theme/role_theme.dart';
+import 'widgets/app_frame.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Month and weekday names for every supported language (dates are shown in the app's language).
+  await initializeDateFormatting();
 
   // Load the last-used language immediately (from local storage) so the
   // correct locale shows on the very first frame, before any network call.
@@ -29,7 +35,7 @@ void main() async {
   try {
     await Supabase.initialize(
       url: 'https://lgosyvuwtkzrjvsbxyed.supabase.co',
-      anonKey: 'sb_publishable_TP11aOfbEEX48NSNipqkUA_r2adm96C',
+      publishableKey: 'sb_publishable_TP11aOfbEEX48NSNipqkUA_r2adm96C',
     ).timeout(const Duration(seconds: 10));
   } catch (e) {
     // Log clearly to the console so this shows up in Logcat/Run output
@@ -92,6 +98,11 @@ class _CimsAppState extends State<CimsApp> with WidgetsBindingObserver {
         return ValueListenableBuilder<ThemeMode>(
           valueListenable: ThemeController.instance.themeMode,
           builder: (context, mode, _) {
+            // The signed-in role picks the colour family (see RolePalette), so
+            // changing it rebuilds the whole app just like a theme change does.
+            return ValueListenableBuilder<String?>(
+              valueListenable: RoleController.instance.role,
+              builder: (context, role, _) {
             ThemeController.instance.applyBrightness(
               WidgetsBinding.instance.platformDispatcher.platformBrightness,
             );
@@ -100,6 +111,7 @@ class _CimsAppState extends State<CimsApp> with WidgetsBindingObserver {
               title: 'CIMS',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.theme,
+              builder: (context, child) => AppFrame(child: child ?? const SizedBox.shrink()),
               home: const SplashScreen(),
               locale: locale,
               supportedLocales: const [
@@ -124,12 +136,14 @@ class _CimsAppState extends State<CimsApp> with WidgetsBindingObserver {
               // Sign-up role assignment summary:
               // @student.tarc.edu.my → Student        (automatic, by domain)
               // @tarc.edu.my         → AcademicSupervisor (automatic, by domain)
-              // Any other email      → user manually picks: Parent/Guardian,
-              //                         HR Personnel, or Company Supervisor
+              // Any other email      → user manually picks: HR Personnel
+              //                         or Company Supervisor
               //
               // Admin is a real Supabase account too (role='admin'), just
               // never offered on the sign-up screen — there's only meant
               // to be one, provisioned directly in the database.
+            );
+              },
             );
           },
         );

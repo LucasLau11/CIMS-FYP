@@ -26,9 +26,36 @@ class PushNotificationService {
   Future<void> linkUser(String userId) async {
     try {
       await OneSignal.login(userId);
+      // OneSignal can only reach a device whose subscription is opted in. After
+      // a refused permission prompt, or a log out and in as someone else, it may
+      // not be, and every push for this person is then dropped ("unsubscribed").
+      await OneSignal.User.pushSubscription.optIn();
+      if (!OneSignal.Notifications.permission) {
+        await OneSignal.Notifications.requestPermission(false);
+      }
     } catch (_) {
       // Non-fatal — push linking failing shouldn't block sign-in.
     }
+  }
+
+  /// Whether this phone currently lets CIMS show notifications. When it does
+  /// not, no alert ever appears outside the app, whatever the server sends.
+  bool get notificationsAllowed {
+    try {
+      return OneSignal.Notifications.permission;
+    } catch (_) {
+      return true; // cannot tell (for example in tests): do not nag
+    }
+  }
+
+  /// Asks again; if the phone has already refused, it offers to open the app's
+  /// notification settings. Returns whether notifications are now allowed.
+  Future<bool> enableNotifications() async {
+    try {
+      await OneSignal.Notifications.requestPermission(true);
+      await OneSignal.User.pushSubscription.optIn();
+    } catch (_) {}
+    return notificationsAllowed;
   }
 
   Future<void> unlinkUser() async {

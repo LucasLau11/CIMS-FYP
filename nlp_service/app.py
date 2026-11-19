@@ -9,7 +9,7 @@ import inspect
 import os
 
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from extractor import parse
 
@@ -35,7 +35,9 @@ async def _maybe_open_ngrok_tunnel():
 
 
 class ParseRequest(BaseModel):
-    text: str
+    # A resume is a few thousand characters. The cap stops this public
+    # endpoint being used to burn CPU on huge inputs (FastAPI answers 422).
+    text: str = Field(max_length=60_000)
 
 
 class WorkExperienceOut(BaseModel):

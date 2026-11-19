@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../widgets/reason_dialog.dart';
+import '../../widgets/grade_dialog.dart';
+import '../../utils/grading_rubric.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_widgets.dart';
 import '../../services/supervisor_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
+import '../../utils/error_text.dart';
+import '../../utils/lang.dart';
 
 class SupervisorReviewsScreen extends StatefulWidget {
   const SupervisorReviewsScreen({super.key});
@@ -53,18 +58,33 @@ class _SupervisorReviewsScreenState extends State<SupervisorReviewsScreen> with 
   }
 
   Future<void> _review(Map<String, dynamic> item, {required bool approve}) async {
-    final comment = await showDialog<String>(
-      context: context,
-      builder: (_) => _CommentDialog(isReject: !approve),
-    );
-    if (comment == null) return;
+    final isReport = item['kind'] == 'report';
+    // Approving a report means grading it (0-100); a rejection needs a written reason; a document
+    // only needs an optional comment.
+    Map<String, int>? marks;
+    String comment;
+    if (approve && isReport) {
+      final result = await showApproveReportDialog(context,
+          isFinal: item['report_type'] == 'final', receivedAt: DateTime.tryParse('${item['submitted_at']}')?.toLocal());
+      if (result == null) return;
+      marks = result.marks;
+      comment = result.comment;
+    } else {
+      final text = await showDialog<String>(
+        context: context,
+        builder: (_) => _CommentDialog(isReject: !approve),
+      );
+      if (text == null) return;
+      comment = text;
+    }
     try {
       final status = approve ? 'approved' : 'rejected';
-      if (item['kind'] == 'report') {
+      if (isReport) {
         await SupervisorDataService.instance.reviewReport(
           reportId: item['id'] as String,
           status: status,
           feedback: comment.trim().isEmpty ? null : comment.trim(),
+          marks: marks,
         );
       } else {
         await SupervisorDataService.instance.reviewDocument(
@@ -76,7 +96,7 @@ class _SupervisorReviewsScreenState extends State<SupervisorReviewsScreen> with 
       _load();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save review: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not save review')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -95,7 +115,7 @@ class _SupervisorReviewsScreenState extends State<SupervisorReviewsScreen> with 
       ));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open file: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not open file')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -106,14 +126,14 @@ class _SupervisorReviewsScreenState extends State<SupervisorReviewsScreen> with 
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(title: l10n.supReviews),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : Column(
               children: [
                 Container(
                   color: AppColors.surface,
                   child: TabBar(
                     controller: _tabController,
-                    labelColor: AppColors.primary,
+                    labelColor: AppColors.primaryText,
                     unselectedLabelColor: AppColors.textMuted,
                     indicatorColor: AppColors.primary,
                     labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600),
@@ -199,7 +219,7 @@ class _ReviewCard extends StatelessWidget {
                 radius: 16,
                 backgroundColor: AppColors.surfaceVariant,
                 child: Text(logoLetter(data['student_name'] as String),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -224,6 +244,14 @@ class _ReviewCard extends StatelessWidget {
               ),
             ],
           ),
+          if (data['grade'] != null) ...[
+            const SizedBox(height: 8),
+            Text(
+                tr('Marks: ${(data['grade'] as num).toStringAsFixed(0)} / ${rubricMaxTotal(isFinal: data['report_type'] == 'final')}',
+                    ms: 'Markah: ${(data['grade'] as num).toStringAsFixed(0)} / ${rubricMaxTotal(isFinal: data['report_type'] == 'final')}',
+                    zh: '得分：${(data['grade'] as num).toStringAsFixed(0)} / ${rubricMaxTotal(isFinal: data['report_type'] == 'final')}'),
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.success)),
+          ],
           if (feedback != null && feedback.isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
@@ -302,55 +330,22 @@ class _ReviewCard extends StatelessWidget {
   }
 }
 
-class _CommentDialog extends StatefulWidget {
+/// Rejecting needs a written reason (at least 100 characters) that the student
+/// will read; approving may carry an optional comment.
+class _CommentDialog extends StatelessWidget {
   final bool isReject;
 
   const _CommentDialog({required this.isReject});
 
   @override
-  State<_CommentDialog> createState() => _CommentDialogState();
-}
-
-class _CommentDialogState extends State<_CommentDialog> {
-  final _commentController = TextEditingController();
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      title: Text(widget.isReject ? l10n.supRejectSubmission : l10n.supApproveSubmission, style: AppTextStyles.h3),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.isReject ? l10n.supRejectFeedbackPrompt : l10n.supApproveCommentPrompt,
-            style: AppTextStyles.bodySecondary,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _commentController,
-            maxLines: 3,
-            decoration: InputDecoration(hintText: l10n.supTypeYourComment),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        ElevatedButton(
-          onPressed: () {
-            if (widget.isReject && _commentController.text.trim().isEmpty) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(l10n.supPleaseAddFeedback), backgroundColor: AppColors.error));
-              return;
-            }
-            Navigator.pop(context, _commentController.text);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: widget.isReject ? AppColors.error : AppColors.primary),
-          child: Text(widget.isReject ? l10n.hrReject : l10n.supApprove),
-        ),
-      ],
+    return ReasonDialog(
+      title: isReject ? l10n.supRejectSubmission : l10n.supApproveSubmission,
+      prompt: isReject ? l10n.supRejectFeedbackPrompt : l10n.supApproveCommentPrompt,
+      confirmLabel: isReject ? l10n.hrReject : l10n.supApprove,
+      reasonRequired: isReject,
+      destructive: isReject,
     );
   }
 }

@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'locale_controller.dart';
 import 'push_notification_service.dart';
 import 'theme_controller.dart';
+import '../utils/lang.dart';
+import '../utils/validators.dart';
+import '../theme/role_theme.dart';
 
 /// All the possible roles a signed-up user can end up with. 'admin' is a
 /// real Supabase account like every other role (no client-side hardcoded
@@ -13,7 +16,6 @@ enum UserRole {
   academicSupervisor,
   companyHr,
   companySupervisor,
-  parent,
   admin,
 }
 
@@ -38,8 +40,6 @@ extension UserRoleX on UserRole {
         return 'company_hr';
       case UserRole.companySupervisor:
         return 'company_supervisor';
-      case UserRole.parent:
-        return 'parent';
       case UserRole.admin:
         return 'admin';
     }
@@ -55,8 +55,6 @@ extension UserRoleX on UserRole {
         return UserRole.companyHr;
       case 'company_supervisor':
         return UserRole.companySupervisor;
-      case 'parent':
-        return UserRole.parent;
       case 'admin':
         return UserRole.admin;
       default:
@@ -87,6 +85,19 @@ class AuthService {
       final profile = await getCurrentProfile();
       if (profile == null) return null;
 
+      // A restored session for an account that is (no longer) approved must
+      // not get into the app.
+      final approval = await _client
+          .from('profiles')
+          .select('approval_status')
+          .eq('profile_id', session.user.id)
+          .single()
+          .then((r) => r['approval_status'] as String? ?? 'approved');
+      if (approval != 'approved') {
+        await _client.auth.signOut();
+        return null;
+      }
+
       await PushNotificationService.instance.linkUser(session.user.id);
 
       final savedLanguage = profile['language'] as String?;
@@ -99,7 +110,9 @@ class AuthService {
         await ThemeController.instance.setThemeModeByCode(savedThemeMode);
       }
 
-      return UserRoleX.fromDbValue(profile['role'] as String);
+      final restoredRole = profile['role'] as String;
+      RoleController.instance.setRole(restoredRole);
+      return UserRoleX.fromDbValue(restoredRole);
     } catch (_) {
       // Session token present but invalid/expired/profile missing —
       // treat as no session, fall back to login screen.
@@ -108,70 +121,20 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------
-  // Allowed email domains for sign-up. Anything outside this list is
-  // rejected — keeps accounts limited to institutional emails plus the
-  // common personal providers used by parents/company staff.
+  // Email / password rules live in lib/utils/validators.dart (one source of
+  // truth, shared with the live field checks). These wrappers keep the
+  // existing call sites working.
   // ---------------------------------------------------------------------
-  static const List<String> allowedEmailDomains = [
-    'outlook.com',
-    'gmail.com',
-    'hotmail.com',
-    'student.tarc.edu.my',
-    'tarc.edu.my',
-  ];
-
-  static final RegExp _emailFormatRegex =
-  RegExp(r'^[\w\.\-\+]+@[\w\-]+(\.[\w\-]+)+$');
+  static List<String> get allowedEmailDomains => Validators.allowedEmailDomains;
 
   /// Validates email format + domain allowlist.
   /// Returns an error message, or null if the email is valid.
-  String? validateEmail(String email) {
-    final trimmed = email.trim();
-
-    if (trimmed.isEmpty) {
-      return 'Email is required.';
-    }
-
-    if (!_emailFormatRegex.hasMatch(trimmed)) {
-      return 'Enter a valid email address.';
-    }
-
-    final lower = trimmed.toLowerCase();
-    final domainAllowed =
-    allowedEmailDomains.any((domain) => lower.endsWith('@$domain'));
-
-    if (!domainAllowed) {
-      return 'Email must be from @gmail.com, @outlook.com, @hotmail.com, '
-          '@student.tarc.edu.my, or @tarc.edu.my.';
-    }
-
-    return null;
-  }
+  String? validateEmail(String email) => Validators.email(email);
 
   /// Validates password strength: 8+ chars, upper, lower, digit, symbol.
   /// Returns an error message, or null if the password is valid.
-  String? validatePassword(String password) {
-    if (password.isEmpty) {
-      return 'Password is required.';
-    }
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters long.';
-    }
-    if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      return 'Password must include at least one uppercase letter.';
-    }
-    if (!RegExp(r'[a-z]').hasMatch(password)) {
-      return 'Password must include at least one lowercase letter.';
-    }
-    if (!RegExp(r'[0-9]').hasMatch(password)) {
-      return 'Password must include at least one number.';
-    }
-    if (!RegExp(r'[!@#\$%\^&\*(),.?":{}|<>_\-+=~`\[\];/\\]')
-        .hasMatch(password)) {
-      return 'Password must include at least one symbol (e.g. ! @ # \$ %).';
-    }
-    return null;
-  }
+  String? validatePassword(String password) => Validators.password(password);
+
 
   // ---------------------------------------------------------------------
   // Current user / profile helpers
@@ -515,20 +478,23 @@ class AuthService {
     try {
       await _client.auth.signInWithPassword(email: email, password: currentPassword);
     } on AuthException {
-      throw Exception('Current password is incorrect.');
+      throw const WrongCurrentPasswordException();
     }
 
     try {
       await _client.auth.updateUser(UserAttributes(password: newPassword));
     } on AuthException catch (e) {
-      throw Exception('Could not update password: ${e.message}');
+      if (e.message.toLowerCase().contains('different from the old password')) {
+        throw Exception('Choose a new password that is different from your current one.');
+      }
+      throw Exception('Could not update your password. Please try again.');
     }
   }
 
   // ---------------------------------------------------------------------
   // Role assignment at sign-up time, based on email domain.
   // Returns null if the email needs the user to pick a role manually
-  // (Parent/Guardian, HR Personnel, or Company Supervisor).
+  // (HR Personnel or Company Supervisor).
   // ---------------------------------------------------------------------
   UserRole? roleFromEmailDomain(String email) {
     final lower = email.trim().toLowerCase();
@@ -556,7 +522,7 @@ class AuthService {
 
   // ---------------------------------------------------------------------
   // Sign up: creates the Supabase auth account. The `profiles` row and its
-  // matching subtype row (students/academic_supervisors/parents/
+  // matching subtype row (students/academic_supervisors/
   // company_hr/company_supervisors) are created automatically by a
   // database trigger on `auth.users` insert (`handle_new_auth_user`,
   // reading the `app_role` passed via `data` below) — NOT by a client-side
@@ -574,12 +540,16 @@ class AuthService {
     required String email,
     required String password,
     UserRole? manualRole,
+    String? fullName,
   }) async {
     final domainRole = roleFromEmailDomain(email);
     final role = domainRole ?? manualRole;
 
     if (role == null) {
       throw Exception('A role must be selected for this email.');
+    }
+    if (role == UserRole.student) {
+      throw Exception('Student accounts are created by your administrator. Log in with the email and password you were given.');
     }
 
     final trimmedEmail = email.trim();
@@ -589,15 +559,19 @@ class AuthService {
       response = await _client.auth.signUp(
         email: trimmedEmail,
         password: password,
-        data: {'app_role': role.dbValue},
+        data: {
+          'app_role': role.dbValue,
+          // Stored on the profile by the sign-up trigger so administrators
+          // can see who they are approving.
+          if (fullName != null && fullName.trim().isNotEmpty) 'full_name': fullName.trim(),
+        },
       );
     } on AuthException catch (e) {
       final msg = e.message.toLowerCase();
       if (msg.contains('already registered') ||
           msg.contains('already exists') ||
           msg.contains('user already')) {
-        throw Exception(
-            'An account with this email already exists. Please log in instead.');
+        throw AccountAlreadyExistsException(trimmedEmail);
       }
       rethrow;
     }
@@ -606,12 +580,27 @@ class AuthService {
       throw Exception('Sign-up failed — no user returned.');
     }
 
+    // Signing up with an email that already has a confirmed account is not an
+    // error to Supabase (it answers the same as for a new account, so nobody
+    // can probe which emails are registered), and it sends NO email. The only
+    // sign is an empty identities list. Without this check the person waits
+    // for a code that will never come.
+    if (response.user!.identities?.isEmpty ?? false) {
+      throw AccountAlreadyExistsException(trimmedEmail);
+    }
+
     // No session means Supabase Auth requires email confirmation before
     // this account can actually log in — the caller must not treat this
     // like an immediate, logged-in sign-up (e.g. must not navigate into an
     // authenticated shell), since there is no session to do anything with
     // yet.
-    return SignUpResult(role: role, needsEmailConfirmation: response.session == null);
+    final signedIn = response.session != null;
+    // Staff accounts are pending approval and are signed out by the caller,
+    // so only an immediately usable session takes on the role's colours.
+    if (signedIn && !(role == UserRole.academicSupervisor || role == UserRole.companySupervisor)) {
+      RoleController.instance.setRole(role.dbValue);
+    }
+    return SignUpResult(role: role, needsEmailConfirmation: !signedIn);
   }
 
   // ---------------------------------------------------------------------
@@ -635,12 +624,42 @@ class AuthService {
       final msg = e.message.toLowerCase();
       if (msg.contains('invalid login credentials') ||
           msg.contains('invalid email or password')) {
-        throw AuthFieldException.credentials(
-            'Incorrect email or password. Please try again.');
+        // Say WHICH one is wrong. (Supabase itself answers the same for both,
+        // so the app asks the database whether the email has an account. That
+        // lets someone check whether an email is registered, a trade-off the
+        // project owner chose for clearer messages.)
+        bool? known;
+        try {
+          known = await _client.rpc('email_has_account', params: {'p_email': email.trim()}) as bool?;
+        } catch (_) {
+          known = null;
+        }
+        if (known == false) {
+          throw AuthFieldException(
+              tr('No account uses this email. Check it for typing mistakes.',
+                  ms: 'Tiada akaun menggunakan e-mel ini. Semak kesilapan menaip.',
+                  zh: '没有使用此邮箱的账户，请检查是否输错。'),
+              AuthFieldTarget.email);
+        }
+        if (known == true) {
+          throw AuthFieldException(
+              tr('Incorrect password. Please try again.',
+                  ms: 'Kata laluan salah. Sila cuba lagi.',
+                  zh: '密码不正确，请重试。'),
+              AuthFieldTarget.password);
+        }
+        throw AuthFieldException.credentials(tr('Incorrect email or password. Please try again.',
+            ms: 'E-mel atau kata laluan salah. Sila cuba lagi.', zh: '邮箱或密码不正确，请重试。'));
+      }
+      if (msg.contains('banned') || msg.contains('user is suspended')) {
+        throw AuthFieldException.account(_suspendedMessage());
       }
       if (msg.contains('email not confirmed')) {
-        throw AuthFieldException.credentials(
-            'Please confirm your email before logging in.');
+        // The sign-up was never finished (the email code was not entered), so there is no account: the
+        // person signs up again. (Nothing can be done with such a sign-up, and a new one replaces it.)
+        throw AuthFieldException.account(tr('This sign-up was never completed, so there is no account yet. Please sign up again.',
+            ms: 'Pendaftaran ini tidak pernah diselesaikan, jadi belum ada akaun. Sila daftar semula.',
+            zh: '此注册从未完成，因此还没有账户。请重新注册。'));
       }
       throw AuthFieldException.credentials('Login failed: ${e.message}');
     }
@@ -651,15 +670,35 @@ class AuthService {
           'Incorrect email or password. Please try again.');
     }
 
-    await PushNotificationService.instance.linkUser(user.id);
-
     try {
       final row = await _client
           .from('profiles')
-          .select('role')
+          .select('role, approval_status')
           .eq('profile_id', user.id)
           .single();
-      return UserRoleX.fromDbValue(row['role'] as String);
+
+      // Staff accounts (supervisors, HR) must be approved by an administrator
+      // before they can use the app. An unapproved account is signed straight
+      // back out — the database also gives it no privileges (see 00023).
+      final approval = row['approval_status'] as String? ?? 'approved';
+      if (approval != 'approved') {
+        await _client.auth.signOut();
+        throw AuthFieldException.account(approval == 'rejected'
+            ? tr('Your registration was not approved. Please contact the internship office.',
+                ms: 'Pendaftaran anda tidak diluluskan. Sila hubungi pejabat latihan industri.',
+                zh: '您的注册未获批准。请联系实习办公室。')
+            : approval == 'suspended'
+                ? _suspendedMessage()
+                : tr('Your account is awaiting administrator approval. You can log in once it has been approved.',
+                    ms: 'Akaun anda menunggu kelulusan pentadbir. Anda boleh log masuk selepas ia diluluskan.',
+                    zh: '您的账户正在等待管理员批准，批准后即可登录。'));
+      }
+
+      await PushNotificationService.instance.linkUser(user.id);
+      await _applySavedPreferences(user.id);
+      final signedInRole = row['role'] as String;
+      RoleController.instance.setRole(signedInRole);
+      return UserRoleX.fromDbValue(signedInRole);
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
         // No profile row found for this authenticated user — should not
@@ -673,16 +712,172 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------
-  // Forgot password: sends a reset email via Supabase. Always shows the
-  // same confirmation regardless of whether the email exists, to avoid
-  // revealing which emails are registered.
+  // Confirming a new account with the code emailed at sign-up (no link to open,
+  // so it works on any phone). The "Confirm signup" email template in the
+  // Supabase dashboard must contain {{ .Token }} for the code to appear.
   // ---------------------------------------------------------------------
-  Future<void> sendPasswordResetEmail(String email) async {
+
+  /// Verifies the sign-up code. On success the person is signed in; staff
+  /// accounts that still await administrator approval are signed straight back
+  /// out. Returns the account's role either way.
+  Future<UserRole> confirmSignupCode({required String email, required String code}) async {
+    try {
+      final response = await _client.auth.verifyOTP(
+        email: email.trim(),
+        token: code.trim(),
+        type: OtpType.signup,
+      );
+      final user = response.user;
+      if (response.session == null || user == null) {
+        throw const ResetCodeException('That code is not valid. Please request a new one.');
+      }
+      final row = await _client.from('profiles').select('role, approval_status').eq('profile_id', user.id).single();
+      final role = row['role'] as String;
+      if ((row['approval_status'] as String? ?? 'approved') != 'approved') {
+        await _client.auth.signOut();
+        return UserRoleX.fromDbValue(role);
+      }
+      await PushNotificationService.instance.linkUser(user.id);
+      await _applySavedPreferences(user.id);
+      RoleController.instance.setRole(role);
+      return UserRoleX.fromDbValue(role);
+    } on AuthException {
+      throw const ResetCodeException('That code is incorrect or has expired. Check the email, or request a new code.');
+    }
+  }
+
+  String _suspendedMessage() => tr('Your account has been suspended. Please contact the internship office.',
+      ms: 'Akaun anda telah digantung. Sila hubungi pejabat latihan industri.',
+      zh: '您的账户已被暂停。请联系实习办公室。');
+
+  /// Language and theme are stored on the account, but the device only remembers
+  /// the LAST choice made on it. Without this, logging in as somebody else kept
+  /// the previous person's language while that person's own Settings page (which
+  /// reads the account) showed another one, and a choice made by user B silently
+  /// replaced user A's language the next time A logged in.
+  Future<void> _applySavedPreferences(String userId) async {
+    try {
+      final row = await _client.from('profiles').select('language, theme_mode').eq('profile_id', userId).maybeSingle();
+      final language = row?['language'] as String?;
+      if (language != null && LocaleController.displayNameToCode.containsKey(language)) {
+        await LocaleController.instance.setLanguageByDisplayName(language);
+      }
+      final themeMode = row?['theme_mode'] as String?;
+      if (themeMode != null) {
+        await ThemeController.instance.setThemeModeByCode(themeMode);
+      }
+    } catch (_) {
+      // Cosmetic: never block a login because the preferences could not be read.
+    }
+  }
+
+  /// True when this account still has the temporary password an administrator
+  /// gave it, so the person must choose their own before using the app.
+  Future<bool> mustChangePassword() async {
+    final id = currentUserId;
+    if (id == null) return false;
+    try {
+      final row = await _client.from('profiles').select('must_change_password').eq('profile_id', id).maybeSingle();
+      return row?['must_change_password'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Saves the new password chosen at the first login and clears the flag.
+  Future<void> completeFirstPasswordChange(String newPassword) async {
+    final rule = Validators.password(newPassword);
+    if (rule != null) throw ResetCodeException(rule);
+    try {
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('different from the old password')) {
+        throw const ResetCodeException('Choose a password that is different from the temporary one.');
+      }
+      throw const ResetCodeException('Could not save the new password. Please try again.');
+    }
+    await _client.rpc('clear_must_change_password');
+  }
+
+  Future<void> resendSignupCode(String email) async {
+    try {
+      await _client.auth.resend(type: OtpType.signup, email: email.trim());
+    } on AuthException catch (e) {
+      final text = '${e.code ?? ''} ${e.message}'.toLowerCase();
+      if (e.statusCode == '429' || text.contains('rate') || text.contains('seconds')) {
+        throw const ResetCodeException('Please wait a minute before asking for another code.');
+      }
+      if (text.contains('sending') || text.contains('smtp')) {
+        throw const ResetCodeException('We could not send the email right now. Please try again later.');
+      }
+      throw const ResetCodeException('Could not send a new code. Please try again.');
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Forgot password, in three steps typed into the app (no email link, so it
+  // works on any phone):
+  //   1. requestPasswordResetCode  -> Supabase emails a numeric code
+  //   2. verifyPasswordResetCode   -> the code is exchanged for a short session
+  //   3. completePasswordReset     -> new password saved, session ended
+  //
+  // Step 1 never says whether the email has an account (Supabase answers the
+  // same either way), so the screen words its confirmation neutrally. The
+  // "Reset Password" email template in the Supabase dashboard must contain
+  // {{ .Token }} for the code to appear in the email.
+  // ---------------------------------------------------------------------
+  Future<void> requestPasswordResetCode(String email) async {
     try {
       await _client.auth.resetPasswordForEmail(email.trim());
+    } on AuthException catch (e) {
+      final text = '${e.code ?? ''} ${e.message}'.toLowerCase();
+      if (e.statusCode == '429' || text.contains('rate') || text.contains('seconds')) {
+        throw const ResetCodeException('Please wait a minute before asking for another code.');
+      }
+      if (text.contains('sending') || text.contains('smtp') || text.contains('not authorized')) {
+        throw const ResetCodeException(
+            'We could not send the email right now. Please try again later or contact the internship office.');
+      }
+      throw const ResetCodeException('Could not request a code. Please try again.');
+    }
+  }
+
+  Future<void> verifyPasswordResetCode({required String email, required String code}) async {
+    try {
+      final response = await _client.auth.verifyOTP(
+        email: email.trim(),
+        token: code.trim(),
+        type: OtpType.recovery,
+      );
+      if (response.session == null) {
+        throw const ResetCodeException('That code is not valid. Please request a new one.');
+      }
     } on AuthException {
-      // Intentionally swallow errors here too — don't leak whether the
-      // email exists via a different error path.
+      throw const ResetCodeException(
+          'That code is incorrect or has expired. Check the email, or request a new code.');
+    }
+  }
+
+  /// Saves the new password and ends the temporary session, so the person
+  /// logs in normally afterwards.
+  Future<void> completePasswordReset(String newPassword) async {
+    final rule = Validators.password(newPassword);
+    if (rule != null) throw ResetCodeException(rule);
+    try {
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('different from the old password')) {
+        throw const ResetCodeException('Choose a password you have not used before.');
+      }
+      throw const ResetCodeException('Could not save the new password. Please try again.');
+    }
+    await _client.auth.signOut();
+  }
+
+  /// Leaves the reset flow without finishing: drops the temporary session.
+  Future<void> cancelPasswordReset() async {
+    if (_client.auth.currentSession != null) {
+      await _client.auth.signOut();
     }
   }
 
@@ -692,7 +887,56 @@ class AuthService {
   Future<void> signOut() async {
     await PushNotificationService.instance.unlinkUser();
     await _client.auth.signOut();
+    RoleController.instance.setRole(null);
   }
+
+  // ---------------------------------------------------------------------
+  // Delete my account. Reports, evaluations and messages from other people
+  // depend on this profile, so the account is anonymised rather than hard
+  // deleted (see anonymise_my_account in migration 00024): personal details
+  // are wiped, login is blocked and sessions end. The resume file and avatar
+  // are removed from Storage first, since the database function cannot
+  // delete storage objects.
+  // ---------------------------------------------------------------------
+  Future<void> deleteMyAccount() async {
+    if (currentUserId == null) {
+      throw Exception('You must be logged in.');
+    }
+    try {
+      await removeResume();
+    } catch (_) {
+      // Nothing to remove, or already gone — keep going.
+    }
+    try {
+      await removeAvatar();
+    } catch (_) {}
+
+    await _client.rpc('anonymise_my_account');
+
+    try {
+      await PushNotificationService.instance.unlinkUser();
+    } catch (_) {}
+    // The database function has already deleted every session of this account,
+    // so the server answers the sign-out with "session not found" (403) and the
+    // client throws. The device's own session is removed before that call is
+    // made, so the error carries no information: the account IS deleted. Showing
+    // it as a red failure message was wrong.
+    try {
+      await _client.auth.signOut();
+    } catch (_) {}
+    RoleController.instance.setRole(null);
+  }
+}
+
+/// Sign-up was attempted with an email that already has an account. A type of
+/// its own so the sign-up screen can show a dialog offering to log in or reset
+/// the password, instead of a plain error line.
+class AccountAlreadyExistsException implements Exception {
+  final String email;
+  const AccountAlreadyExistsException(this.email);
+
+  @override
+  String toString() => 'An account with $email already exists.';
 }
 
 /// Distinguishes WHICH part of the login form an auth error relates to,
@@ -709,4 +953,25 @@ class AuthFieldException implements Exception {
   String toString() => message;
 }
 
-enum AuthFieldTarget { credentials, account }
+enum AuthFieldTarget { credentials, email, password, account, unconfirmed }
+
+/// The current password typed in "Change password" was wrong. A type of its
+/// own so the dialog can show it under that exact field.
+class WrongCurrentPasswordException implements Exception {
+  const WrongCurrentPasswordException();
+
+  String get message => 'Your current password is incorrect.';
+
+  @override
+  String toString() => message;
+}
+
+/// A problem in the forgot-password flow, with a message that is already
+/// written for the person (shown as-is).
+class ResetCodeException implements Exception {
+  final String message;
+  const ResetCodeException(this.message);
+
+  @override
+  String toString() => message;
+}

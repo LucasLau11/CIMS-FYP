@@ -5,6 +5,12 @@ import '../../services/student_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../../l10n/app_localizations.dart';
 import 'student_interview_screen.dart';
+import '../../services/interview_service.dart';
+import '../../utils/interview_format.dart';
+import '../../utils/error_text.dart';
+import '../../theme/role_theme.dart';
+import '../../utils/lang.dart';
+import '../document_preview_screen.dart';
 
 class StudentApplicationsScreen extends StatefulWidget {
   const StudentApplicationsScreen({super.key});
@@ -23,7 +29,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     _load();
   }
 
@@ -72,7 +78,62 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.errorCouldNotWithdraw(e.toString())), backgroundColor: AppColors.error));
+          .showSnackBar(SnackBar(content: Text(l10n.errorCouldNotWithdraw(friendlyError(e))), backgroundColor: AppColors.error));
+    }
+  }
+
+  Future<void> _viewOfferLetter(Map<String, dynamic> application) async {
+    final path = application['offer_letter_path'] as String?;
+    if (path == null) return;
+    try {
+      final url = await StudentDataService.instance.getOfferLetterUrl(path);
+      if (!mounted) return;
+      final name = (application['offer_letter_name'] as String?) ?? path.split('/').last;
+      Navigator.push(context, MaterialPageRoute(builder: (_) => DocumentPreviewScreen(url: url, fileName: name)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${tr('Could not open the offer letter', ms: 'Tidak dapat membuka surat tawaran', zh: '无法打开录取信')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
+    }
+  }
+
+  Future<void> _acceptOffer(Map<String, dynamic> application) async {
+    final internship = application['internships'] as Map;
+    final id = application['id'] as String;
+    final otherOpen = _applications
+        .where((a) => a['id'] != id && const ['pending', 'interview', 'offered'].contains(a['status']))
+        .length;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.offAcceptTitle),
+        content: Text(
+          '${AppLocalizations.of(context)!.offAcceptBody('${internship['title']}', '${internship['company_name']}')}'
+          '${otherOpen == 0 ? '' : '\n\n${AppLocalizations.of(context)!.offAcceptCloses(otherOpen)}'}'
+          '\n\n${AppLocalizations.of(context)!.offAcceptOne}',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context)!.offNotYet)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AppLocalizations.of(context)!.offAcceptOffer)),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await StudentDataService.instance.acceptOffer(id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.offAccepted('${internship['company_name']}')), backgroundColor: AppColors.success),
+      );
+      await _load();
+      _tabController.animateTo(4); // Active tab
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.offCouldNotAccept(friendlyError(e))), backgroundColor: AppColors.error),
+      );
     }
   }
 
@@ -119,7 +180,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                         decoration:
                             BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(6)),
                         child: Text(s,
-                            style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primary)),
+                            style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.primaryText)),
                       ))
                   .toList(),
             ),
@@ -134,68 +195,77 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
 
   List<Map<String, dynamic>> _filtered(String tab) {
     if (tab == 'All') return _applications;
-    final map = {'Pending': 'pending', 'Active': 'active', 'Interview': 'interview', 'Rejected': 'rejected'};
+    final map = {'Pending': 'pending', 'Offers': 'offered', 'Active': 'active', 'Interview': 'interview', 'Rejected': 'rejected'};
     return _applications.where((a) => a['status'] == map[tab]).toList();
   }
 
   int _countByStatus(String status) => _applications.where((a) => a['status'] == status).length;
+
+  /// One header for the whole page: the title and the tabs (each with its count) share a
+  /// single banner instead of a title bar with a separate strip under it.
+  Widget _buildHeader(AppLocalizations l10n) {
+    return RoleHeaderBackground(
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: Text(
+                l10n.myApplications,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+              ),
+            ),
+            // The internal filter keys ('All', 'Pending', ... used by _filtered())
+            // are deliberately NOT localized: they are identifiers, not display
+            // text. Only the visible Tab labels use l10n.
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white,
+              indicatorColor: Colors.white,
+              indicatorWeight: 3,
+              dividerColor: Colors.transparent,
+              overlayColor: WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.12)),
+              labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w700),
+              unselectedLabelStyle: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.85)),
+              tabs: [
+                Tab(text: '${l10n.tabAll} (${_applications.length})'),
+                Tab(text: '${l10n.pending} (${_countByStatus('pending')})'),
+                Tab(text: '${l10n.interview} (${_countByStatus('interview')})'),
+                Tab(text: l10n.appTabOffers(_countByStatus('offered'))),
+                Tab(text: '${l10n.active} (${_countByStatus('active')})'),
+                Tab(text: '${l10n.rejected} (${_countByStatus('rejected')})'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: GradientAppBar(title: l10n.myApplications),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: Column(
-                children: [
-                  // Summary row
-                  Container(
-                    color: AppColors.surface,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    child: Row(
-                      children: [
-                        _SummaryPill(label: l10n.total, value: '${_applications.length}', color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        _SummaryPill(label: l10n.active, value: '${_countByStatus('active')}', color: AppColors.success),
-                        const SizedBox(width: 8),
-                        _SummaryPill(
-                            label: l10n.interview, value: '${_countByStatus('interview')}', color: AppColors.warning),
-                        const SizedBox(width: 8),
-                        _SummaryPill(
-                            label: l10n.pending, value: '${_countByStatus('pending')}', color: AppColors.primaryLight),
-                      ],
-                    ),
-                  ),
-                  // Tab bar. Note: the internal filter keys below ('All',
-                  // 'Pending', etc, used by _filtered()) are deliberately
-                  // NOT localized — they're identifiers, not display text.
-                  // Only the visible Tab labels use l10n.
-                  Container(
-                    color: AppColors.surface,
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: AppColors.textMuted,
-                      indicatorColor: AppColors.primary,
-                      indicatorWeight: 2,
-                      labelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600),
-                      tabs: [
-                        Tab(text: l10n.tabAll),
-                        Tab(text: l10n.pending),
-                        Tab(text: l10n.interview),
-                        Tab(text: l10n.active),
-                        Tab(text: l10n.rejected),
-                      ],
-                    ),
-                  ),
-                  Expanded(
+      body: Column(
+        children: [
+          _buildHeader(l10n),
+          Expanded(
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : RefreshIndicator(
+                    onRefresh: _load,
                     child: TabBarView(
                       controller: _tabController,
-                      children: ['All', 'Pending', 'Interview', 'Active', 'Rejected'].map((tab) {
+                      children: ['All', 'Pending', 'Interview', 'Offers', 'Active', 'Rejected'].map((tab) {
                         final items = _filtered(tab);
                         if (items.isEmpty) {
                           return EmptyState(
@@ -211,39 +281,23 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen>
                             data: items[i],
                             onViewDetails: () => _showDetails(items[i]),
                             onWithdraw: items[i]['status'] == 'pending' ? () => _withdraw(items[i]) : null,
+                            onAcceptOffer: items[i]['status'] == 'offered' ? () => _acceptOffer(items[i]) : null,
+                            onViewOfferLetter: items[i]['status'] == 'offered' && items[i]['offer_letter_path'] != null
+                                ? () => _viewOfferLetter(items[i])
+                                : null,
                             onViewInterview: items[i]['status'] == 'interview'
-                                ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentInterviewScreen(application: items[i])))
+                                ? () async {
+                                    final changed = await Navigator.push<bool>(
+                                        context, MaterialPageRoute(builder: (_) => StudentInterviewScreen(application: items[i])));
+                                    if (changed == true) _load();
+                                  }
                                 : null,
                           ),
                         );
                       }).toList(),
                     ),
                   ),
-                ],
-              ),
-            ),
-    );
-  }
-}
-
-class _SummaryPill extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _SummaryPill({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(value, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: color)),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: color)),
+          ),
         ],
       ),
     );
@@ -255,8 +309,17 @@ class _ApplicationCard extends StatelessWidget {
   final VoidCallback onViewDetails;
   final VoidCallback? onWithdraw;
   final VoidCallback? onViewInterview;
+  final VoidCallback? onAcceptOffer;
+  final VoidCallback? onViewOfferLetter;
 
-  const _ApplicationCard({required this.data, required this.onViewDetails, required this.onWithdraw, this.onViewInterview});
+  const _ApplicationCard({
+    required this.data,
+    required this.onViewDetails,
+    required this.onWithdraw,
+    this.onViewInterview,
+    this.onAcceptOffer,
+    this.onViewOfferLetter,
+  });
 
   Color get _accentColor {
     switch (data['status']) {
@@ -264,6 +327,10 @@ class _ApplicationCard extends StatelessWidget {
         return AppColors.success;
       case 'interview':
         return AppColors.warning;
+      case 'offered':
+        return AppColors.info;
+      case 'unavailable':
+        return AppColors.textMuted;
       case 'rejected':
         return AppColors.error;
       default:
@@ -278,6 +345,10 @@ class _ApplicationCard extends StatelessWidget {
       case 'interview':
         return StatusBadge(
             label: l10n.interview, backgroundColor: const Color(0xFFFEF3C7), textColor: const Color(0xFFD97706));
+      case 'offered':
+        return StatusBadge.offered(context);
+      case 'unavailable':
+        return StatusBadge.unavailable(context);
       case 'rejected':
         return StatusBadge.rejected(context);
       default:
@@ -291,7 +362,8 @@ class _ApplicationCard extends StatelessWidget {
     final internship = data['internships'] as Map;
     final companyName = internship['company_name'] as String;
     final appliedAt = DateTime.parse(data['applied_at'] as String);
-    final interviewAt = data['interview_at'] != null ? DateTime.parse(data['interview_at'] as String) : null;
+    final interview = data['interview'] as InterviewInfo?;
+    final showInterview = interview != null && data['status'] == 'interview' && interview.status != 'completed';
 
     return AccentCard(
       onTap: onViewDetails,
@@ -309,7 +381,7 @@ class _ApplicationCard extends StatelessWidget {
                 child: Center(
                   child: Text(logoLetter(companyName),
                       style: TextStyle(
-                          fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700, color: nameColor(companyName))),
+                          fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w700, color: nameTextColor(companyName))),
                 ),
               ),
               const SizedBox(width: 10),
@@ -330,36 +402,100 @@ class _ApplicationCard extends StatelessWidget {
           const SizedBox(height: 10),
           const Divider(height: 1),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 14,
+            runSpacing: 6,
             children: [
-              Flexible(
-                child: _MetaItem(icon: Icons.location_on_outlined, label: internship['location'] as String),
-              ),
-              const SizedBox(width: 14),
+              _MetaItem(icon: Icons.location_on_outlined, label: internship['location'] as String),
               _MetaItem(icon: Icons.calendar_today_outlined, label: l10n.hrAppliedAgo(timeAgo(context, appliedAt))),
             ],
           ),
-          if (interviewAt != null) ...[
+          if (showInterview) ...[
             const SizedBox(height: 8),
             GestureDetector(
               onTap: onViewInterview,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                decoration: BoxDecoration(color: AppColors.warningBg, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: interview.isCancelled ? AppColors.errorBg : AppColors.warningBg, borderRadius: BorderRadius.circular(8)),
                 child: Row(
                   children: [
-                    Icon(Icons.videocam_outlined, size: 15, color: AppColors.warning),
+                    Icon(interview.isCancelled ? Icons.event_busy_outlined : Icons.videocam_outlined,
+                        size: 15, color: interview.isCancelled ? AppColors.error : AppColors.warning),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(l10n.hrInterviewScheduledColon(interviewAt.toString()),
+                      child: Text(
+                          interview.isCancelled
+                              ? l10n.appInterviewCancelledTap
+                              : l10n.hrInterviewScheduledColon(formatInterviewDateTime(interview.start)),
                           style: TextStyle(
-                              fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warning)),
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: interview.isCancelled ? AppColors.error : AppColors.warning)),
                     ),
-                    if (onViewInterview != null) Icon(Icons.chevron_right, size: 16, color: AppColors.warning),
+                    if (onViewInterview != null)
+                      Icon(Icons.chevron_right, size: 16, color: interview.isCancelled ? AppColors.error : AppColors.warning),
                   ],
                 ),
               ),
             ),
+          ],
+          if (data['status'] == 'offered') ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: AppColors.infoBg, borderRadius: BorderRadius.circular(8)),
+              child: Text(
+                l10n.appOfferedBody,
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.info),
+              ),
+            ),
+            if (onViewOfferLetter != null) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onViewOfferLetter,
+                  icon: const Icon(Icons.description_outlined, size: 16),
+                  label: Text(tr('View offer letter', ms: 'Lihat surat tawaran', zh: '查看录取信')),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
+                ),
+              ),
+            ],
+            if (onAcceptOffer != null) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: onAcceptOffer,
+                  icon: const Icon(Icons.check_circle_outline, size: 16),
+                  label: Text(l10n.offAcceptOffer),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
+                ),
+              ),
+            ],
+          ],
+          if (data['status'] == 'rejected') ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: AppColors.errorBg, borderRadius: BorderRadius.circular(8)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.appReasonFromCompany,
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.error)),
+                  const SizedBox(height: 2),
+                  Text((data['rejection_reason'] as String?) ?? l10n.appNoReasonRecorded,
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.error)),
+                ],
+              ),
+            ),
+          ],
+          if (data['status'] == 'unavailable') ...[
+            const SizedBox(height: 10),
+            Text(l10n.appClosedAcceptedOther, style: AppTextStyles.caption),
           ],
           if (onWithdraw != null) ...[
             const SizedBox(height: 10),

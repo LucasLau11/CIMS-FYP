@@ -7,7 +7,12 @@ import '../../services/supervisor_data_service.dart';
 import '../../utils/format_utils.dart';
 import '../document_preview_screen.dart';
 import '../student/student_messages_screen.dart' show ChatScreen;
-import 'supervisor_evaluate_screen.dart';
+import '../../services/admin_data_service.dart';
+import '../../widgets/profile_actions.dart';
+import '../student_grade_screen.dart';
+import '../hr/applicant_profile_screen.dart' show StudentProfileSections;
+import '../../utils/error_text.dart';
+import '../../utils/lang.dart';
 
 class SupervisorStudentsScreen extends StatefulWidget {
   const SupervisorStudentsScreen({super.key});
@@ -60,7 +65,7 @@ class _SupervisorStudentsScreenState extends State<SupervisorStudentsScreen> {
       backgroundColor: AppColors.background,
       appBar: GradientAppBar(title: l10n.supMyStudentsTitle),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               child: Column(
@@ -79,7 +84,7 @@ class _SupervisorStudentsScreenState extends State<SupervisorStudentsScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: Row(
-                      children: [Text(l10n.supStudentsCount(results.length), style: AppTextStyles.caption)],
+                      children: [Flexible(child: Text(l10n.supStudentsCount(results.length), style: AppTextStyles.caption, overflow: TextOverflow.ellipsis))],
                     ),
                   ),
                   Expanded(
@@ -134,7 +139,7 @@ class _StudentProgressCard extends StatelessWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: AppColors.infoBg,
-                child: Text(logoLetter(name), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                child: Text(logoLetter(name), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -186,7 +191,10 @@ class _StudentProgressCard extends StatelessWidget {
 class StudentDetailScreen extends StatefulWidget {
   final String studentId;
 
-  const StudentDetailScreen({super.key, required this.studentId});
+  /// Opened from the administrator's student list: adds suspend / remove for the account.
+  final bool adminMode;
+
+  const StudentDetailScreen({super.key, required this.studentId, this.adminMode = false});
 
   @override
   State<StudentDetailScreen> createState() => _StudentDetailScreenState();
@@ -198,6 +206,8 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   List<Map<String, dynamic>> _reports = [];
   List<Map<String, dynamic>> _documents = [];
   List<Map<String, dynamic>> _evaluations = [];
+  String? _accountStatus;
+  Map<String, String?>? _supervisor;
 
   @override
   void initState() {
@@ -213,8 +223,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       final reports = await SupervisorDataService.instance.getStudentReports(widget.studentId);
       final documents = await SupervisorDataService.instance.getStudentDocuments(widget.studentId);
       final evaluations = await SupervisorDataService.instance.getStudentEvaluations(widget.studentId);
+      final accountStatus = widget.adminMode ? await AdminDataService.instance.getAccountStatus(widget.studentId) : null;
+      final supervisor = widget.adminMode ? await AdminDataService.instance.getStudentSupervisor(widget.studentId) : null;
       if (!mounted) return;
       setState(() {
+        _accountStatus = accountStatus;
+        _supervisor = supervisor;
         _student = student;
         _reports = reports;
         _documents = documents;
@@ -240,7 +254,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       ));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open file: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not open file')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
@@ -256,21 +270,20 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open chat: $e'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tt('Could not open chat')}: ${friendlyError(e)}'), backgroundColor: AppColors.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+      return Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
     }
     final l10n = AppLocalizations.of(context)!;
     final student = _student ?? {};
     final name = (student['full_name'] as String?)?.isNotEmpty == true ? student['full_name'] as String : 'Unnamed student';
     final hasActive = student['has_active_internship'] == true;
     final companyName = student['company_name'] as String?;
-    final canEvaluate = student['can_evaluate'] == true;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -290,7 +303,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                   CircleAvatar(
                     radius: 34,
                     backgroundColor: AppColors.infoBg,
-                    child: Text(logoLetter(name), style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    child: Text(logoLetter(name), style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primaryText)),
                   ),
                   const SizedBox(height: 10),
                   Text(name, style: AppTextStyles.h2),
@@ -306,15 +319,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             Row(
               children: [
                 Expanded(
+                  // The academic supervisor grades through the reports (Reviews tab); this shows the result.
                   child: ElevatedButton.icon(
-                    onPressed: canEvaluate
-                        ? () async {
-                            await Navigator.push(context, MaterialPageRoute(builder: (_) => SupervisorEvaluateScreen(student: student)));
-                            _load();
-                          }
-                        : null,
+                    onPressed: () => Navigator.push(
+                        context, MaterialPageRoute(builder: (_) => StudentGradeScreen(studentId: widget.studentId, studentName: name))),
                     icon: const Icon(Icons.assessment_outlined, size: 16),
-                    label: Text(l10n.supEvaluate),
+                    label: Text(tr('Grade', ms: 'Gred', zh: '成绩')),
                     style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
                   ),
                 ),
@@ -329,15 +339,63 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            StudentProfileSections(studentId: widget.studentId),
+            if (widget.adminMode && _supervisor != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_pin_outlined, size: 18, color: AppColors.textMuted),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(l10n.adminSupervisorColonName(_supervisor!['name'] ?? ''), style: AppTextStyles.bodySecondary)),
+                    TextButton(
+                      onPressed: () async {
+                        final ok = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(tr('Remove the assignment?', ms: 'Buang penetapan?', zh: '取消分配？')),
+                            content: Text(tr('$name will have no academic supervisor until you assign one again.',
+                                ms: '$name tidak akan mempunyai penyelia akademik sehingga anda menetapkan semula.',
+                                zh: '$name将没有学术导师，直到您重新分配。')),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tt('Cancel'))),
+                              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tt('Remove'), style: TextStyle(color: AppColors.error))),
+                            ],
+                          ),
+                        );
+                        if (ok != true) return;
+                        try {
+                          await AdminDataService.instance.assignSupervisor(studentId: widget.studentId, supervisorId: null);
+                          _load();
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendlyError(e)), backgroundColor: AppColors.error));
+                        }
+                      },
+                      child: Text(l10n.adminUnassign, style: TextStyle(color: AppColors.error)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (widget.adminMode) ...[
+              const SizedBox(height: 12),
+              AdminAccountButtons(
+                profileId: widget.studentId,
+                name: name,
+                status: _accountStatus,
+                onChanged: _load,
+                onRemoved: () => Navigator.pop(context),
+              ),
+            ],
             // Evaluations are gated on the student's derived internship
             // status (see migration 00022) — 'completed' means their
             // assigned intake's end date has passed while they still have
             // an active internship. RLS enforces this too; this note just
             // explains the disabled button instead of letting a tap fail.
-            if (!canEvaluate) ...[
-              const SizedBox(height: 8),
-              Text(l10n.supEvaluateLockedNote, style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppColors.textSecondary)),
-            ],
             if (_evaluations.isNotEmpty) ...[
               const SizedBox(height: 20),
               Text(l10n.supLatestEvaluation, style: AppTextStyles.h3),
@@ -345,7 +403,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF0D6E78), Color(0xFF14B8C8)]),
+                  gradient: LinearGradient(colors: AppColors.headerGradient),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -426,7 +484,7 @@ class _SubmissionTile extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.primary),
+          Icon(icon, size: 18, color: AppColors.primaryText),
           const SizedBox(width: 10),
           Expanded(child: Text(title, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600))),
           _badge(context),
