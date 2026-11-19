@@ -70,3 +70,10 @@ nlp_service/.venv-tf/
 
 # Subagent-driven-development scratch workspace (ledgers, briefs, reports)
 .superpowers/
+
+# Training data / checkpoints (regenerate with nlp_service/tf_model/prepare_tf_data.py and train_tf.py)
+nlp_service/tf_model/data/
+nlp_service/tf_model/artifacts/*.keras
+
+# Local UAT seed scripts (test accounts and companies)
+supabase/seed/uat_*.sql
